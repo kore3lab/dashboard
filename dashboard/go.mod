@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/emicklei/go-restful v2.12.0+incompatible
+	github.com/emicklei/go-restful/v3 v3.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/prometheus/client_golang v1.5.1

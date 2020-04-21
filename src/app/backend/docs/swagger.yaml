@@ -1,0 +1,13 @@
+info:
+  contact: {}
+  license: {}
+paths:
+  /healthy:
+    get:
+      consumes:
+      - application/json
+      description: 상태정보 조회
+      produces:
+      - application/json
+      summary: 상태정보를 조회합니다.
+swagger: "2.0"

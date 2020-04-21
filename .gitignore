@@ -1,0 +1,22 @@
+node_modules/
+.DS_Store
+.nuxt/
+.tmp/
+dist/
+*.log
+*.js.map
+
+# IDE specific files:
+.idea/
+*.iml
+*.swp
+.vscode
+
+# npm debug log:
+npm-debug.log
+
+# jmeter & kcl
+__pycache__
+*.jtl
+Pipfile
+Thread Group.jmx

@@ -16,7 +16,6 @@ package namespace
 
 import (
 	"context"
-	"log"
 
 	"github.com/kubernetes/dashboard/src/app/backend/api"
 	"github.com/kubernetes/dashboard/src/app/backend/errors"
@@ -62,7 +61,6 @@ func GetNamespaceListFromChannels(channels *common.ResourceChannels, dsQuery *da
 
 // GetNamespaceList returns a list of all namespaces in the cluster.
 func GetNamespaceList(client kubernetes.Interface, dsQuery *dataselect.DataSelectQuery) (*NamespaceList, error) {
-	log.Println("Getting list of namespaces")
 	namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), api.ListEverything)
 
 	nonCriticalErrors, criticalError := errors.HandleError(err)

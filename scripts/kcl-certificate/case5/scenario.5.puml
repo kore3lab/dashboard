@@ -1,0 +1,45 @@
+@@startuml
+
+header Acornsoft
+skinparam partition{
+	BackgroundColor #eeeeee
+	BorderColor #777777
+}
+
+title
+	<u>Test Scenario #5</u>
+	<font size="9">보안 인증 반영 소요시간</font>
+
+end title
+
+
+start
+
+	repeat
+		partition Clean {
+			:보안정책 Clean;
+				note right
+					* 상태코드 200 : 정상
+					* 상태코드 403 : Forbidden
+				end note
+
+			while (상태코드==200 ?) is (No)
+				:서비스 페이지 요청(HTTP);
+			endwhile (Yes)
+		}
+
+		partition 보안정책반영 {
+
+			#palegreen:보안정책 주입;
+			while (상태코드==403 ?) is (No)
+				:서비스 페이지 요청(HTTP);
+			endwhile (Yes)
+
+		}
+
+	repeatwhile (수행회수<=1000)
+
+stop
+
+
+@@enduml
