@@ -1,0 +1,18 @@
+/* 툴바 */
+g.toolbar g.button {cursor:pointer;}
+g.toolbar g.button rect {fill:#aaa; width:29px; height:29px; fill-opacity:0.1; stroke: #aaa;}
+g.toolbar g.button:hover rect {fill-opacity:0.6;}
+g.toolbar g.button g.ico {fill:#666; transform: translate(3px,3px);-ms-transform: translate(3px,3px);-webkit-transform: translate(3px,3px);-o-transform: translate(3px,3px);-moz-transform: translate(3px,3px);}
+#ac_btn_zoomout {transform: translate(34px,0px);-ms-transform: translate(34px,0px);-webkit-transform: translate(34px,0px);-o-transform: translate(34px,0px);-moz-transform: translate(34px,0px);}
+#ac_btn_zoomfit {transform: translate(68px,0px);-ms-transform: translate(68px,0px);-webkit-transform: translate(68px,0px);-o-transform: translate(68px,0px);-moz-transform: translate(68px,0px);}
+#ac_btn_legend {transform: translate(102px,0px);-ms-transform: translate(102px,0px);-webkit-transform: translate(102px,0px);-o-transform: translate(102px,0px);-moz-transform: translate(102px,0px);}
+#ac_btn_legend text {font-size: .9rem; stroke-width:0; fill:#fff;transform: translate(9px,9px);-ms-transform: translate(9px,9px);-webkit-transform: translate(9px,9px);-o-transform: translate(9px,9px);-moz-transform: translate(9px,9px);}
+#ac_btn_legend rect {width: 45px; fill: #007bff;fill-opacity:1; font-weight:normal; }
+
+/* 범례 */
+g.legend div {border:1px solid #ccc; margin:0;background-color:#fff;}
+g.legend rect.background {fill:transparent}
+g.legend g.button {cursor:pointer;fill:#007bff;}
+g.legend g.button rect {width:24px; height:24px; fill:transparent; stroke-width: 0px;}
+g.legend g.group > text {font-size:.85em; fill: #333; stroke-width:0; font-weight: 500;}
+g.legend g.row > text {font-size:.8em; fill: #666; stroke-width:0; }

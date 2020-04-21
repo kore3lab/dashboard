@@ -1,0 +1,443 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: acornsoftlab-kore3
+
+---
+
+apiVersion: v1
+data:
+  config: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxakNDQWI2Z0F3SUJBZ0lKQVBvaTgvYTZqMUIvTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1Ua3hNVEU0TURJek5qQTBXaGNOTWpreE1URTFNREl6TmpBMApXakFZTVJZd0ZBWURWUVFEREExcmRXSmxjbTVsZEdWekxXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DCkFROEFNSUlCQ2dLQ0FRRUEydjZMbE9UVXV4Y0VQV1BETTRiNVROdHNBU2I0VGFObTFpVmdid093MXIxK3lBUGsKL09lMFFLQXRGejRDb3ZkcEZwMTh3YkxlcDY0cFdDZ3VUcytLTGlqSWtpenRQcG1KeWplUUdaSlJwY2J0dFNuMgp5MXZCNkh1UDBnKzZ0bjVzWSs5STFMbXN0ajVJZ255VWxHUnkzU1I4d0luM3NUdW5qWWhOL0QvVzBDQTRhVG9vCjNTV1R4d011RUVjc1hCeVYwWG8rTzErZVNpSitUWWQ5VTFPd3dUU1gvSnVod1dOZHhRejZISDd0N1pOOU4xWU0KT05PeFdaY29UanB5R0pycko5WmZzWHhDdkErbDVsQnQyZHNSMC8vRVlVR2FLRXVnZ0R2am1tOHl6dkw1MFRYSgowVW1lMTRMMzBrbTdLQjJJMVRJNlY1UmJWbTJIRkROcnpYNTVld0lEQVFBQm95TXdJVEFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUE0R0ExVWREd0VCL3dRRUF3SUNwREFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBMThZYzk4b0gKMTNFZFVDN2tCT0VNMm84NU96M1BVZkVtZG40OTRNQmdSR1FodytYWXAzOVAyWVVhT09SbDFQQ2FaSy82TjZsRApLcVFXNUxCYjhxaExQejZ5Rm5YQ2t6ODBtM2JUdWc1aEdHVTFHV3B0N1E1N0EzS2VWbEttOVRVR3RSdTZ3SGE1CkFNYlh2SDc4cHFBQzhjTFV3OTlQMjNzTWpxMDlVQWpSV0tVTmxmbmpTQ2NUTnVNRExsNWFIV2ttMW1VRjQwWDEKRDREWEk0clhTY3p2TlYzdEN1YzBPanpvRjZ4aHBiT01ucGU1QjFKZlpyeCtJZi9sRzJGM3BPN0ZnNkxNOXhJVAo5a1gyQ0x0SnhVYXhiZVplZWRUeWVHbjBFV1hDMGpubGNHTkpHdXcrbk9ndVNKNmJpYWt6OFlTaTdKN21HSFlXCjJlWGNzOVJSSUg3SWVRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        server: https://101.55.69.105:6443
+      name: apps-05
+    - cluster:
+        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxakNDQWI2Z0F3SUJBZ0lKQUw2dDZpM0NzVnhrTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1Ua3hNVEU1TURJek5qUTVXaGNOTWpreE1URTJNREl6TmpRNQpXakFZTVJZd0ZBWURWUVFEREExcmRXSmxjbTVsZEdWekxXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DCkFROEFNSUlCQ2dLQ0FRRUF1cEtaZVgwSUt4Nnh4Q21Ma2EvanJiY2dqN1FwdlkzdmlwdkY3LytmVFgyRWFzOE4KQkttVjUwa0xwVHFqcWlaeldmSnNlc211aTNjRzZJMjhYd256UVhaMWNsMlFyMVRQQzl0OWFkT1ZQdWdzSFhSaApTQTR6VzN1a0hpS1JBSE5iemI4K2g0eHdXdW9EN09uNzhTeVZWbUE2dUIvU0NaMkE2c01xem5XUkVHVE81WHM3Cng2MmVCcnJCMXdoSDVOUlI4V0JwUmZwRVE3MnhzVnZzWWQ0NGNZREwyL1pNOFFVUlhlKzdYcXEwdnZZMXFiNUUKSS96TEx1MDBwcGozQTJncFE0bGMvZnJFYXI3TFROS1AxVUpsTUVkNVhTTkhBOTJvUml4ek1MYi9XNG9seFBCcwpZYlZOb0kzMTNzTkFibTh4eVNtdXRsOHIrVnM4NjhObWV6R0lUUUlEQVFBQm95TXdJVEFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUE0R0ExVWREd0VCL3dRRUF3SUNwREFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBZlQvSEx4bTkKbVVraS9nZFpnUldjaFQyOFVsUVAzMXVwaDZKYnVLMEhxV1JiTURwN1JCZDNnNllvYWRHNUlGOGNRQ25rcjBQTgpqTmo4WEF0WjRCdnluU2lZN1BYL3ZIYmpxNitNUTZVT0dSR09obGFHTDdzSDQ2UlJlU1c4YTZxMkRxS2lwWi9WCmJnRDB4MytuMFZoNEdzUXg4L2lmSVpQaytEVFlPbU1jZ2FPLy8xWk9UUE0yOGVreSt5dWh6Z3FKSGRTbkYzTDkKZHFKWjN5dVVGc3o4ekZMUFNMN1RBRHJYdm1wUG9CMkxuZ1VmWG5ucGtMVWpPUTZWYlRRaG5UQVE0bzM5UjlPNAoxNFdiN1ZOOTlNWTRwMWVxZUZ2NGEvUi8yMHdVdzlxNllIcy9DWERDOTM1TlU1UkNUL3QvNXByOVdOVjZmVmU1CjBWSVBkNVlQeWFobUZnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        server: https://101.55.69.109:6443
+      name: apps-09
+    contexts:
+    - context:
+        cluster: apps-05
+        namespace: acornsoftlab-kore3
+        user: apps-05-user
+      name: apps-05
+    - context:
+        cluster: apps-09
+        user: apps-09-user
+      name: apps-09
+    current-context: apps-05
+    kind: Config
+    preferences: {}
+    users:
+    - name: apps-05-user
+      user:
+        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5VENDQWQyZ0F3SUJBZ0lJWGxIa2xrT3NoaTR3RFFZSktvWklodmNOQVFFTEJRQXdHREVXTUJRR0ExVUUKQXd3TmEzVmlaWEp1WlhSbGN5MWpZVEFlRncweE9URXhNVGd3TWpNMk1EUmFGdzB5TURFeE1UY3dNelUyTlRCYQpNRFF4RnpBVkJnTlZCQW9URG5ONWMzUmxiVHB0WVhOMFpYSnpNUmt3RndZRFZRUURFeEJyZFdKbGNtNWxkR1Z6CkxXRmtiV2x1TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUEvR1AvMzhNckMxZW0KTFEwNENENWVuMGtBMDgxN3U1by9LNnY2WmptUlc0cTlpRE5IVTVTbElFS3dyNWgrKzZ3QXpUL3dOd0lLeW1lRwpNblZQdlZHeGtYZ2NGSUc0M3ZyUjJQVVViZ2hHanM1am84aUtHU1FqdXFydVN0SG9WRmhRMkZjTTM3eEQvZXZxCjZ0dVEzbmkvL0drWlFydFdoTzdSWHFFZC9VRDB1UENlYWdnY3hidSt1ZDBBN0NWVlZkT29KY0RwOGdMSTNhT1YKd2swbzdtU3p4RmpHbDRVbGFPdVdHUTR5N005Q05IVXREaGdvZmtBN1NZU0xoTHpSenozaGJmclNOV1p6M0dSMgpCcVVyQVcxdUZUbGNXK09CQzF3cjdqSkorL2ZIRU5CRkVXeVFzNXBDVEcxa0RQQXdOT3MrUDY1dzQxYkIwckUvCmVqMDE3Q0t3RHdJREFRQUJveWN3SlRBT0JnTlZIUThCQWY4RUJBTUNCYUF3RXdZRFZSMGxCQXd3Q2dZSUt3WUIKQlFVSEF3SXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBTERYYzNTN3VDbkdFNGF0VWhadDBQaXFVMG9wWVdJdwpPWkN0aDFhRnhCYjJZMEF0UzlPM09xWkVCaSsvQ255NXR5R3c1Yk5LTW54NHliSVdTYWhBYXg4Mm9acFhYNWxPCjYyWTFORVlpbi9RMUlsM0k1OWhhdUxTOVlORC9mdnNTdTF3dWdYZVgyQWNUaWIybE1LeERzaTZ2dCtJRXhweDMKejZGRlhtNlVmUFdZRktvd3dTaW5ncnhLeFl4MzByUlpER2JNL3JJSjNBVCtaaFZDcXNGODJWT01iRmdtUC9TLwo0WXdiMWpOTHlUZjBYOGUxZXhFL0FQUWpKd290ajZLNXRDSWQyOWJDSGZEa0NqNVdVRWhUQUJkZk5ZYVNXdFhsClU1VjZ3NXc0dk5oNWNWdXcwUmlpN2RaNUJJNEkxL1hFSDJLclU1ZVJHckFlOGFXUDlMNjE5UXc9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBL0dQLzM4TXJDMWVtTFEwNENENWVuMGtBMDgxN3U1by9LNnY2WmptUlc0cTlpRE5IClU1U2xJRUt3cjVoKys2d0F6VC93TndJS3ltZUdNblZQdlZHeGtYZ2NGSUc0M3ZyUjJQVVViZ2hHanM1am84aUsKR1NRanVxcnVTdEhvVkZoUTJGY00zN3hEL2V2cTZ0dVEzbmkvL0drWlFydFdoTzdSWHFFZC9VRDB1UENlYWdnYwp4YnUrdWQwQTdDVlZWZE9vSmNEcDhnTEkzYU9Wd2swbzdtU3p4RmpHbDRVbGFPdVdHUTR5N005Q05IVXREaGdvCmZrQTdTWVNMaEx6Unp6M2hiZnJTTldaejNHUjJCcVVyQVcxdUZUbGNXK09CQzF3cjdqSkorL2ZIRU5CRkVXeVEKczVwQ1RHMWtEUEF3Tk9zK1A2NXc0MWJCMHJFL2VqMDE3Q0t3RHdJREFRQUJBb0lCQVFDc3V2TisvRjhWSUNORwphZW1UR3J3L1h3TUY4WGRnNlN1YWc5U1c2WWNsazBvclVJemNFcnIvM1NSMnlITC9ZclFaeEV4dUdTT3hhakJaCmtCZkdoWVowL0RLYmhqd3p2b3luWXZOY2FxVi9UcGk2bXFDSW5FY25sWndIOEtpRU1QMERVbkFwSHZ1WmFFQWEKQTdLZHp4MzFiU2d3bDIyYkJLYWRrTDZwZUM4RDhhMUxnaEpFUzUxeCtMRWQzQk1ISTZtbjRPNld0V2xweTF6TQo2MTgyd3JFYzZ3VVBDMEt0TEVoT3gwcEdncjI3T1NPdE9RdVhWWkdVUEVkVGxOMkhQempyd2NTNWw4RGZzaEh6CndRVml4eU03Y2ZOUEZ1OXJWdkZoOEdRV0dkSzl2ODZ2U29SaER6ZzNVQndONWZGRmlocVQ3ZnJUeDR4Vzc0aDcKZUdtM2lUbUJBb0dCQVAzUnIyYXRuZDJaWUZiYUdoRDVUNjkzTDVnTWx5Sy94WXI3cXk1NmZpcEkrNlQzdnZHegpUMW4va2VBUkg1WnkrRWt6c0lNUmwxMlFHbXRmZW9taUhZVVo0TmFUdGRoMDBMSjVwZkp0ZVpKVnltbk8rWXZTCmVkVVpLdi9OaDhsdnhJbmc3ampkRFpocmlsemVnOHE4eTV2Q0NKdjdjLzRkZ3hlRENnVUNURE1mQW9HQkFQNlAKTEJjUXRYY0dHdm9yTEhzRnZtUDNPUXJsR2RLN2RuMkZaNU9vTWRWTi82RHFmMEhpZ0ZQSHdSVmpSWWVtUEFqVApSdy90WDBjWnFHN1NHODVVR0JKNkt1dW5Yemw4czVwc0lHN2V6NjdreHc3YXdPcTYza3RHV1lPaHhGaGNTY2hNCm93aXA4TkI0ZXY0UGVmdys2ZDR1YkJtZHNnc1A2UFd5djZOdXBsVVJBb0dBTGR6dnRydjBaSkJNU2lWS3hIcG8KSGFxSm5RM1pXVndSazlWNXp3SXZQZkRHRjc3MGI3UVl5SWhYa1lkR2orYmlXa2ZPdzBBd2U2V0lRSktXRDd5TgpYUG1hR092RDFnTDFtdXBFUkJQbi9ic213Z3UySjcrMlovME9PZjZuWkl5ZmxOSmgrVUJvTG54d0dldlRJSlVRCnJXcFlKK2M5eEZNTTF2akVuTGNYa2IwQ2dZRUFsbFNZOWhvaEFHUnpwQS9CR2ZuZllRdkwvUm9sTU9VU2FiaFIKM2NwemU0T3ZsaWxGOC9PK1V6dmhWQzhuRFovblRsTHZZWUdPUmQvcUwyQVhtYmJoN0crSFQxbXRpN2FRSG44QwpmRmRMRVA3OGExSldvWWl2NUlac01LZGsyOFhNc09SSlY4RjhmTERaK1pYTU5XSTJITWNQZ2VVMkV3QlhWRm8yCmdGN0ZEZkVDZ1lFQXNnUHpHblA4MUdZQnJCTVhjeXg1L2lzN1c0WitqcHZHOHIrNXZEWG9YYkRuYm9NVmN4eHYKQWR4LzN5M25SSWxId2Yya3dSQVlhUnJEMVliVGZjVDAycEppejdWT1dHNVY4K1hFYnpvdFd2TzNyaUZJbHNqZApjcTZxS01FVk0xWmRTSWxMQW5OUUpGZit4a1RaNkt6N2tyMHFOTC93Yzk3N3Y5VnJ3L1JjODBVPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+    - name: apps-09-user
+      user:
+        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5VENDQWQyZ0F3SUJBZ0lJYUtBMWVPaWpyQTR3RFFZSktvWklodmNOQVFFTEJRQXdHREVXTUJRR0ExVUUKQXd3TmEzVmlaWEp1WlhSbGN5MWpZVEFlRncweE9URXhNVGt3TWpNMk5EbGFGdzB5TURFeE1UZ3dNak01TVRaYQpNRFF4RnpBVkJnTlZCQW9URG5ONWMzUmxiVHB0WVhOMFpYSnpNUmt3RndZRFZRUURFeEJyZFdKbGNtNWxkR1Z6CkxXRmtiV2x1TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFuR2lmUDdFMTBSd3oKVG8zQmNPaDlpZWtudE1ZS3YxakNBWTdtd0NsTC8waUtCVUpNMUlMeDgxMjc1ZFFHb0lHZWM3akEvUk1TdGZuQwpoTlh0ODUwbVhLMDZGLzl0L1RueVMraW9HeGVFNExVSlNtWTNVQ28xWHVyTGg3ZVp4WGhZUUxCa0ZVbmNPSTM2CldLUytHWDhOVVBkUXI0OVdSbUJRN2I4alp3SEE3SmRnblUvWXZaYnJYWGN1VUlyNTI4RitWYjBPaFQ0T2c3bXYKTzR0L0tNN0wwK0cxU1JzRzlKYm5tNVFNQi9GYzRLK1VpNzM3dFlyMUJGVDBKdElwMUY4dUQ5ZnorMThxZVlydgpqYzJVTkFwaUNqaFF1WWFmRjl0VzB1bWdXK3k3eDh4WGM0MFFpTGdJTGlDV1crUFErOTNMckxCRkF3MkFmVzBhCnJvUFl3elNaQVFJREFRQUJveWN3SlRBT0JnTlZIUThCQWY4RUJBTUNCYUF3RXdZRFZSMGxCQXd3Q2dZSUt3WUIKQlFVSEF3SXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSTR0RVFhZjRvVWRiVmJ4clViY2xYLy83cW5HeElGbgpidmZmZDlCVGdycGtReStjdXNYeWtrQWdUVUhQaWtBV3ZQZVJra0RjUnhzd3BKSk82TG5JOEZBM2YydURkY09mClB0T1ZKa1QzL3ZvZDhIZDJPTEFtTzNOYng0VHBQa21XSmJJVlJSam5valo4OC9ucDEzMXV0d2V5bHVuRU0waUUKdEI0a2wxdW5vaGZPYmRUeHVGZ0kweVZQTWg3QW40dWRXczk5VHJRZjlhUFpyTlBKZUtYUUR1TFkwSGhDYnJnSwpNbUNrY2dzZ2Z5N2VKbEthTHdxalhSZDVoaFFvRUVWeVdka2w0ZmhZdEZISmFydGNmR1ZWVWpZRFUya1dOUjZHCk1CbS9OMUtLRTdxaVUxNGV6S0x0YlhTdnBBeDRrbWtSSnBKRWE3VFBuZmpvM1ZycnhSK1c0WEE9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBbkdpZlA3RTEwUnd6VG8zQmNPaDlpZWtudE1ZS3YxakNBWTdtd0NsTC8waUtCVUpNCjFJTHg4MTI3NWRRR29JR2VjN2pBL1JNU3RmbkNoTlh0ODUwbVhLMDZGLzl0L1RueVMraW9HeGVFNExVSlNtWTMKVUNvMVh1ckxoN2VaeFhoWVFMQmtGVW5jT0kzNldLUytHWDhOVVBkUXI0OVdSbUJRN2I4alp3SEE3SmRnblUvWQp2WmJyWFhjdVVJcjUyOEYrVmIwT2hUNE9nN212TzR0L0tNN0wwK0cxU1JzRzlKYm5tNVFNQi9GYzRLK1VpNzM3CnRZcjFCRlQwSnRJcDFGOHVEOWZ6KzE4cWVZcnZqYzJVTkFwaUNqaFF1WWFmRjl0VzB1bWdXK3k3eDh4WGM0MFEKaUxnSUxpQ1dXK1BRKzkzTHJMQkZBdzJBZlcwYXJvUFl3elNaQVFJREFRQUJBb0lCQURhb1FPNUxDUmw0RjEzZQpIN2xMSllPcUhKd0prUHZwRW5Mazh6STN2RDBMcGwvTUdYa3lBVWNnZkdjR1B3S2NDVGs3V1FXWFFyU2hBUjdXCmUzN2tiZUY1RDVJUFN1cHc4NEVmWG8rSkdvQkVBMmtpYXpYeWFoQXZVTXl1bG1meGREVzI3bUthR3dFUWJHbkoKdUR6RXIyeVo0SEpaVHJidE5acS9icW15YlM2Lzg2NlhwdS9RNnVleCtDOG9ncEpvUVpvenpMUkVSbnVWc2JmRgpOdHVlbUNaNlplRVFRclZoVWhyNHQ0RHRBN0ozYUJTbmZkc1d3MGdxZVQyYTg4RkNHSTB0Ky90SkFhQXczTDQ2ClBlaXRlR1pIWW5tSzJGSmJjRXFTbzNkWU1zcWIyeUZxOG50b0EwSUFRZWoyd2pVMUdTUVBUekp3R2U4eFRxL2gKQTNBYWRMa0NnWUVBd1lCbjRqSjk5Q1VMN3lHT0tUam51QXdrQmpkdDl5MVR0blJ0dDZMTHk2c1l3dUVUemxXawpEVXd6QVZLTHVCTkxkdzBPV1FUem5GbkpsUTZFMHZxd210Yi9xMGZBbDdGMURCYVAyKzNKbml1VWRaVjJNTVBjCitsSWpScUFtd2t6TkVxQjlLb1puZGhzb1MzMVlWclJqdlBWamJwamxRTHlVcUl1bkRUOUsrSU1DZ1lFQXp1MDAKb0tKNzBRSEZVaXgwSER2N0c0RUF3VFh5cXU4bjM4L2VtQTFXNTk1YTgyVmpmTW5xc3ROdGNiVU9VRk1HRG85dgpneTc4WHBvLzRhZGhFSVArR1JPR3lHNHJsZXVnVkYvWWQ2ZXFZc0hxTTh0L0wwcnhLZnBodWFRMnR3ZHVXLzVYCnV0WGRmd2JLallXSm9hQlpveUFad3hvUUpSelpkQVh2MzFVcXlTc0NnWUVBaHpXVVlXaHF2b2lNZUVINE5qRy8KS01uQytsME5CK1N5VkJHekFOaE9remd4Q3l0L1RYUm1ONnlCRDNHQWs5VlhyQTZCY2c2VnN6RENQTmR5VklJNwptVmFXUERiZENxSkRhWGp5ZVBrRkl2TE13QVQ2RzBVaFNnRFBDWENxNUtZSnZmUkt3Y1k4MFRoVXhic0dXVCtmCldkQVY5SmY5eVdoOGIvRjFmem8weHNVQ2dZQWRyNVlQUFlBNTJlRXZDc1dWajExVThzcmk3UlJsUlc0WkE3OVIKWFFpTXR5K2hIM2lJWElkWkpFL2RNalpkZTZ1d3h3OGVhTTAzM1RVdzhFeFNqRDBWNStFOE8rSHczaDdnTytmWQpNcXVWQTNEUUFXKzdueXE5OVBlMEpFVGRPU214OU9rdEdxVnVKZEZGUUZVZ1pOcTNObEc3MWE5ZlE2WkdxTnRpCjFOc1FoUUtCZ1FDclJieExZYjFQaURpRDV1dWh2RVN2VmNzZVhxT3R1cFY2cUo5dGJMQTBlaHA1anFVQXhkdE8KdVBZZENoK1RPQ2dlWmFZUmZ3UVdxT2c2ZkgxRkF6ZEg0RkMwODhRZDh5djBQMzJIeFpTa014dkRqY2tOWUV1aApLWDBBOEMrUzFBVGN0dzBYZDdXSzFPbGlUUWFkZlJEcjA5VlZabWRPZmR1SlBzTXNOelVRSFE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: acornsoftlab-kore3-kubeconfig
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard
+  namespace: acornsoftlab-kore3
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard-certs
+  namespace: acornsoftlab-kore3
+type: Opaque
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard-csrf
+  namespace: acornsoftlab-kore3
+type: Opaque
+data:
+  csrf: ""
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard-key-holder
+  namespace: acornsoftlab-kore3
+type: Opaque
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard-settings
+  namespace: acornsoftlab-kore3
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard
+  namespace: acornsoftlab-kore3
+rules:
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["dashboard-key-holder", "dashboard-certs", "dashboard-csrf"]
+    verbs: ["get", "update", "delete"]
+    # Allow Dashboard to get and update 'dashboard-settings' config map.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["dashboard-settings"]
+    verbs: ["get", "update"]
+    # Allow Dashboard to get metrics.
+  - apiGroups: [""]
+    resources: ["services"]
+    resourceNames: ["heapster", "dashboard-metrics-scraper"]
+    verbs: ["proxy"]
+  - apiGroups: [""]
+    resources: ["services/proxy"]
+    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "dashboard-metrics-scraper", "http:dashboard-metrics-scraper"]
+    verbs: ["get"]
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: dashboard
+  name: acornsoftlab-kore3
+rules:
+  # Allow Metrics Scraper to get metrics from the Metrics server
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list", "watch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard
+  namespace: acornsoftlab-kore3
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dashboard
+subjects:
+  - kind: ServiceAccount
+    name: dashboard
+    namespace: acornsoftlab-kore3
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: acornsoftlab-kore3
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acornsoftlab-kore3
+subjects:
+  - kind: ServiceAccount
+    name: dashboard
+    namespace: acornsoftlab-kore3
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard
+  namespace: acornsoftlab-kore3
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 30090
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    app: dashboard
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dashboard
+  name: dashboard
+  namespace: acornsoftlab-kore3
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: acornsoftlab/kore3.dashboard:v0.1.0
+          imagePullPolicy: Always
+          env:
+          - name: SIDECAR_HOST
+            value: "http://dashboard-metrics-scraper:8000"
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     scheme: HTTP
+          #     path: /
+          #     port: 9090
+          #   initialDelaySeconds: 30
+          #   timeoutSeconds: 30
+          volumeMounts:
+            - name: dashboard-kubeconfig
+              mountPath: /app/.kube
+            - mountPath: /tmp
+              name: tmp-volume
+      volumes:
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoftlab-kore3-kubeconfig
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: dashboard
+      nodeSelector:
+        "kubernetes.io/os": linux
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: dashboard-metrics-scraper
+  name: dashboard-metrics-scraper
+  namespace: acornsoftlab-kore3
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: dashboard-metrics-scraper
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: dashboard-metrics-scraper
+  name: dashboard-metrics-scraper
+  namespace: acornsoftlab-kore3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard-metrics-scraper
+  template:
+    metadata:
+      labels:
+        app: dashboard-metrics-scraper
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
+    spec:
+      containers:
+        - name: dashboard-metrics-scraper
+          image: kubernetesui/metrics-scraper:v1.0.6
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          volumeMounts:
+          - mountPath: /tmp
+            name: tmp-volume
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 2001
+      serviceAccountName: dashboard
+      nodeSelector:
+        "kubernetes.io/os": linux
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: backend
+  name: backend
+  namespace: acornsoftlab-kore3
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 30081
+      port: 3001
+      protocol: TCP
+      targetPort: 3001
+  selector:
+    app: backend
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: backend
+  name: backend
+  namespace: acornsoftlab-kore3
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: acornsoftlab/kore3.backend:v0.1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+          volumeMounts:
+          - name: dashboard-kubeconfig
+            mountPath: /app/.kube
+          - mountPath: /tmp
+            name: tmp-volume
+      nodeSelector:
+        "kubernetes.io/os": linux
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoftlab-kore3-kubeconfig
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+  namespace: acornsoftlab-kore3
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 30080
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: frontend
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+  namespace: acornsoftlab-kore3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: acornsoftlab/kore3.frontend:v0.1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+          volumeMounts:
+          - mountPath: /tmp
+            name: tmp-volume
+      nodeSelector:
+        "kubernetes.io/os": linux
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}

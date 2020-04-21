@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": [
+      "esnext",
+      "esnext.asynciterable",
+      "dom"
+    ],
+    "esModuleInterop": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "strict": false,
+    "noEmit": false,
+    "experimentalDecorators": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "./src/app/frontend/*"
+      ],
+      "@/*": [
+        "./src/app/frontend/*"
+      ]
+    },
+    "types": [
+      "@types/node",
+      "@nuxt/types"
+    ]
+  },
+  "include": [
+   "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".nuxt",
+    "dashboard",
+    "dist",
+    "aio"
+  ]
+}
+
