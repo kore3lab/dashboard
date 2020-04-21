@@ -1,0 +1,34 @@
+{
+  "name": "kcore-platform",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "http://git.acornsoft.io/kore3/servicemesh.git"
+  },
+  "license": "UNLICENSED",
+  "scripts": {
+    "start:backend": "cd dashboard KUBECONFIG=${KUBECONFIG:-$npm_package_config_kubeconfig}; gulp serve --kubeconfig $KUBECONFIG --sidecarServerHost $npm_package_config_sidecar_host",
+    "start:backend:https": "cd dashboard; KUBECONFIG=${KUBECONFIG:-$npm_package_config_kubeconfig}; gulp serve --kubeconfig $KUBECONFIG --autoGenerateCerts true --sidecarServerHost $npm_package_config_sidecar_host",
+    "build:backend": "cd dashboard; npm run clean && gulp backend:prod",
+    "clean": "rm -rf dashboard/.go_workspace dashboard/.tmp coverage dashboard/dist dashboard/npm-debug.log"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-preset-env": "1.7.0",
+    "babel-register": "6.26.0",
+    "typescript": "3.8.3",
+    "ts-loader": "6.2.1",
+    "ts-node": "8.6.2",
+    "through2": "3.0.1",
+    "lodash": "4.17.15",
+    "q": "1.5.1",
+    "semver": "7.1.3",
+    "minimist": "1.2.5",
+    "gulp": "4.0.2"
+  },
+  "engines": {
+    "node": ">=10.13.0",
+    "npm": ">=6.0.0"
+  }
+}
