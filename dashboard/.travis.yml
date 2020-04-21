@@ -1,0 +1,77 @@
+# Travis continuous integration system configuration file.
+# Read more follows:
+# * https://docs.travis-ci.com/user/customizing-the-build/
+# * https://docs.travis-ci.com/user/reference/bionic/
+# * https://docs.travis-ci.com/user/installing-dependencies/
+# * https://docs.travis-ci.com/user/firefox/
+# * https://config.travis-ci.com/ref/job/addons/apt
+
+sudo: required
+dist: bionic
+language: node_js
+node_js: 12.16.0
+
+addons:
+  firefox: "latest"
+
+apt:
+  packages:
+  - google-chrome
+  sources:
+  - google-chrome-stable
+  update: true
+
+git:
+  depth: 500
+  quiet: true
+
+cache:
+  directories:
+    - .cached_tools
+    - ~/.cache
+    - node_modules
+
+before_install:
+  - export NG_CLI_ANALYTICS=ci
+  - export DOCKER_CLI_EXPERIMENTAL=enabled
+  - export GO111MODULE=on
+  - export GOPROXY=https://proxy.golang.org
+  - export PATH=$PATH:$GOPATH/bin
+  - export NODE_OPTIONS=--max-old-space-size=8192
+  - eval "$(gimme 1.13.9)"
+
+# `npm ci` will run between `before_install` and `before_script`.
+
+before_script:
+  - echo "Recheck versions before job."
+  - go version
+  - docker --version
+  - google-chrome-stable --version
+  - firefox --version
+
+jobs:
+  include:
+    - stage: test
+      before_script:
+        - aio/scripts/install-codegen.sh
+      script: npm run check
+    - script: npm run test:coverage
+      after_success:
+        - rm -rf $TRAVIS_BUILD_DIR/.tmp
+        - bash <(curl -s https://codecov.io/bash)
+    - script: npm run cluster:start && npm run e2e
+    - stage: deploy
+      script:
+        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        - npm run docker:push:head
+    - stage: release
+      script:
+        - docker login -u $DOCKER_RELEASE_USER -p $DOCKER_RELEASE_PASS
+        - npm run docker:push
+
+stages:
+  - test
+  - name: deploy
+    if: branch = master AND type != pull_request
+  - name: release
+    if: tag IS present AND type != pull_request
