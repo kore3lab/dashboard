@@ -1,10 +1,6 @@
-# Kore3 ServiceMesh Platform
-[![GitHub release](https://img.shields.io/github/v/release/aconsoftlab/servicemesh.svg)](https://github.com/acornsoftlab/kore3/releases/latest)
+# Acornsoft Kubernetes Dashboard
 
-## Getting started
-> 개발환경 구성 방법을 설명
-
-### Preparation
+## Preparation
 
 아래 소프트웨어가 설치 및 $PATH 변수에 추가 필요
 
@@ -16,72 +12,65 @@
 * Node.js 12+ and npm 6+ ([installation with nvm](https://github.com/creationix/nvm#usage))
 * Gulp.js 4+ ([installation manual](https://github.com/gulpjs/gulp/blob/master/docs/getting-started/1-quick-start.md))
 
+## Getting started
 
-### Clone
-
-```
-$ git clone https://github.com/acornsoftlab/kore3.git
-$ cd kore3
-```
-
-### Install 
-
-* npm denpendy
-  * 만일 루트 권한으로 실행한 다면 `--unsafe-perm flag` 옵션지정
-  * kubernetes dashboard 도 npm install 수행 
+* clone
 
 ```
-$ npm ci
+$ git clone https://github.com/acornsoftlab/dashboard.git
 $ cd dashboard
-$ npm ci
 ```
 
-
-* `subtree` 구성된 kubernetes/dashboard 에서 필요한 파일만 선별하고 트리를 업데이트 한다.
+* `subtree` 구성된 kubernetes/dashboard 에서 사용하지 않는 파일을 제외하도록 지정하고 소스 트리를 업데이트
 
 ```
 # sparse checkout 옵션 지정
 $ git config core.sparsecheckout true
 
 # 대상 파일 지정
-$ vi .git/info/sparse-checkout
-
+$ cat <<EOF> .git/info/sparse-checkout
 /*
 !/dashboard
+/dashboard/Dockerfile
+/dashboard/.npmrc
+/dashboard/.gitignore
 /dashboard/aio/gulp/*.*
-/dashboard/dist
 /dashboard/src/app/backend
 /dashboard/.babelrc
 /dashboard/.gitignore
 /dashboard/package*.*
 /dashboard/go.*
 /dashboard/gulpfile.babel.js
-
+EOF
 
 # 트리 업데이트
 $ git read-tree HEAD -m -u
 ```
 
-### Run
+
+* npm install
 
 ```
-$ export KUBECONFIG=~/.kube/config  # kubeconfig 파일 지정
+# frontend
+$ npm i
 
-$ npm run dev:graph            # 그래프 개발 (backend, graph)
-$ npm run dev:ui               # UI 개발 (backend, frontend)
-$ npm run start                # 개발 실행 (backend, dashboard, graph)
-$ npm run start:backend        # backend 개발 실행
-$ npm run start:dashboard      # kubernetes dashboard backend 개발 실행
-$ npm run start:graph          # graph 개발 실행
+# dashboard
+$ cd dashboard
+$ npm i
+
+# graph
+$ cd src/app/graph
+$ npm i
 ```
 
-* Dashboard 개발 시  `dashboard-metrics-scraper` 실행 필요
+* run
 
 ```
-$ kubectl port-forward  svc/dashboard-metrics-scraper -n kubernetes-dashboard 8000
+$ npm run start
 ```
 
-### Validation
+
+* validation
 
 ```
 # frontend
@@ -90,32 +79,89 @@ $ curl http://localhost:3000/
 # backend
 $ curl http://localhost:3001/healthy
 
-
-# graph
-$ curl http://localhost:3002/graph/mesh.html
-$ curl http://localhost:3002/graph/rbac.html
-$ curl http://localhost:3002/graph/topology.html
-
 # dashboard
 $ curl http://localhost:9090/api/v1/pod
-$ curl http://localhost:9090/api/v1/pod?context=play.getapps.run
-$ curl http://localhost:9090/api/v1/pod?context=apps-05
+
+# graph
+http://localhost:3002/topology.html
 ```
 
-### Ports
+* Dashboard 개발 시  `dashboard-metrics-scraper` 실행 필요
+
+```
+$ kubectl port-forward  svc/dashboard-metrics-scraper -n kubernetes-dashboard 8000
+```
+
+## NPM 
+
+* 개발
+```
+$ npm run start               # 실행 (backend, dashboard, frontend)
+$ npm run start:frontend      # frontend 실행
+$ npm run start:backend       # backend 실행
+$ npm run start:dashboard     # kubernetes dashboard backend 실행
+$ npm run start:graph         # graph 실행
+$ npm run start:graph:backend # 그래프 개발 실행 (backend + graph)
+```
+
+* 빌드
+```
+$ npm run build:frontend      # frontend 빌드 (using on docker build)
+$ npm run build:graph         # 그래프 빌드 frontend 에 변경된 최신 그래프 적용시 사용
+$ npm run run                 # frontend container 에서 nuxt 실행 (docker image entrypoint) 
+```
+
+* Containerization
+
+```
+# docker build
+$ npm run docker:build:frontend
+$ npm run docker:build:backend
+$ npm run docker:build:dashboard
+
+# docker push
+$ npm run docker:push:frontend    
+$ npm run docker:push:backend
+$ npm run docker:push:dashboard
+
+# docker build & push
+$ npm run docker:build:push:frontend    
+$ npm run docker:build:push:backend
+$ npm run docker:build:push:dashboard
+
+# all (frontend, backend, dashboard)
+$ npm run docker:build        # build
+$ npm run docker:build:push   # build & push
+```
+
+
+### Using ports
 * 3000 : front-end
 * 3001 : backend (restful-api)
 * 3002 : graph 개발
 * 9090 : kubernetes dashboard backend
 
-## Developments
-> 개발 문서
+
+## Deployment
 
 
-## Architecture
-> 아키텍쳐 및 구성
+### Deploy on Docker
 
-### Frontend (TODO)
+```
+$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend acornsoftlab/kore3.backend:v0.1.1
+$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --name dashboard acornsoftlab/kore3.dashboard:0.1.0
+$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend acornsoftlab/kore3.frontend:v0.1.1
+$ docker ps
+```
+
+### Deploy on Kubernetes
+
+[Install on Kubernetes](./scripts/install/README.md)
+
+
+
+## Front-End
+> Web UI
 
 * Frameworks : [nuxtJS](https://ko.nuxtjs.org/guide/plugins/)
 * Template & Markup
@@ -123,21 +169,36 @@ $ curl http://localhost:9090/api/v1/pod?context=apps-05
   * [bootstrap-vue v2.0.0](https://bootstrap-vue.org/docs/components/dropdown)
   * [Bootstrap v4.3.1](https://getbootstrap.com/)
 
+
+### Run
+
 ```
-$ export BACKEND_PORT="3001"
-$ export BDASHBOARD_PORT="9090"
-$ export KIALI_ROOT_URL="http://localhost:20001"
 $ npm run start:frontend
 ```
 
-#### 환경변수 (env)
+* 환경변수 (env)
 
-|변수명     |설명             |기본값                 |
-|---          |---              |---                    |
-|BACKEND_URL  |backend Root URL |http://localhost:3001  |
+|변수명           |설명                             |기본값 |
+|---              |---                              |---    |
+|BACKEND_PORT     |backend 서비스 포트              |3001   |
+|BDASHBOARD_PORT  |kubernetes-dashboard 서비스 포트 |9090   |
+|KIALI_PORT       |kiali 서비스 포트                |20001  |
 
+```
+$ export BACKEND_PORT="3001"
+$ export BDASHBOARD_PORT="9090"
+$ export KIALI_PORT="20001"
+$ npm run start:frontend
+```
 
-### Backend
+### 참조
+
+[nuxtjs](https://ko.nuxtjs.org/)
+[nuxtjs github](https://github.com/nuxt/nuxt.js/)
+[패스트캠퍼스 Vue.js 수업 자료](https://joshua1988.github.io/vue-camp/textbook.html)
+
+## Back-End
+> Custom backend rest-api
 
 * backend restful api 
 * language :  go-lang 1.15
@@ -147,26 +208,78 @@ $ npm run start:frontend
   * https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/meta.go
   * 리스트 조회: https://github.com/kubernetes/client-go/blob/master/listers/core/v1 
 
-#### 환경변수 (env)
+### Run
+
+```
+$ npm run start:backend
+```
+
+* 환경변수 (env)
 
 |변수명     |설명                 |기본값               |
 |---        |---                  |---                  |
 |KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
 
-#### 제공 API
 
-|apis                             |이름                             |비고  |예                                                  |   |
-|---                              |---                              |---   |---                                                 |---|
-|/apis/contexts                   |k8s cluster context 리스트 조회  |      |http://localhost:3001/apis/context                  |   |
-|/apis/cluster/:cluster/topology  |토플로지 그래프 조회             |      |http://localhost:3001/apis/cluster/apps-05/topology |   |
+### 제공 API
 
+|apis                               |이름                               |비고  |예                                                  |   |
+|---                                |---                                |---   |---                                                 |---|
+|/api/contexts                      |k8s cluster context 리스트 조회    |      |http://localhost:3001/apis/context                  |   |
+|/api/cluster/:cluster/topology     |토플로지 그래프 조회               |      |http://localhost:3001/apis/cluster/apps-05/topology |   |
+|/api/_raw/:context:/:apiGroups/*   |해당 context 의 kubernetes Raw API |      |아래 참조                                           |   |
+
+
+### Raw API
+> [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
+
+* 패턴
+  * `:context` : kubeconfig Context 이름
+  * `:apiGroups` : api Groups `kubectl api-resources -o wide` 으로 조회 가능
+
+```
+/api/_raw/:context:/:apiGroups/*
+```
+
+* apiGroups
+```
+$ kubectl api-resources -o wide
+
+# CRD 경우
+$ kubectl get crd
+$ kubectl get crd virtualservices.networking.istio.io -o jsonpath="{.spec.group}"
+```
+
+
+* Raw API 호출 예제
+
+```
+# Root URL 정의
+$ export RootUrl="http://localhost:3001/api/_raw/$(kubectl config current-context)"
+
+
+# core API (Core 그룹은 공백값)
+$ curl ${RootUrl}//v1/pods
+$ curl ${RootUrl}//v1/namespaces 
+$ curl ${RootUrl}//v1/nodes
+$ curl ${RootUrl}/apps/v1/deployments 
+
+# core API (in namespace)
+$ curl ${RootUrl}//v1/namespaces/kube-system/pods
+$ curl ${RootUrl}/apps/v1/namespaces/kube-system/deployments
+
+# CRD 
+$ curl ${RootUrl}/networking.istio.io/v1alpha3/virtualservices
+$ curl ${RootUrl}/networking.istio.io/v1alpha3/namespaces/bookinfo/virtualservices
+```
 
 ### Dashboard
+> Kubernetes dashbaord
 
 * Kubernetes dashboard 프로젝트(https://github.com/kubernetes/dashboard) 활용
 * https://github.com/kubernetes/dashboard repository 를  `subtree` 로 구성 
 
-* `subtree` 구성 방법
+### `subtree` 구성 방법
 
 ```
 $ mkdir aconsoftlab.kore3
@@ -179,92 +292,18 @@ $ git remote add origin git@github.com:acornsoftlab/kore3.git
 $ git subtree add --prefix=dashboard https://github.com/kubernetes/dashboard.git master
 ```
 
+## Graph
 
-## Containerization
+### Build
 
-* Clean-up docker cache
-
-```
-$ docker system prune
-```
-
-* Definition 
+* frontend와 연동되어 build하면 frontend 에 복사된다.
 
 ```
-$ BACKEND="kore3.backend"
-$ DASHBOARD="kore3.dashboard"
-$ FRONTEND="kore3.frontend"
+$ npm run build:graph
 ```
 
-
-
-* Build
 ```
-$ docker build --tag acornsoftlab/${BACKEND}:latest ./src/app/backend   # backend
-$ docker build --tag acornsoftlab/${DASHBOARD}:latest ./dashboard       # kubernetes-dashboard
-
-# frontend
-$ npm run build:graph                                     # graph 변경사항 반영할 경우 실행
-$ docker build --tag acornsoftlab/${FRONTEND}:latest .
-
-$ docker images | grep acornsoftlab
+http://localhost:3002/topology.html   # topology graph
+http://localhost:3002/mesh.html       # mesh graph (deprecated)
+http://localhost:3002/rbac.html       # rbac graph
 ```
-
-* Run on docker
-```
-$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name ${BACKEND} acornsoftlab/${BACKEND}:latest
-$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --name ${DASHBOARD} acornsoftlab/${DASHBOARD}:latest
-$ docker run --rm -d -p 3000:3000 --name ${FRONTEND} acornsoftlab/${FRONTEND}:latest
-
-$ docker ps
-```
-
-* Verify
-```
-# backend
-$ curl http://localhost:3001/healthy
-"healthy"
-
-# dashboard
-$ curl http://localhost:9090/api/v1/pod
-
-# frontend 
-# oepn in browser : http://localhost:3000/
-```
-
-
-* Debug
-```
-$ docker logs ${BACKEND}
-$ docker logs ${DASHBOARD}
-$ docker logs ${FRONTEND}
-
-$ docker exec -it  ${FRONTEND} sh
-```
-
-* Push
-```
-# login
-$ docker login -u acornsoftlab -p <password>
-
-$ docker push acornsoftlab/${BACKEND}:latest
-$ docker push acornsoftlab/${DASHBOARD}:latest
-$ docker push acornsoftlab/${FRONTEND}:latest
-
-$ TAG="v0.1.0"
-$ docker tag acornsoftlab/${BACKEND}:latest acornsoftlab/${BACKEND}:${TAG}
-$ docker tag acornsoftlab/${DASHBOARD}:latest acornsoftlab/${DASHBOARD}:${TAG}
-$ docker tag acornsoftlab/${FRONTEND}:latest acornsoftlab/${FRONTEND}:${TAG}
-
-$ docker push acornsoftlab/${BACKEND}:${TAG}
-$ docker push acornsoftlab/${DASHBOARD}:${TAG}
-$ docker push acornsoftlab/${FRONTEND}:${TAG}
-
-$ docker images | grep acornsoftlab
-```
-
-## 참고
-
-[nuxtjs](https://ko.nuxtjs.org/)
-[nuxtjs github](https://github.com/nuxt/nuxt.js/)
-[패스트캠퍼스 Vue.js 수업 자료](https://joshua1988.github.io/vue-camp/textbook.html)

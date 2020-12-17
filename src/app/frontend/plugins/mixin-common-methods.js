@@ -1,5 +1,4 @@
 import Vue from "vue";
-import axios from "axios";
 
 Vue.mixin({
   methods: {
@@ -12,13 +11,13 @@ Vue.mixin({
       });
     },
     backendUrl() {
-      return `${location.protocol}//${location.hostname}:${process.env.backendPort}`;
+      return `${location.protocol}//${location.hostname}:${this.$config.backendPort}`;
     },
     dashboardUrl() {
-      return `${location.protocol}//${location.hostname}:${process.env.dashboardPort}`;
+      return `${location.protocol}//${location.hostname}:${this.$config.dashboardPort}`;
     },
     kialiRootUrl() {
-      return process.env.kialiRootUrl;
+      return `${location.protocol}//${location.hostname}:${this.$config.kialiPort}`;
     },
 
     getTimestampString(timestamp) {

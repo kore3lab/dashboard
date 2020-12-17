@@ -9,20 +9,21 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = [
   {
     entry: {
-      mesh: "./src/app/graph/core/mesh/graph.ts",
-      topology: "./src/app/graph/core/topology/graph.ts",
-      rbac: "./src/app/graph/core/rbac/graph.ts",
+      mesh: path.join(__dirname, "/core/mesh/graph.ts"),
+      topology: path.join(__dirname, "/core/topology/graph.ts"),
+      rbac: path.join(__dirname, "/core/rbac/graph.ts"),
     },
     resolve: {
       extensions: [".ts", ".js", ".scss"],
     },
     output: {
-      path: path.resolve(__dirname, "../frontend/static/acorn-graph"),
+      // path: path.resolve(__dirname, "../frontend/static/acorn-graph"),
+      // publicPath: "/graph",
+      path: path.resolve(__dirname, "dist"),
       library: ["acorn", "graph"],
       libraryTarget: "umd",
       filename: "acorn.graph.[name].js",
       globalObject: "this",
-      publicPath: "/graph",
     },
     module: {
       rules: [
@@ -34,17 +35,17 @@ module.exports = [
       // new CleanWebpackPlugin(),
       new HtmlWebpackPlugin({
         chunks: ["mesh"],
-        template: "src/app/graph/mesh.html",
+        template: "./examples/mesh.html",
         filename: "mesh.html",
       }),
       new HtmlWebpackPlugin({
         chunks: ["topology"],
-        template: "src/app/graph/topology.html",
+        template: "./examples/topology.html",
         filename: "topology.html",
       }),
       new HtmlWebpackPlugin({
         chunks: ["rbac"],
-        template: "src/app/graph/rbac.html",
+        template: "./examples/rbac.html",
         filename: "rbac.html",
       }),
     ],
@@ -55,7 +56,7 @@ module.exports = [
       host: "0.0.0.0",
       port: 3002,
       proxy: {
-        "/api/*": "http://localhost:3001",
+        "/api/clusters/apps-05/*": "http://localhost:3002/examples/data",
       },
     },
     node: {
