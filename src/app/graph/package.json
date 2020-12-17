@@ -1,0 +1,36 @@
+{
+    "name": "acornsoft-graph",
+    "version": "0.1.0",
+    "description": "acornsoft graph js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/acornsoftlab/kore3.git"
+    },
+    "license": "UNLICENSED",
+    "scripts": {
+        "start": "webpack-dev-server --config webpack.js --colors --mode=development",
+        "build": "webpack --colors --config webpack.js --mode=production"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/d3": "^5.7.2",
+        "@types/d3-array": "^2.0.0",
+        "@types/d3-collection": "^1.0.8",
+        "@types/d3-hierarchy": "^1.1.6",
+        "d3": "^5.9.2",
+        "d3-array": "^2.3.1",
+        "typescript": "^3.5.3",
+        "ts-loader": "6.2.1",
+        "style-loader": "^1.2.1",
+        "css-loader": "^3.4.2",
+        "webpack": "^4.35.3",
+        "webpack-dev-server": "^3.7.2",
+        "webpack-cli": "^3.3.5",
+        "webpack-merge": "^5.7.0",
+        "html-webpack-plugin": "^4.4.1"
+    },
+    "engines": {
+        "node": ">=10.13.0",
+        "npm": ">=6.0.0"
+    }
+}

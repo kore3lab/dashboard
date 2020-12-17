@@ -1,19 +1,5 @@
-const config = {
-  backendPort:
-    process.env.NODE_ENV !== "production"
-      ? process.env.BACKEND_PORT || "3001"
-      : "30081",
-  dashboardPort:
-    process.env.NODE_ENV !== "production"
-      ? process.env.DASHBOARD_PORT || "9090"
-      : "30090",
-  kialiRootUrl:
-    process.env.NODE_ENV !== "production"
-      ? process.env.KIALI_ROOT_URL || "http://localhost:20001"
-      : "http://101.55.69.105:32080",
-};
 export default {
-  mode: "spa",
+  ssr: false,
   srcDir: "src/app/frontend/",
   head: {
     title: process.env.npm_package_name || "",
@@ -38,11 +24,6 @@ export default {
       class: "hold-transition sidebar-mini layout-fixed",
     },
   },
-  loading: {
-    color: "#0826c0",
-    height: "6px",
-    failedColor: "#d43c6d",
-  },
   css: ["~/assets/css/app.css"],
   plugins: [
     { src: "~/plugins/json-tree", mode: "client" },
@@ -52,10 +33,14 @@ export default {
   modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios"],
   build: {
     extend(config, ctx) {},
+    babel: {
+      compact: true, // for build ERROR "bootstrap-vue icons.js as it exceeds the max of 500KB."
+    },
   },
-  env: {
-    backendPort: config.backendPort,
-    dashboardPort: config.dashboardPort,
-    kialiRootUrl: config.kialiRootUrl,
+  // using "this.$config.backendPort",...
+  publicRuntimeConfig: {
+    backendPort: process.env.BACKEND_PORT || "3001",
+    dashboardPort: process.env.DASHBOARD_PORT || "9090",
+    kialiPort: process.env.KIALI_PORT || "20001",
   },
 };
