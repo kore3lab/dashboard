@@ -5,7 +5,7 @@ Vue.mixin({
     toast(msg, variant) {
       if (!variant) variant = "info";
       this.$bvToast.toast(msg, {
-        title: "Kore3",
+        title: "Acornsoft Dashboard",
         variant: variant,
         autoHideDelay: 4000,
       });

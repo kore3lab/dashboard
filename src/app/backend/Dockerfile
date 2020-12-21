@@ -10,7 +10,7 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags acornsoftlab.kore3.backend -o acornsoftlab.kore3.backend -v backend.go
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags acornsoft-dashboard.backend -o acornsoft-dashboard.backend -v backend.go
 
 #-------------------------------------------
 # STEP 2 : build a image
@@ -18,10 +18,10 @@ RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags 
 # FROM honester/httpbin:latest
 FROM scratch
 
-COPY --from=builder /usr/src/app/acornsoftlab.kore3.backend /app/
+COPY --from=builder /usr/src/app/acornsoft-dashboard.backend /app/
 
 ENV KUBECONFIG  "/app/.kube/config"
 
-ENTRYPOINT [ "/app/acornsoftlab.kore3.backend" ]
+ENTRYPOINT [ "/app/acornsoft-dashboard.backend" ]
 
 EXPOSE 3001

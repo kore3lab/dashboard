@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/acornsoftlab/kore3/pkg/config"
-	"github.com/acornsoftlab/kore3/pkg/lang"
+	"github.com/acornsoftlab/dashboard/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/dustin/go-humanize"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

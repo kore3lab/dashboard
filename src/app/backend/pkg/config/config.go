@@ -3,10 +3,9 @@ package config
 import (
 	"os"
 
-	"github.com/acornsoftlab/kore3/pkg/lang"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	// clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 type conf struct {

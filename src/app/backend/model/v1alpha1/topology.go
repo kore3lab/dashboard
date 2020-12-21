@@ -5,8 +5,7 @@ import (
 	"fmt"
 	_ "time"
 
-	// "github.com/acornsoftlab/kore3/pkg/k8s"
-	"github.com/acornsoftlab/kore3/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/config"
 	"k8s.io/client-go/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

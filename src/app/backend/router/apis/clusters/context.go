@@ -3,8 +3,8 @@ package apis
 import (
 	"net/http"
 
-	"github.com/acornsoftlab/kore3/pkg/app"
-	"github.com/acornsoftlab/kore3/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/gin-gonic/gin"
 )
 

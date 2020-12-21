@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/acornsoftlab/kore3/docs"
-	"github.com/acornsoftlab/kore3/pkg/app"
-	"github.com/acornsoftlab/kore3/router/apis/_raw"
-	api "github.com/acornsoftlab/kore3/router/apis/clusters"
+	"github.com/acornsoftlab/dashboard/docs"
+	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/router/apis/_raw"
+	api "github.com/acornsoftlab/dashboard/router/apis/clusters"
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -18,7 +18,7 @@ var Router *gin.Engine
 func CreateUrlMappings() {
 
 	// swagger docs
-	docs.SwaggerInfo.Title = "Kore3 API"
+	docs.SwaggerInfo.Title = "acornsoft-dashboard API"
 	docs.SwaggerInfo.Description = "mulit-cluster kubernetes dashboard api"
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "github.com/acornsoftlab"

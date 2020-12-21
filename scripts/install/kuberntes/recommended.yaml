@@ -1,62 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: acornsoftlab-kore3
+  name: acornsoft-dashboard
 
----
-
-apiVersion: v1
-data:
-  config: |
-    apiVersion: v1
-    clusters:
-    - cluster:
-        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxakNDQWI2Z0F3SUJBZ0lKQVBvaTgvYTZqMUIvTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1Ua3hNVEU0TURJek5qQTBXaGNOTWpreE1URTFNREl6TmpBMApXakFZTVJZd0ZBWURWUVFEREExcmRXSmxjbTVsZEdWekxXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DCkFROEFNSUlCQ2dLQ0FRRUEydjZMbE9UVXV4Y0VQV1BETTRiNVROdHNBU2I0VGFObTFpVmdid093MXIxK3lBUGsKL09lMFFLQXRGejRDb3ZkcEZwMTh3YkxlcDY0cFdDZ3VUcytLTGlqSWtpenRQcG1KeWplUUdaSlJwY2J0dFNuMgp5MXZCNkh1UDBnKzZ0bjVzWSs5STFMbXN0ajVJZ255VWxHUnkzU1I4d0luM3NUdW5qWWhOL0QvVzBDQTRhVG9vCjNTV1R4d011RUVjc1hCeVYwWG8rTzErZVNpSitUWWQ5VTFPd3dUU1gvSnVod1dOZHhRejZISDd0N1pOOU4xWU0KT05PeFdaY29UanB5R0pycko5WmZzWHhDdkErbDVsQnQyZHNSMC8vRVlVR2FLRXVnZ0R2am1tOHl6dkw1MFRYSgowVW1lMTRMMzBrbTdLQjJJMVRJNlY1UmJWbTJIRkROcnpYNTVld0lEQVFBQm95TXdJVEFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUE0R0ExVWREd0VCL3dRRUF3SUNwREFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBMThZYzk4b0gKMTNFZFVDN2tCT0VNMm84NU96M1BVZkVtZG40OTRNQmdSR1FodytYWXAzOVAyWVVhT09SbDFQQ2FaSy82TjZsRApLcVFXNUxCYjhxaExQejZ5Rm5YQ2t6ODBtM2JUdWc1aEdHVTFHV3B0N1E1N0EzS2VWbEttOVRVR3RSdTZ3SGE1CkFNYlh2SDc4cHFBQzhjTFV3OTlQMjNzTWpxMDlVQWpSV0tVTmxmbmpTQ2NUTnVNRExsNWFIV2ttMW1VRjQwWDEKRDREWEk0clhTY3p2TlYzdEN1YzBPanpvRjZ4aHBiT01ucGU1QjFKZlpyeCtJZi9sRzJGM3BPN0ZnNkxNOXhJVAo5a1gyQ0x0SnhVYXhiZVplZWRUeWVHbjBFV1hDMGpubGNHTkpHdXcrbk9ndVNKNmJpYWt6OFlTaTdKN21HSFlXCjJlWGNzOVJSSUg3SWVRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-        server: https://101.55.69.105:6443
-      name: apps-05
-    - cluster:
-        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxakNDQWI2Z0F3SUJBZ0lKQU84akRyWTlqV21JTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1qQXdNakU0TURZeE5UVTFXaGNOTXpBd01qRTFNRFl4TlRVMQpXakFZTVJZd0ZBWURWUVFEREExcmRXSmxjbTVsZEdWekxXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DCkFROEFNSUlCQ2dLQ0FRRUFvWUp2VXhkVExqZUs1TGlpbFZ6ajVUVUNYZFpWK2FFUlpJQkVyeTJ4U01ZVDUxb1IKMHhRaDdWWlUxOGYxaXBsVkVUa1FyVER4akpJQ3NYeXEvdVhENlVheGxhMzErZHZ6cU83QXgxSGI2NTVQaUFQWQpvKzZKendLMWovdm5yREJ4TVpyeWFUMmxSZWtxeXc0U2Q5dk9GNEY3aTFhVi9xdlE3UDZidjlLOGZYemNqK2M0CktVeWE4d0pLTjJqRjFMbUYyK1d0SlVOSGx2bmRYWG9US09PWSs1RkJWbUxxZkRXaWhzb2hWOGlTb3Y4N2I5SDAKYUZsU1psYkxLU1Y3aGhaei9xeTJhWnlFSjNCVUVoSGJyQmprSGJzeVpkL0QxeUNzZHpVMTJMT1V6QmpTOUFIVQpGaWhlRHd6V0lYd3d0Tm5CeW5RWmxqd3FxdWdTYVU2OXdjVlJyd0lEQVFBQm95TXdJVEFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUE0R0ExVWREd0VCL3dRRUF3SUNwREFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSk5ZSkJ3cXkKbUhiUkxiRU5nOEdjV2ppdmhlRkV0czhsMHNReEVzRkZrR3RiN3cxZGlva1c2WGMwbjQxWm9ZQzhUMFBkR3hyMApLZzVHVlZRaGtKL3RsU29FWjlyUUxYc2FCNEVoYmVUandReFcyS0I0Y3pwcUFXYWdnOW9BdnNtRmcxdWl3dlhFCk5INkhGV3AxK013M1NGNTJLZHRmWFQxRmFPQWpmVTRLc1JWN2VkZWMzQjg4UVFEQnBDNG13cW9oWGZvM1hRV0IKbVd2ek81MHloeWMwS0Q2M1ZjcEsxdmlQSE9yVS9QY2t1MlVCSVpxRXloR1V3MDNyeEYwKytmRElQZ3RWQnJFdQpCU2c4RGYrU0p2L091cm03ZGdjenpWN3h6RVUvczFNMklwMWcwSkxTYkoxZEhUM1RUZzBCV3ExdldjejgyN1ArCnhGM3g5MFZ1bXlXaDNBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
-        server: https://101.55.69.106:6443
-      name: apps-06
-    - cluster:
-        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMxakNDQWI2Z0F3SUJBZ0lKQUw2dDZpM0NzVnhrTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1Ua3hNVEU1TURJek5qUTVXaGNOTWpreE1URTJNREl6TmpRNQpXakFZTVJZd0ZBWURWUVFEREExcmRXSmxjbTVsZEdWekxXTmhNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DCkFROEFNSUlCQ2dLQ0FRRUF1cEtaZVgwSUt4Nnh4Q21Ma2EvanJiY2dqN1FwdlkzdmlwdkY3LytmVFgyRWFzOE4KQkttVjUwa0xwVHFqcWlaeldmSnNlc211aTNjRzZJMjhYd256UVhaMWNsMlFyMVRQQzl0OWFkT1ZQdWdzSFhSaApTQTR6VzN1a0hpS1JBSE5iemI4K2g0eHdXdW9EN09uNzhTeVZWbUE2dUIvU0NaMkE2c01xem5XUkVHVE81WHM3Cng2MmVCcnJCMXdoSDVOUlI4V0JwUmZwRVE3MnhzVnZzWWQ0NGNZREwyL1pNOFFVUlhlKzdYcXEwdnZZMXFiNUUKSS96TEx1MDBwcGozQTJncFE0bGMvZnJFYXI3TFROS1AxVUpsTUVkNVhTTkhBOTJvUml4ek1MYi9XNG9seFBCcwpZYlZOb0kzMTNzTkFibTh4eVNtdXRsOHIrVnM4NjhObWV6R0lUUUlEQVFBQm95TXdJVEFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUE0R0ExVWREd0VCL3dRRUF3SUNwREFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBZlQvSEx4bTkKbVVraS9nZFpnUldjaFQyOFVsUVAzMXVwaDZKYnVLMEhxV1JiTURwN1JCZDNnNllvYWRHNUlGOGNRQ25rcjBQTgpqTmo4WEF0WjRCdnluU2lZN1BYL3ZIYmpxNitNUTZVT0dSR09obGFHTDdzSDQ2UlJlU1c4YTZxMkRxS2lwWi9WCmJnRDB4MytuMFZoNEdzUXg4L2lmSVpQaytEVFlPbU1jZ2FPLy8xWk9UUE0yOGVreSt5dWh6Z3FKSGRTbkYzTDkKZHFKWjN5dVVGc3o4ekZMUFNMN1RBRHJYdm1wUG9CMkxuZ1VmWG5ucGtMVWpPUTZWYlRRaG5UQVE0bzM5UjlPNAoxNFdiN1ZOOTlNWTRwMWVxZUZ2NGEvUi8yMHdVdzlxNllIcy9DWERDOTM1TlU1UkNUL3QvNXByOVdOVjZmVmU1CjBWSVBkNVlQeWFobUZnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-        server: https://101.55.69.109:6443
-      name: apps-09
-    contexts:
-    - context:
-        cluster: apps-05
-        namespace: acornsoftlab-kore3
-        user: apps-05-user
-      name: apps-05
-    - context:
-        cluster: apps-06
-        user: apps-06-user
-      name: apps-06
-    - context:
-        cluster: apps-09
-        user: apps-09-user
-      name: apps-09
-    current-context: apps-05
-    kind: Config
-    preferences: {}
-    users:
-    - name: apps-05-user
-      user:
-        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5VENDQWQyZ0F3SUJBZ0lJS0hzQzRjQzlKbkl3RFFZSktvWklodmNOQVFFTEJRQXdHREVXTUJRR0ExVUUKQXd3TmEzVmlaWEp1WlhSbGN5MWpZVEFlRncweE9URXhNVGd3TWpNMk1EUmFGdzB5TVRFd01qWXdOakUxTVRaYQpNRFF4RnpBVkJnTlZCQW9URG5ONWMzUmxiVHB0WVhOMFpYSnpNUmt3RndZRFZRUURFeEJyZFdKbGNtNWxkR1Z6CkxXRmtiV2x1TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUEydzllMU91WGM5VXkKZGdYUnhSNTFXR3dMMnNHdEJFdHU1czRqb3d1Y1RJZTFmWjBpZjJEZERadDVPK0NNazhJL1ZqeW9LSUtNR09LSQpiTmdSNUp1NmpNQ29PN1JsV3pxT29UaFE0emNtSmMrbTZBYkF0L0IwTVpxL3g0ZlFjR0ZSc09hZlFBdGxhWjlwCkIwTjI4Rm4zalBJZE9wWmx5ZFY5eUp2L2JiQTBtczN1YU5udHpkS2pZOWJ2Ti9oYVZ0NmEyYlViSWhzSzJmNlIKRUFnaURwZlhQd0VBd3NZbm16U2ZJdy9URTA1VzNicmZxdSsvdWxPbFBxdHM0YlBOR3pLb1hjaERLcUlmZnBBMApTQWZCeEJodUw5N1VLTkNIU1lidGtSeFpCM1VGeGs1aXdxRFJTakRaYzZBTm0xOVh6L05NN0hwdk02UnFMM0RyCitKZ25oaGc4NlFJREFRQUJveWN3SlRBT0JnTlZIUThCQWY4RUJBTUNCYUF3RXdZRFZSMGxCQXd3Q2dZSUt3WUIKQlFVSEF3SXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQ0w4R3hUZTExcGZHUnhsanpWQW9UTDdBL29JM2xmNwozbi9LRE1ZQkdjNmZ2Snhuay9QeGFnd2p4QUtkeVVjaHdIOEg2OXloVU45MHZIM2hZNStmRENTYWtpaUlWSTZ4ClFZT1RZVzJyYXJwa2dOZEFBNi9CRmlndVJOajJqYkVxenFvOGl1UlhrNGxieS9VbVkrT25IVTVtL3NKQXVkWEIKeUs5RnVVdWNyUUhtR1Z4cThXMnFXNDRUU05JY2lFdVpycXlQdW55QUNjNmRsc21MSWkrNWFUbC9SYjRqQTFQbApUaWQrOWFhSGJISDg3emRlanZqajhBc1pQVlN2azBDRy9TbnRRSnkwMHhlbU1rcTJ0eDdJdmpHVkdtdzRUeThOCnFPVGhnTzhCQ3ZDdys5RzRWVHBUei9jckgvaVhXWEZadVN6L3JoSjdLNmF4Z1V4MmtOc1lnZG89Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBMnc5ZTFPdVhjOVV5ZGdYUnhSNTFXR3dMMnNHdEJFdHU1czRqb3d1Y1RJZTFmWjBpCmYyRGREWnQ1TytDTWs4SS9WanlvS0lLTUdPS0liTmdSNUp1NmpNQ29PN1JsV3pxT29UaFE0emNtSmMrbTZBYkEKdC9CME1acS94NGZRY0dGUnNPYWZRQXRsYVo5cEIwTjI4Rm4zalBJZE9wWmx5ZFY5eUp2L2JiQTBtczN1YU5udAp6ZEtqWTlidk4vaGFWdDZhMmJVYkloc0syZjZSRUFnaURwZlhQd0VBd3NZbm16U2ZJdy9URTA1VzNicmZxdSsvCnVsT2xQcXRzNGJQTkd6S29YY2hES3FJZmZwQTBTQWZCeEJodUw5N1VLTkNIU1lidGtSeFpCM1VGeGs1aXdxRFIKU2pEWmM2QU5tMTlYei9OTTdIcHZNNlJxTDNEcitKZ25oaGc4NlFJREFRQUJBb0lCQVFDTjRLQ2M2cEZHOWxnZQpWSnFPUHJIbHVPVGNvLys0L2xvdnBtY3lYSHk0bkZTUnJNb0JFZTFadU02R1YyTDArQ1FwYUZQSkdQUS8wY2htCkpuTkFTeFJCd1MyMHJadlB3RmRNVjdzYnprWW95eHJnd0M3bGN4anVYN25DTTFadTBya2tCOW93a3JEMS9jYjYKYTFtSFJkMnRMY3A4Zlpnalp1QjJvNEtGdWsvM3lpSFVncHNXOXQ5MEVuV1VrbkxoSEQyckpsOElLRHpVTEViVgorRlkya3ZzRnNlU0tMYXlYVVRmSG5VVkgyczR6R2thYWVXQWhvSkUyTHpYaHdkeGV4aGFmNHBiUkMrSTJtaHRECng0Q2YvT3o5ZC81SjBHbGk3Zlo1Q2ZpMDdsd09DVEJ2NGNIcVU3cjZlbm5BVUVGNHhTUVc5dytGL2lDdG9HemcKVTAvSmg4ZmhBb0dCQU94emkrZE9OdTliRUI2MGZ2enpmYy8xVXJHNFFUKzdwL3FoVXpLSllIOUYySURxYjVpRwpKcUNKUU9STW9WcEpNSDVkSXB3QlBCeXA0YkV1NU8rSGdjT0o4SmhZYlBLZnREeTU3dHpPanE0bXlieGxObjhMCjFOdXU0Y3NrNmcwZWJ1QnZveGROMkUvNTc0TE5GVzcwR1dXaDJLdmhpL2xSRU9JZkZlUkh1Nk1kQW9HQkFPMHIKdlYwVnVZNGQwM1UrUzg3NFk5b0l1bWZnM05iYVRMb0F3RVh1Qi9jTVJZVWoyT3l1TFB6OTBzTmVhNFlVZFpNQwpLNWl2bURqWUpFOHExNmlDdW4vSDlDUnZzS05rZ2kvKzQxS29WRmdVVjcwdFBXWGNjOXNOMnc3UWQ0dUFOMjNQCnlaSHAraHJUYWJYalRTVEVONTkrM2Z6TnZLMmo4MHNFcDZTd3hxczlBb0dBSHgxVlc2cS9MK0FienU2UmgxZkQKUm9wUngzRW5wT3RjdjI1Yk5Gcy9oMy81Ylgxc0VmWVZQeXJRanpwR1FVdEFSbUNiSFV4TVRMbE9LYkt5RFpNWApVRlBtaFNXZHNJK3plQW8vbEc3Wjk3REMremVXWkVGNlVTNUNLQ2xEWTFhTjRKclFLMURqRmlNZGtXakxXVDVsCjJTbmpDVHMwNENuNnZzYTRhc0hGdjBFQ2dZRUEzd1IwU21XMVdGZmZrYTRFcHhpVy9GMmN1eldOTkZPT05wR2kKTzUrNnlhbzJiUjNxUzVUMUpPaWhHYWxkdm5UYW9tUTJEcHQvcm1SQXNGais5YXdJSjBRazVXWkpXVHVYMS8zOApVS3VNdEU1Y3VyMGhzUGo5MEl4VTRyZFEwbEs4ekh2SmRYWHBBdlN0d0tWKzB3WFhzQmtpTVNoZE5ZS25zbkVzCkd3ZEhxWmtDZ1lFQTJFaTRXdGh5MlBVUkRHbHViWHdHSXFhWmRpMlMyVGYreUJyQ2dWRFQ1T3hNaFZ2dDVoN28KQ2syYithT0JCaGIvdnBvVFQya0ROUEZCWUxMYTRpMkRJRGN2emkzRHVUcDkxUWVqN2tJYi9oMlQ2aVAyUkprcAp3YlM3aFFPUVk1SWRpNFRrWGliUk93c3ArM25QdHd4Q0hPblREZVEwZHV3UHNtZmFvS2VLRkdrPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
-    - name: apps-06-user
-      user:
-        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURBVENDQWVtZ0F3SUJBZ0lKQU5pbGpVRzlaaldPTUEwR0NTcUdTSWIzRFFFQkN3VUFNQmd4RmpBVUJnTlYKQkFNTURXdDFZbVZ5Ym1WMFpYTXRZMkV3SGhjTk1qQXdNakU0TURZeE56STFXaGNOTXpBd01qRTFNRFl4TnpJMQpXakEwTVJjd0ZRWURWUVFLREE1emVYTjBaVzA2YldGemRHVnljekVaTUJjR0ExVUVBd3dRYTNWaVpYSnVaWFJsCmN5MWhaRzFwYmpDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTHhQWEZrUFZXZDUKUENaN010bnJWNERJb1R2dUg2Wm0waG5YbTl3aytBekNoOHJjY3g2QXEwbklYMXU5NDBJZjZMZklORVFLNWVNQgpucUJWVktRS1oxYldJanN4QXhkbG9xZVozT1IwTk93b2FLYUc5K0tMWlZyY29yQ21IcTZHQ0ZhNXhGT1ZhcGNkCmtZcWtnQW9nZWFqdWtzNDArWXhkTDF0WWR0b3RUc2RyVVJnaTcrZlpKMklhUFk0MWx4UFhtZEYrNXlxMk8xSSsKQ3pVNmdLeVl2K0F6UWc0a29XNVZaaGpIMHhNVnFpa0JEeHNNSFpuZy9wYmh3bjgwdDluN0VOSzJxeEZVS29XUwpWb3J2RVlEYnlpNXZhempiUDQ4TngrNkZRYXNueW5CODhFWGtrVDFoWHFXZ200VVRFZG42bjlIUW5XOE1FdkdrClUxTG5JMVVnc1djQ0F3RUFBYU15TURBd0NRWURWUjBUQkFJd0FEQU9CZ05WSFE4QkFmOEVCQU1DQmFBd0V3WUQKVlIwbEJBd3dDZ1lJS3dZQkJRVUhBd0l3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUFWQ0oxNE40NytBMXYzSQp0bGptZVNFZ2xwSnhtejd2cnVEMWZFcy9EWWFEZ2dtSXdGRDRYQ1FnM21CZkNPM25VMGdnc1h4QjJEN2h2TlQ3CjZIdzlJNi90V0o1ekpidWFuQWtxTTdCZUhjR2NEejk5aFduOEJpVmtXRDB1aXgrUnk3alhSS0RwMzg0SGtHQnAKZWovL3hLQ1dUaUY3OHNsM2RuQVY5MmVlUUlmZTdrNkowWWR4ZGhBenFsN0N0NHZSMGZ0elo0UzhHYVQ0aHdTVwowb1cyZVQwWDBmSlhybzU1UWJvalU5Y2szaU1GampiSlR1UE5xR2FyUlpBZHpxTGtET1FQYjl6NzJaNWNoVU93CnZBSGF5czFGaEloSzNSLyt5aklmK3FpVFhjQUUwS1AzVkFzSU9SVmtXYjlERkp5Rk1oT0x4UHczaU9sdjI2bFQKQjBBM0QzQT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
-        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb2dJQkFBS0NBUUVBdkU5Y1dROVZaM2s4Sm5zeTJldFhnTWloTys0ZnBtYlNHZGViM0NUNERNS0h5dHh6CkhvQ3JTY2hmVzczalFoL290OGcwUkFybDR3R2VvRlZVcEFwblZ0WWlPekVERjJXaXA1bmM1SFEwN0Nob3BvYjMKNG90bFd0eWlzS1llcm9ZSVZybkVVNVZxbHgyUmlxU0FDaUI1cU82U3pqVDVqRjB2VzFoMjJpMU94MnRSR0NMdgo1OWtuWWhvOWpqV1hFOWVaMFg3bktyWTdVajRMTlRxQXJKaS80RE5DRGlTaGJsVm1HTWZURXhXcUtRRVBHd3dkCm1lRCtsdUhDZnpTMzJmc1EwcmFyRVZRcWhaSldpdThSZ052S0xtOXJPTnMvanczSDdvVkJxeWZLY0h6d1JlU1IKUFdGZXBhQ2JoUk1SMmZxZjBkQ2Rid3dTOGFSVFV1Y2pWU0N4WndJREFRQUJBb0lCQURlRyswY3pzMDVRdklEbwpZU1ZMTlVFL1ovUGhFcW9odGFCektIMXcxVWdGOEw3TDVKSkJCTUU3K1lwMjR0Vnp6VTZzRldWZkJVeThCSWRvCndnMmhGN25PYU1lbGV6RGlBbVdEaEZSRlEvbkRMS0MyT2RBdXBKTjNiZTNDL2xjZUpNVlYvK05ac3RXZW5YVVIKYnNRTnNYSXo3MHdvNk5FUUJVL2ROU2ErcDNVNzJYQVlHalNpV3p0TTRJWjBDVUlrb0o1akR6TGp5QWdWZEd3SwowOWkxWW02cWNDREx1ak85Mk8zaG1KWjZGK0hmdWk2dmxKSEtXV1BEZmRTU2dwaEFmUkRoSzNBcG5hc1lpRzY1Cml6d052dUxBZE1tUjBTQS9QSnpDcU5zcnl5YUg0UHpMYXB3dmtPb0N6WnI5eGkxeVpEcTY5eCtqeUVtT3FnbUoKWDB1OGlUa0NnWUVBMis1QlBTcFZpWUNRdzEzSlh1cW9XdGpneVRDL0pFRHZsNm5GRkdjODdpdDNhZHJFL3IrTQpDaVc2Unc0WWZ3NU1rMjhleStPMnFFT21uQ2ZUVUl2cHd0WTJsdkpEV2l1LzdlZkdsdHpEMm1SQmtVYW5ZYUNIClhyWHJJU3hkQ04wYXZ1RitYVWFuWCtkSGJxQjlPa0IwWk5nbGQzUG03emY3em9ieG9pTlJTYzBDZ1lFQTJ6R0UKbnNSbEtkZFBEMWpWQ0w5R2pQOFBXOVBvRlFybTAyOFJIaEQybjI3QVNQaFZUWUxSbmRGSzJTZ0V1a3JqelFzQgpLUElFVFd2czJnTEE2YSthMU9xUzZXaUloN0hFUkdCcmFzb2dTK0IrOU1Wbi9Da20zL2ZSOSs5WUM1d0J6TjFHCkNKL2p1TnVGcldzOHFSbDRibUszSTQvaWQ4bG80cFZjd1RQOEpBTUNnWUJ4SFdKcWZocU9aUlNQbHU0YUptQysKa090VUx3RXdPVUhCWkd6YnFKbDYrZG9xRkgzYmRGTW5hTzRjMjVBWDBSZnJnR3g3ZXp3WDRPdVJSeDUxUC9EVAo1KzhkeGE2RWN4bjgxNGVaVWlSZGI5RVZVaHlHcHRUWkRvSEhoeFMybVZuSE1SMFlCbDNSZ3BlSHUzMk05MWVtCkFsR0sxWTdDSEs0ak05NlZnTXF2UlFLQmdFK1Mrb0pvNmhEMmlVMFpBcjNhTXRLZEJnWmdON0RyOUVCdDRkajQKYjVBUnROekl5cThJL3ZBOE90LzdGenhLVThqc1pjOW5qUWhPVmY0UFlkbDBWdEZWRjJDRkFvdkFqWEFGVVBuRAp4MVhFZWxLQ0YrNERRb21zZmgxMFZwSmdZSWJ2RGEyejNnZ09LY2w3Vk5wTzFObStISjVjYmVydXc1VCtoRjNmCmNYbmhBb0dBVDZYL0JMdjN6NzI1eitOdEZQRDFTWk9vd3ZMK1JNT2JHRUtMZTNOd2pxVW4rQjRHMmtVSGJSZnQKb2JhSWtEakUwalkzV0padFY2cnFsNldXT3FsV0t5bHJIck5nQkFpVEVIQm5XYitCcWI3Q1cremlKS1pMaXp3NwpKa2RNekd4NnBZVEd5TGZSUTU2UTlaMHFQd29tZ3VXd3RUOEc3RUIyS25OTU1vdUl3MW89Ci0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0t
-    - name: apps-09-user
-      user:
-        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5VENDQWQyZ0F3SUJBZ0lJYUtBMWVPaWpyQTR3RFFZSktvWklodmNOQVFFTEJRQXdHREVXTUJRR0ExVUUKQXd3TmEzVmlaWEp1WlhSbGN5MWpZVEFlRncweE9URXhNVGt3TWpNMk5EbGFGdzB5TURFeE1UZ3dNak01TVRaYQpNRFF4RnpBVkJnTlZCQW9URG5ONWMzUmxiVHB0WVhOMFpYSnpNUmt3RndZRFZRUURFeEJyZFdKbGNtNWxkR1Z6CkxXRmtiV2x1TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFuR2lmUDdFMTBSd3oKVG8zQmNPaDlpZWtudE1ZS3YxakNBWTdtd0NsTC8waUtCVUpNMUlMeDgxMjc1ZFFHb0lHZWM3akEvUk1TdGZuQwpoTlh0ODUwbVhLMDZGLzl0L1RueVMraW9HeGVFNExVSlNtWTNVQ28xWHVyTGg3ZVp4WGhZUUxCa0ZVbmNPSTM2CldLUytHWDhOVVBkUXI0OVdSbUJRN2I4alp3SEE3SmRnblUvWXZaYnJYWGN1VUlyNTI4RitWYjBPaFQ0T2c3bXYKTzR0L0tNN0wwK0cxU1JzRzlKYm5tNVFNQi9GYzRLK1VpNzM3dFlyMUJGVDBKdElwMUY4dUQ5ZnorMThxZVlydgpqYzJVTkFwaUNqaFF1WWFmRjl0VzB1bWdXK3k3eDh4WGM0MFFpTGdJTGlDV1crUFErOTNMckxCRkF3MkFmVzBhCnJvUFl3elNaQVFJREFRQUJveWN3SlRBT0JnTlZIUThCQWY4RUJBTUNCYUF3RXdZRFZSMGxCQXd3Q2dZSUt3WUIKQlFVSEF3SXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSTR0RVFhZjRvVWRiVmJ4clViY2xYLy83cW5HeElGbgpidmZmZDlCVGdycGtReStjdXNYeWtrQWdUVUhQaWtBV3ZQZVJra0RjUnhzd3BKSk82TG5JOEZBM2YydURkY09mClB0T1ZKa1QzL3ZvZDhIZDJPTEFtTzNOYng0VHBQa21XSmJJVlJSam5valo4OC9ucDEzMXV0d2V5bHVuRU0waUUKdEI0a2wxdW5vaGZPYmRUeHVGZ0kweVZQTWg3QW40dWRXczk5VHJRZjlhUFpyTlBKZUtYUUR1TFkwSGhDYnJnSwpNbUNrY2dzZ2Z5N2VKbEthTHdxalhSZDVoaFFvRUVWeVdka2w0ZmhZdEZISmFydGNmR1ZWVWpZRFUya1dOUjZHCk1CbS9OMUtLRTdxaVUxNGV6S0x0YlhTdnBBeDRrbWtSSnBKRWE3VFBuZmpvM1ZycnhSK1c0WEE9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBbkdpZlA3RTEwUnd6VG8zQmNPaDlpZWtudE1ZS3YxakNBWTdtd0NsTC8waUtCVUpNCjFJTHg4MTI3NWRRR29JR2VjN2pBL1JNU3RmbkNoTlh0ODUwbVhLMDZGLzl0L1RueVMraW9HeGVFNExVSlNtWTMKVUNvMVh1ckxoN2VaeFhoWVFMQmtGVW5jT0kzNldLUytHWDhOVVBkUXI0OVdSbUJRN2I4alp3SEE3SmRnblUvWQp2WmJyWFhjdVVJcjUyOEYrVmIwT2hUNE9nN212TzR0L0tNN0wwK0cxU1JzRzlKYm5tNVFNQi9GYzRLK1VpNzM3CnRZcjFCRlQwSnRJcDFGOHVEOWZ6KzE4cWVZcnZqYzJVTkFwaUNqaFF1WWFmRjl0VzB1bWdXK3k3eDh4WGM0MFEKaUxnSUxpQ1dXK1BRKzkzTHJMQkZBdzJBZlcwYXJvUFl3elNaQVFJREFRQUJBb0lCQURhb1FPNUxDUmw0RjEzZQpIN2xMSllPcUhKd0prUHZwRW5Mazh6STN2RDBMcGwvTUdYa3lBVWNnZkdjR1B3S2NDVGs3V1FXWFFyU2hBUjdXCmUzN2tiZUY1RDVJUFN1cHc4NEVmWG8rSkdvQkVBMmtpYXpYeWFoQXZVTXl1bG1meGREVzI3bUthR3dFUWJHbkoKdUR6RXIyeVo0SEpaVHJidE5acS9icW15YlM2Lzg2NlhwdS9RNnVleCtDOG9ncEpvUVpvenpMUkVSbnVWc2JmRgpOdHVlbUNaNlplRVFRclZoVWhyNHQ0RHRBN0ozYUJTbmZkc1d3MGdxZVQyYTg4RkNHSTB0Ky90SkFhQXczTDQ2ClBlaXRlR1pIWW5tSzJGSmJjRXFTbzNkWU1zcWIyeUZxOG50b0EwSUFRZWoyd2pVMUdTUVBUekp3R2U4eFRxL2gKQTNBYWRMa0NnWUVBd1lCbjRqSjk5Q1VMN3lHT0tUam51QXdrQmpkdDl5MVR0blJ0dDZMTHk2c1l3dUVUemxXawpEVXd6QVZLTHVCTkxkdzBPV1FUem5GbkpsUTZFMHZxd210Yi9xMGZBbDdGMURCYVAyKzNKbml1VWRaVjJNTVBjCitsSWpScUFtd2t6TkVxQjlLb1puZGhzb1MzMVlWclJqdlBWamJwamxRTHlVcUl1bkRUOUsrSU1DZ1lFQXp1MDAKb0tKNzBRSEZVaXgwSER2N0c0RUF3VFh5cXU4bjM4L2VtQTFXNTk1YTgyVmpmTW5xc3ROdGNiVU9VRk1HRG85dgpneTc4WHBvLzRhZGhFSVArR1JPR3lHNHJsZXVnVkYvWWQ2ZXFZc0hxTTh0L0wwcnhLZnBodWFRMnR3ZHVXLzVYCnV0WGRmd2JLallXSm9hQlpveUFad3hvUUpSelpkQVh2MzFVcXlTc0NnWUVBaHpXVVlXaHF2b2lNZUVINE5qRy8KS01uQytsME5CK1N5VkJHekFOaE9remd4Q3l0L1RYUm1ONnlCRDNHQWs5VlhyQTZCY2c2VnN6RENQTmR5VklJNwptVmFXUERiZENxSkRhWGp5ZVBrRkl2TE13QVQ2RzBVaFNnRFBDWENxNUtZSnZmUkt3Y1k4MFRoVXhic0dXVCtmCldkQVY5SmY5eVdoOGIvRjFmem8weHNVQ2dZQWRyNVlQUFlBNTJlRXZDc1dWajExVThzcmk3UlJsUlc0WkE3OVIKWFFpTXR5K2hIM2lJWElkWkpFL2RNalpkZTZ1d3h3OGVhTTAzM1RVdzhFeFNqRDBWNStFOE8rSHczaDdnTytmWQpNcXVWQTNEUUFXKzdueXE5OVBlMEpFVGRPU214OU9rdEdxVnVKZEZGUUZVZ1pOcTNObEc3MWE5ZlE2WkdxTnRpCjFOc1FoUUtCZ1FDclJieExZYjFQaURpRDV1dWh2RVN2VmNzZVhxT3R1cFY2cUo5dGJMQTBlaHA1anFVQXhkdE8KdVBZZENoK1RPQ2dlWmFZUmZ3UVdxT2c2ZkgxRkF6ZEg0RkMwODhRZDh5djBQMzJIeFpTa014dkRqY2tOWUV1aApLWDBBOEMrUzFBVGN0dzBYZDdXSzFPbGlUUWFkZlJEcjA5VlZabWRPZmR1SlBzTXNOelVRSFE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  name: acornsoftlab-kore3-kubeconfig
-  
 ---
 
 apiVersion: v1
@@ -65,7 +11,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 
 ---
 
@@ -75,7 +21,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard-certs
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 type: Opaque
 
 ---
@@ -86,7 +32,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard-csrf
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 type: Opaque
 data:
   csrf: ""
@@ -99,7 +45,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard-key-holder
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 type: Opaque
 
 ---
@@ -110,7 +56,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard-settings
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 
 ---
 
@@ -120,7 +66,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 rules:
   # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
   - apiGroups: [""]
@@ -149,7 +95,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   labels:
     app: dashboard
-  name: acornsoftlab-kore3
+  name: acornsoft-dashboard
 rules:
   # Allow Metrics Scraper to get metrics from the Metrics server
   - apiGroups: ["metrics.k8s.io"]
@@ -164,7 +110,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -172,22 +118,22 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: dashboard
-    namespace: acornsoftlab-kore3
+    namespace: acornsoft-dashboard
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: acornsoftlab-kore3
+  name: acornsoft-dashboard
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: acornsoftlab-kore3
+  name: acornsoft-dashboard
 subjects:
   - kind: ServiceAccount
     name: dashboard
-    namespace: acornsoftlab-kore3
+    namespace: acornsoft-dashboard
 
 ---
 
@@ -197,7 +143,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   type: NodePort
   ports:
@@ -217,7 +163,7 @@ metadata:
   labels:
     app: dashboard
   name: dashboard
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -231,7 +177,7 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: acornsoftlab/kore3.dashboard:v0.1.0
+          image: acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
           imagePullPolicy: Always
           env:
           - name: SIDECAR_HOST
@@ -254,7 +200,7 @@ spec:
       volumes:
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoftlab-kore3-kubeconfig
+            name: acornsoft-dashboard-kubeconfig
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: dashboard
@@ -272,7 +218,7 @@ metadata:
   labels:
     app: dashboard-metrics-scraper
   name: dashboard-metrics-scraper
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   ports:
     - port: 8000
@@ -288,7 +234,7 @@ metadata:
   labels:
     app: dashboard-metrics-scraper
   name: dashboard-metrics-scraper
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   replicas: 1
   selector:
@@ -340,7 +286,7 @@ metadata:
   labels:
     app: backend
   name: backend
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   type: NodePort
   ports:
@@ -360,7 +306,7 @@ metadata:
   labels:
     app: backend
   name: backend
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -374,7 +320,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: acornsoftlab/kore3.backend:v0.1.1
+          image: acornsoftlab/acornsoft-dashboard.backend:v0.1.1
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
@@ -394,7 +340,7 @@ spec:
           emptyDir: {}
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoftlab-kore3-kubeconfig
+            name: acornsoft-dashboard-kubeconfig
 
 ---
 
@@ -404,7 +350,7 @@ metadata:
   labels:
     app: frontend
   name: frontend
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   type: NodePort
   ports:
@@ -424,7 +370,7 @@ metadata:
   labels:
     app: frontend
   name: frontend
-  namespace: acornsoftlab-kore3
+  namespace: acornsoft-dashboard
 spec:
   replicas: 1
   selector:
@@ -437,7 +383,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: acornsoftlab/kore3.frontend:v0.1.1
+          image: acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT

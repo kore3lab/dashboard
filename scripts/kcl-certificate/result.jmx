@@ -46,7 +46,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">/Users/eunsang/WORKSPACE/servicemesh/aconsoftlab.kore3/scripts/kcl-certificate/case2/case2.jtl</stringProp>
+        <stringProp name="filename">/Users/eunsang/WORKSPACE/acornsoftlab.dashboard/scripts/kcl-certificate/case2/case2.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="4.라우팅 정책 반영 소요시간" enabled="true">
@@ -83,7 +83,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">/Users/eunsang/WORKSPACE/servicemesh/aconsoftlab.kore3/scripts/kcl-certificate/case4/case4.jtl</stringProp>
+        <stringProp name="filename">/Users/eunsang/WORKSPACE/acornsoftlab.dashboard/scripts/kcl-certificate/case4/case4.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="5.보안 인증 반영 소요시간" enabled="true">
@@ -120,7 +120,7 @@
             <connectTime>true</connectTime>
           </value>
         </objProp>
-        <stringProp name="filename">/Users/eunsang/WORKSPACE/servicemesh/aconsoftlab.kore3/scripts/kcl-certificate/case5/case5.jtl</stringProp>
+        <stringProp name="filename">/Users/eunsang/WORKSPACE/aconsoftlab.dashboard/scripts/kcl-certificate/case5/case5.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>
