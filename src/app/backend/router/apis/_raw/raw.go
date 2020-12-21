@@ -9,11 +9,11 @@ package _raw
 import (
 	"net/http"
 
-	"github.com/acornsoftlab/kore3/pkg/app"
-	"github.com/acornsoftlab/kore3/pkg/client"
+	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/pkg/client"
 	"github.com/gin-gonic/gin"
 
-	"github.com/acornsoftlab/kore3/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/config"
 )
 
 // Create or Update

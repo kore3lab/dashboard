@@ -35,6 +35,7 @@ $ cat <<EOF> .git/info/sparse-checkout
 /dashboard/.npmrc
 /dashboard/.gitignore
 /dashboard/aio/gulp/*.*
+/dashboard/i18n
 /dashboard/src/app/backend
 /dashboard/.babelrc
 /dashboard/.gitignore
@@ -148,9 +149,9 @@ $ npm run docker:build:push   # build & push
 ### Deploy on Docker
 
 ```
-$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend acornsoftlab/kore3.backend:v0.1.1
-$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --name dashboard acornsoftlab/kore3.dashboard:0.1.0
-$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend acornsoftlab/kore3.frontend:v0.1.1
+$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend acornsoftlab/acornsoft-dashboard.backend:v0.1.1
+$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --name dashboard acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
+$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
 $ docker ps
 ```
 
@@ -282,13 +283,13 @@ $ curl ${RootUrl}/networking.istio.io/v1alpha3/namespaces/bookinfo/virtualservic
 ### `subtree` 구성 방법
 
 ```
-$ mkdir aconsoftlab.kore3
-$ cd aconsoftlab.kore3
-$ echo "# kore3" >> README.md
+$ mkdir aconsoftlab.dashboard
+$ cd aconsoftlab.dashboard
+$ echo "# Dashboard" >> README.md
 $ git init
 $ git add README.md
 $ git commit -m "initialize"
-$ git remote add origin git@github.com:acornsoftlab/kore3.git
+$ git remote add origin git@github.com:acornsoftlab/dashboard.git
 $ git subtree add --prefix=dashboard https://github.com/kubernetes/dashboard.git master
 ```
 

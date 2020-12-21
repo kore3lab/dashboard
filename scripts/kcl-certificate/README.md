@@ -15,9 +15,9 @@
 ### Node Port
 
 ```
-acornsoftlab-kore3   backend                     NodePort       10.103.5.120     <none>        3001:30081/
-acornsoftlab-kore3   dashboard                   NodePort       10.106.39.66     <none>        9090:30090/
-acornsoftlab-kore3   frontend                    NodePort       10.96.142.69     <none>        3000:30080/
+acornsoft-dashboard  backend                     NodePort       10.103.5.120     <none>        3001:30081/
+acornsoft-dashboard  dashboard                   NodePort       10.106.39.66     <none>        9090:30090/
+acornsoft-dashboard  frontend                    NodePort       10.96.142.69     <none>        3000:30080/
 guestbook            frontend                    NodePort       10.97.113.100    <none>        80:30594/
 istio-system         istio-ingressgateway        NodePort       10.101.168.108   <none>        15021:31033/TCP,80:32080/TCP,443:32443/TCP,15443:30742/
 istio-system         prometheus                  NodePort       10.99.226.2      <none>        9090:32090/

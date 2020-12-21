@@ -3,7 +3,7 @@
 # usage
 if [ "$#" -lt 3 ]; then 
 	echo "docker-build.sh <module name - backend/frontend/dashboard/all> <command> <tag>"
-	echo "    ./docker-build.sh backend build 0.1.0"
+	echo "    ./docker-build.sh backend build v0.1.0"
 	exit 0; 
 fi
 
@@ -24,10 +24,11 @@ push() {
 # }
 
 GROUP="acornsoftlab/"
+PROJECT="acornsoft-dashboard"
 ROOT="$(pwd)"
-FRONTEND="${GROUP}kore3.frontend"
-BACKEND="${GROUP}kore3.backend"
-DASHBOARD="${GROUP}kore3.dashboard"
+FRONTEND="${GROUP}${PROJECT}.frontend"
+BACKEND="${GROUP}${PROJECT}.backend"
+DASHBOARD="${GROUP}${PROJECT}.dashboard"
 
 MODULE="$1"
 COMMAND="$2"

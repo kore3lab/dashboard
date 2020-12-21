@@ -4,7 +4,7 @@
     "description": "acornsoft kubernetes dashboard",
     "repository": {
         "type": "git",
-        "url": "https://github.com/acornsoftlab/kore3.git"
+        "url": "https://github.com/acornsoftlab/dashboard.git"
     },
     "license": "UNLICENSED",
     "scripts": {
@@ -16,15 +16,15 @@
         "start:graph:backend": "concurrently \"npm run start:backend\" \"npm run start:graph\"",
         "build:frontend": "nuxt build",
         "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/acorn-graph/",
-        "docker:build:frontend": "./scripts/docker-build.sh frontend build $npm_package_config_docker_frontend_tag",
-        "docker:build:backend": "./scripts/docker-build.sh backend build $npm_package_config_docker_backend_tag",
-        "docker:build:dashboard": "./scripts/docker-build.sh dashboard build $npm_package_config_docker_dashboard_tag",
-        "docker:push:frontend": "./scripts/docker-build.sh frontend push $npm_package_config_docker_frontend_tag",
-        "docker:push:backend": "./scripts/docker-build.sh backend push $npm_package_config_docker_backend_tag",
-        "docker:push:dashboard": "./scripts/docker-build.sh dashboard push $npm_package_config_docker_dashboard_tag",
-        "docker:build:push:frontend": "./scripts/docker-build.sh frontend build:push $npm_package_config_docker_frontend_tag",
-        "docker:build:push:backend": "./scripts/docker-build.sh backend build:push $npm_package_config_docker_backend_tag",
-        "docker:build:push:dashboard": "./scripts/docker-build.sh dashboard build:push $npm_package_config_docker_dashboard_tag",
+        "docker:build:frontend": "./scripts/docker-build.sh frontend build $npm_package_config_docker_image_tag",
+        "docker:build:backend": "./scripts/docker-build.sh backend build $npm_package_config_docker_image_tag",
+        "docker:build:dashboard": "./scripts/docker-build.sh dashboard build $npm_package_config_docker_image_tag",
+        "docker:push:frontend": "./scripts/docker-build.sh frontend push $npm_package_config_docker_image_tag",
+        "docker:push:backend": "./scripts/docker-build.sh backend push $npm_package_config_docker_image_tag",
+        "docker:push:dashboard": "./scripts/docker-build.sh dashboard push $npm_package_config_docker_image_tag",
+        "docker:build:push:frontend": "./scripts/docker-build.sh frontend build:push $npm_package_config_docker_image_tag",
+        "docker:build:push:backend": "./scripts/docker-build.sh backend build:push $npm_package_config_docker_image_tag",
+        "docker:build:push:dashboard": "./scripts/docker-build.sh dashboard build:push $npm_package_config_docker_image_tag",
         "docker:build": "concurrently \"npm run docker:build:frontend\" \"npm run docker:build:backend\" \"npm run docker:build:dashboard\"",
         "docker:build:push": "concurrently \"npm run docker:build:push:frontend\" \"npm run docker:build:push:backend\" \"npm run docker:build:push:dashboard\"",
         "run": "nuxt start"

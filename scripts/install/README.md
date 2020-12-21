@@ -119,24 +119,31 @@ EOF
 
 ### Install
 
+* Deploy
+
 ```
-$ kubectl create configmap acornsoftlab-kore3-kubeconfig --from-file=${HOME}/.kube/config
-
-# if update configmap
-$ kubectl create configmap acornsoftlab-kore3-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply -f -
-
 $ kubectl apply -f kuberntes/recommended.yaml
 ```
 
-* NodePort
-  * Frontend: 30080
-  * Backend : 30081
-  * Dashboard backend : 30090
+
+* Careate configmap `acornsoft-dashboard-kubeconfig`
+
+```
+$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config -n acornsoft-dashboard
+
+# if update configmap
+$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
+```
+
+### NodePort
+* Frontend: 30080
+* Backend : 30081
+* Dashboard backend : 30090
 
 
 ## Verify
 
-* Web UI : http://101.55.69.105:30080/
-* Kiali UI : http://101.55.69.105:32080/kiali
-* Kiali embedding UI (kiosk mode) : http://101.55.69.105:32080/kiali/console/graph/namespaces/?kiosk=true
+* Web UI : http://<server>:30080/
+* Kiali UI : http://<server>:32080/kiali
+* Kiali embedding UI (kiosk mode) : http://<server>:32080/kiali/console/graph/namespaces/?kiosk=true
 
