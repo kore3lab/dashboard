@@ -13,14 +13,6 @@
 				<div class="col-sm-2">
 					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select>
 				</div>
-				<!-- KCL -->
-				<div class="col-sm-3 text-lg">
-					nodes : <span class="text-danger">{{ nodeLen }}</span> <span class="text-sm">ea</span>, elapsed : <span class="text-danger">{{ elapsed }}</span> <span class="text-sm">ms</span>
-				</div>
-				<div class="col-sm-3 text-lg">
-					node/sec : <span class="text-danger">{{ Math.round(nodeLen/(elapsed/1000)*100)/100 }}</span> <span class="text-sm">ea</span>
-				</div>
-				<!-- KCL -->
 				<div class="col-sm-2 text-right">
 					<b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button>
 				</div>
@@ -58,9 +50,7 @@ export default {
 		let ns = this.$route.query.namespace;
 		return {
 			selectedNamespace: ns ? ns: " ",
-			nodeLen: 0,
-			start: 0,		//KCL
-			elapsed: 0		//KCL
+			nodeLen: 0
 		}
 	},
 	layout: "default",
@@ -72,31 +62,22 @@ export default {
 		this.$nuxt.$off("navbar-context-selected")
 	},
 	methods: {
-		onEnd() {
-			this.$data.elapsed = (new Date()).getTime() - this.$data.start; // KCL
-		},
 		query() {
 			this.$data.start = (new Date()).getTime();
 			let url = `${this.backendUrl()}/api/clusters/${this.currentContext()}/topology`;
 			if (this.$data.selectedNamespace != " ") url += `/namespaces/${this.$data.selectedNamespace}`;
 			
-
 			let g = new graph.TopologyGraph("#wrapGraph");
 			axios.get(url)
 				.then( resp => {
-					// KCL
 					this.$data.nodeLen = resp.data.nodes.length;
 					g.config({
 						topology:{
 							simulation: {
-								alphaDecay:0.3,
-								onEnd: this.onEnd
+								alphaDecay:0.3
 							}
 						}
 					}).data(resp.data).render();
-					//-- KCL
-					// g.data(resp.data).render();
-
 				})
 				.catch((error) => {
 					this.toast(error.message);

@@ -19,7 +19,6 @@ Vue.mixin({
     kialiRootUrl() {
       return `${location.protocol}//${location.hostname}:${this.$config.kialiPort}`;
     },
-
     getTimestampString(timestamp) {
       let dt = Date.parse(timestamp);
       let seconds = Math.floor((new Date() - dt) / 1000);
@@ -40,14 +39,17 @@ Vue.mixin({
 
       return Math.floor(seconds) + " seconds";
     },
+    // namespace 리스트 조회
     namespaces(_) {
       if (_) this.$store.commit("setNamespaces", _);
       else return this.$store.getters["getNamespaces"];
     },
+    // context (cluster) 리스트 조회
     contexts(_) {
       if (_) this.$store.commit("setContexts", _);
       else return this.$store.getters["getContexts"];
     },
+    // 현재 선택된 context (cluster) 조회
     currentContext(_) {
       if (_) this.$store.commit("setCurrentContext", _);
       else return this.$store.getters["getCurrentContext"];

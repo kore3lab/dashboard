@@ -7,50 +7,55 @@
 			<c-navigator group="Workload"></c-navigator>
 			<div class="row mb-2">
 				<div class="col-sm-2"><h1 class="m-0 text-dark">Pods</h1></div>
+				<!-- 검색 (namespace) -->
 				<div class="col-sm-2">
-					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select>
-				</div>
-				
+					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select>
+				</div><!--//END -->
+				<!-- 검색 (검색어) -->
 				<div class="col-sm-2 float-left">
 					<div class="input-group input-group-sm" >
-						<input type="text" name="table_search" class="form-control float-right" placeholder="Search">
+						<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
 						<div class="input-group-append">
-							<button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+							<button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button>
 						</div>
 					</div>
-				</div>
+				</div><!--//END -->
+				<!-- 버튼 -->
 				<div class="col-sm-6 text-right">
-					<!-- 버튼 -->
 					<div class="dropdown">
 						<b-dropdown text="Create" variant="primary" size="sm">
 							<b-dropdown-item class="dropdown-item"><nuxt-link :to="{ path:'/create', query:{ context: currentContext(), group: 'Workload', crd: 'Pod' } }">from Yaml</nuxt-link></b-dropdown-item>
 						</b-dropdown>
 					</div>
-					<!--// 버튼 -->
-				</div>
+				</div><!--//END -->
 			</div>
 		</div>
 	</div>
 
 	<section class="content">
 	<div class="container-fluid">
+		<!-- 검색 (상태) -->
 		<div class="row mb-2">
-			<!-- 조회조건 -->
-			<div class="col-12">
+			<div class="col-11">
 				<b-form-group class="mb-0 font-weight-light">
-					<button type="submit" class="btn btn-default btn-sm" @click="query_All(null);">All</button>
-					<b-form-checkbox-group v-model="selected" :options="conditions" button-variant="light"  font="light" buttons size="sm" @input="query"></b-form-checkbox-group>
+					<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
+					<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
 				</b-form-group>
 			</div>
-			<!-- //조회조건 -->
-		</div>
-
+			<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+		</div><!--//END -->
+		<!-- GRID-->
 		<div class="row">
 			<div class="col-12">
-				<!-- GRID-->
 				<div class="card">
 					<div class="card-body table-responsive p-0">
-						<b-table id="list" hover :items="items" :fields="fields" class="text-sm">
+						<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+							<template #table-busy>
+								<div class="text-center text-success" style="margin:150px 0">
+									<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
+									<span class="align-middle text-lg">Loading...</span>
+								</div>
+							</template>
 							<template v-slot:cell(name)="data">
 								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Pod', name: data.item.name, url: `pod/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
@@ -61,10 +66,10 @@
 							</template>
 						</b-table>
 					</div>
+					<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 				</div>
-				<!-- //GRID-->
 			</div>
-		</div>
+		</div><!-- //GRID-->
 	</div>
 	</section>
 
@@ -81,8 +86,8 @@ export default {
 	data() {
 		return {
 			selectedNamespace: " ",
-			selected: [],
-			conditions: [
+			selectedStatus: [],
+			optionsStatus: [
 				{ text: "Running", value: "Running" },
 				{ text: "Pending", value: "Pending" },
 				{ text: "Terminating", value: "Terminating" },
@@ -91,6 +96,8 @@ export default {
 				{ text: "Failed", value: "Failed" },
 				{ text: "Unknowen", value: "Unknowen" }
 			],
+			keyword: "",
+			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
 				{ key: "namespace", label: "네임스페이스", sortable: true  },
@@ -100,8 +107,11 @@ export default {
 				{ key: "restartCount", label: "재시작", sortable: true  },
 				{ key: "creationTimestamp", label: "생성시간" }
 			],
+			isBusy: false,
+			origin: [],
 			items: [],
-			origin: []
+			currentPage: 1,
+			totalItems: 0
 		}
 	},
 	layout: "default",
@@ -110,29 +120,23 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		// 상태 조건에 따른 조회 (namespace, status)
-		query() {
-			let ns = this.$data.selectedNamespace;
-			let selected = this.$data.selected;
-
-			if ( selected.length == 0) {
-				this.$data.items = this.$data.origin.filter(el => {
-					return (ns == " " || el.namespace == ns);
-				});
-			} else {
-				this.$data.items = this.$data.origin.filter(el => {
-					return selected.includes(el.status) && (ns == " " || el.namespace == ns);
-				});
-			}
+		//  status 필터링
+		onChangeStatus() {
+			let selectedStatus = this.selectedStatus;
+			this.items = this.origin.filter(el => {
+				return (selectedStatus.length == 0) || selectedStatus.includes(el.status);
+			});
+			this.totalItems = this.items.length;
+			this.currentPage = 1
 		},
+		// 조회
 		query_All() {
-			this.$data.selected = [];
-
-			axios.get(`${this.dashboardUrl()}/api/v1/pod/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			this.isBusy = true;
+			axios.get(`${this.dashboardUrl()}/api/v1/pod/${this.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
 				.then((resp) => {
-					this.$data.origin = [];
+					this.items = [];
 					resp.data.pods.forEach(el => {
-						this.$data.origin.push({
+						this.items.push({
 							name: el.objectMeta.name,
 							namespace: el.objectMeta.namespace,
 							labels: el.objectMeta.labels,
@@ -142,11 +146,35 @@ export default {
 							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
 						});
 					});
-					this.$data.items = this.$data.origin;
+					this.origin = this.items;
+					this.onFiltered(this.items);
 				})
-				.catch((error) => {
-					this.$root.toast(error.message, "danger");
-				});
+				.catch((error) => {this.$root.toast(error.message, "danger");})
+				.finally(()=> { this.isBusy = false;});
+		},
+		onFiltered(filteredItems) {
+			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, crashLoopBackOff:0, completed:0, failed:0, unknowen:0 }
+
+			filteredItems.forEach(el=> {
+				if(el.status == "Running") status.running++;
+				if(el.status == "Pending") status.pending++;
+				if(el.status == "Terminating") status.terminating++;
+				if(el.status == "CrashLoopBackOff") status.crashLoopBackOff++;
+				if(el.status == "Completed") status.completed++;
+				if(el.status == "Failed") status.failed++;
+				if(el.status == "Unknowen") status.unknowen++;
+			});
+
+			this.optionsStatus[0].text = status.running >0 ? `Running (${status.running})`: "Running";
+			this.optionsStatus[1].text = status.pending >0 ? `Pending (${status.pending})`: "Pending";
+			this.optionsStatus[2].text = status.terminating >0 ? `Terminating (${status.terminating})`: "Terminating";
+			this.optionsStatus[3].text = status.crashLoopBackOff >0 ? `CrashLoopBackOff (${status.crashLoopBackOff})`: "CrashLoopBackOff";
+			this.optionsStatus[4].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
+			this.optionsStatus[5].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
+			this.optionsStatus[6].text = status.unknowen >0 ? `Unknowen (${status.unknowen})`: "Unknowen";
+
+			this.totalItems = filteredItems.length;
+			this.currentPage = 1
 		}
 	},
 	beforeDestroy(){
