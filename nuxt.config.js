@@ -42,5 +42,6 @@ export default {
     backendPort: process.env.BACKEND_PORT || "3001",
     dashboardPort: process.env.DASHBOARD_PORT || "9090",
     kialiPort: process.env.KIALI_PORT || "20001",
+    itemsPerPage: process.env.ITEMS_PER_PAGE || "10",
   },
 };

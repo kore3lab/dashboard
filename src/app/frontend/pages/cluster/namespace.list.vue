@@ -7,41 +7,49 @@
 			<c-navigator group="Cluster"></c-navigator>
 			<div class="row mb-2">
 				<div class="col-sm-2"><h1 class="m-0 text-dark">Namespaces</h1></div>
+				<!-- 검색 (검색어) -->
 				<div class="col-sm-2 float-left">
 					<div class="input-group input-group-sm" >
-						<input type="text" name="table_search" class="form-control float-right" placeholder="Search">
+						<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
 						<div class="input-group-append">
-							<button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+							<button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button>
 						</div>
 					</div>
-				</div>
+				</div><!--//END -->
+				<!-- 버튼 -->
 				<div class="col-sm-8 text-right dropdown">
 					<b-dropdown text="Create" variant="primary" size="sm">
 						<b-dropdown-item class="dropdown-item"><nuxt-link :to="{ path:'/create', query:{ context: currentContext(), group: 'Cluster', crd: 'Namespace' } }">from Yaml</nuxt-link></b-dropdown-item>
 					</b-dropdown>
-				</div>
+				</div><!--//END -->
 			</div>
 		</div>
 	</div>
 
 	<section class="content">
 	<div class="container-fluid">
+		<!-- 검색 (상태) -->
 		<div class="row mb-2">
-			<div class="col-12">
-				<!-- 조회조건 -->
+			<div class="col-11">
 				<b-form-group class="mb-0 font-weight-light">
-					<button type="submit" class="btn btn-default btn-sm" @click="query_All();">All</button>
-					<b-form-checkbox-group v-model="selected" :options="conditions" button-variant="light"  font="light" buttons size="sm" @input="query"></b-form-checkbox-group>
+					<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
+					<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light"  font="light" buttons size="sm" @input="onChangePhase"></b-form-checkbox-group>
 				</b-form-group>
-				<!-- //조회조건 -->
 			</div>
-		</div>
+			<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+		</div><!--//END -->
+		<!-- GRID-->
 		<div class="row">
 			<div class="col-12">
-				<!-- GRID-->
 				<div class="card">
 					<div class="card-body table-responsive p-0">
-						<b-table id="list" hover :items="items" :fields="fields" class="text-sm">
+						<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+							<template #table-busy>
+								<div class="text-center text-success" style="margin:150px 0">
+									<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
+									<span class="align-middle text-lg">Loading...</span>
+								</div>
+							</template>
 							<template v-slot:cell(name)="data">
 								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Namespace', name: data.item.name, url: `namespace/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
@@ -52,10 +60,10 @@
 							</template>
 						</b-table>
 					</div>
+					<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 				</div>
-				<!-- //GRID-->
 			</div>
-		</div>
+		</div><!-- //GRID-->
 	</div>
 	</section>
 </div>
@@ -69,19 +77,23 @@ export default {
 	},
 	data() {
 		return {
-			selected: [],
-			conditions: [
+			selectedPhase: [],
+			optionsPhase: [
 				{ text: "Active", value: "Active" },
 				{ text: "Terminating", value: "Terminating" }
 			],
+			keyword: "",
+			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
 				{ key: "labels", label: "레이블", sortable: true },
 				{ key: "phase", label: "단계", sortable: true },
 				{ key: "creationTimestamp", label: "생성시간" }
 			],
+			isBusy: false,
 			items: [],
-			origin: []
+			currentPage: 1,
+			totalItems: 0
 		}
 	},
 	layout: "default",
@@ -90,38 +102,49 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		// 상태 조건에 따른 조회 (namespace, status)
-		query() {
-			let selected = this.$data.selected;
-
-			if ( selected.length == 0) {
-				this.$data.items = this.$data.origin;
-			} else {
-				this.$data.items = this.$data.origin.filter(el => {
-					return selected.includes(el.phase);
-				});
-			}
+		//  Phase 필터링
+		onChangePhase() {
+			let selectedPhase = this.selectedPhase;
+			this.items = this.origin.filter(el => {
+				return (this.selectedPhase.length == 0) || this.selectedPhase.includes(el.phase);
+			});
+			this.totalItems = this.items.length;
+			this.currentPage = 1
 		},
+		// 조회
 		query_All() {
-			this.$data.selected = [];
-
+			this.isBusy = true;
 			axios.get(`${this.dashboardUrl()}/api/v1/namespace?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
 				.then((resp) => {
-					let data = []
+					this.items = [];
 					resp.data.namespaces.forEach(el => {
-						data.push({
+						this.items.push({
 							name: el.objectMeta.name,
 							labels: el.objectMeta.labels,
 							phase: el.phase,
 							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
 						});
 					});
-					this.$data.origin = data;
-					this.$data.items = data;
+					this.origin = this.items;
+					this.onFiltered(this.items);
 				})
-				.catch((error) => {
-					this.$root.toast(error.message, "danger");
-				});
+				.catch((error) => { this.$root.toast(error.message, "danger");})
+				.finally(()=> { this.isBusy = false;});
+		},
+		//  status 필터링
+		onFiltered(filteredItems) {
+			let status = { active:0, terminating:0 }
+
+			filteredItems.forEach(el=> {
+				if(el.phase == "Active") status.active++;
+				if(el.phase == "Terminating") status.terminating++;
+			});
+
+			this.optionsPhase[0].text = status.active >0 ? `Active (${status.active})`: "Active";
+			this.optionsPhase[1].text = status.terminating >0 ? `Terminating (${status.terminating})`: "Terminating";
+
+			this.totalItems = filteredItems.length;
+			this.currentPage = 1
 		},
 		toEndpointList(p) {
 			let list = [];
