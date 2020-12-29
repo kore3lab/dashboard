@@ -5,10 +5,15 @@
 import Ace from "ace-builds/src-noconflict/ace"
 import "ace-builds/webpack-resolver"
 import "ace-builds/src-noconflict/mode-yaml"
-import {dump as toYaml, load as fromYaml} from "js-yaml";
+import {dump as toYaml, load as toJSON} from "js-yaml";
 
 export default {
 	props:["value"],
+	data () {
+		return {
+			localValue: this.value
+		}
+	},
 	mounted(){
 		//  editor
 		this.editor = Ace.edit(this.$el.id);
@@ -23,11 +28,24 @@ export default {
 		this.editor.setReadOnly(false);
 		this.editor.session.setMode("ace/mode/yaml");
 		this.editor.session.setUseWorker(false);
+		this.editor.on('blur', () => {
+			try {
+				this.localValue = toJSON(this.editor.getValue())
+				this.$emit("input", this.localValue);
+			} catch (ex) {
+				console.error(ex.message);
+				this.$emit("error", ex);
+			}
+		});
 	},
 	watch: {
 		value(newVal) {
-			this.value = newVal;
-			this.editor.setValue(toYaml(this.value), -1);
+			try {
+				this.editor.setValue(toYaml(newVal), -1);
+				this.value = newVal;
+			} catch (ex) {
+				console.error(ex.message);
+			}
 		}
 	}
 }
