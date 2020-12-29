@@ -5,9 +5,18 @@ Vue.mixin({
     toast(msg, variant) {
       if (!variant) variant = "info";
       this.$bvToast.toast(msg, {
-        title: "Acornsoft Dashboard",
+        title: "",
+        noCloseButton: true,
         variant: variant,
         autoHideDelay: 4000,
+      });
+    },
+    mesbox(msg) {
+      this.$bvModal.msgBoxOk(msg, {
+        title: "",
+        variant: "info",
+        buttonSize: "sm",
+        footerClass: "p-1",
       });
     },
     backendUrl() {

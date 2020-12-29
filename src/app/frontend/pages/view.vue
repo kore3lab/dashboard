@@ -67,15 +67,15 @@
 			<b-tab title="Yaml">
 				<div class="row mb-2">
 					<div class="col-sm-12 text-right">
-						<b-button variant="primary" size="sm">Apply</b-button>
-						<b-button variant="secondary" size="sm">Reset</b-button>
+						<b-button variant="primary" size="sm" @click="onPatch">Apply</b-button>
+						<b-button variant="secondary" size="sm" @click="onReset">Reset</b-button>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-md-12">
 						<div class="card">
 							<div class="card-header"></div>
-							<c-aceeditor class="card-body" :value="raw" style="min-height: calc(100vh - 210px - 60px)"></c-aceeditor>
+							<c-aceeditor class="card-body" v-model="raw" v-on:error="onError" style="min-height: calc(100vh - 210px - 60px)"></c-aceeditor>
 						</div>
 					</div>
 				</div>
@@ -104,6 +104,7 @@ export default {
 			group: this.$route.query.group ?  this.$route.query.group: "Workload", 
 			crd : this.$route.query.crd ?  this.$route.query.crd: "pod",
 			name : this.$route.query.name ? this.$route.query.name: "httpbin",
+			origin: { metadata: {}, spec: {} },
 			raw: { metadata: {}, spec: {} }
 		}
 	},
@@ -116,11 +117,13 @@ export default {
 		this.$nuxt.$off('navbar-context-selected')
 	},
 	methods: {
+		// 조회
 		query() {
 			let params = this.$route.query;
-			axios.get(`${this.dashboardUrl()}/api/v1/_raw/${params.url}?context=${params.context}`)
+			axios.get(`${this.dashboardUrl()}/api/v1/_raw/${params.url}?context=${this.currentContext()}`)
 				.then( resp => {
-					this.$data.raw = resp.data;
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
 					let spec = null; 
 
 					if(this.$data.crd == "Config Map" || this.$data.crd == "Secret") spec = resp.data.data;
@@ -133,8 +136,27 @@ export default {
 					if (spec) this.$jsonTree.create(spec, this.$refs["wrapSpec"]);
 
 				}).catch( error => {
-					this.$root.toast(error.message, "danger");
+					this.toast(error.message, "danger");
 				});
+		},
+		// apply
+		onPatch() {
+			axios.put(`${this.backendUrl()}/api/_raw/${this.currentContext()}`, this.raw)
+				.then( resp => {
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
+				}).catch( error => {
+					this.toast(error.message, "danger");
+				});
+		},
+		// reset
+		onError(error) {
+			// this.mesbox(error.message);
+			this.toast(error.message, "danger");
+		},
+		// reset
+		onReset() {
+			this.raw = Object.assign({}, this.origin);
 		}
 	}
 }
