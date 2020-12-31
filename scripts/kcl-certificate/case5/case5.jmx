@@ -87,7 +87,7 @@
             <stringProp name="HTTPSampler.port">${PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol"></stringProp>
             <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-            <stringProp name="HTTPSampler.path">/api/_raw/${CLUSTER}/security.istio.io/v1beta1/namespaces/bookinfo/authorizationpolicies/productpage</stringProp>
+            <stringProp name="HTTPSampler.path">/raw/clusters/${CLUSTER}/apis/security.istio.io/v1beta1/namespaces/bookinfo/authorizationpolicies/productpage</stringProp>
             <stringProp name="HTTPSampler.method">DELETE</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -194,7 +194,7 @@
             <stringProp name="HTTPSampler.port">${PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol"></stringProp>
             <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-            <stringProp name="HTTPSampler.path">/api/_raw/${CLUSTER}</stringProp>
+            <stringProp name="HTTPSampler.path">/raw/clusters/${CLUSTER}</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>

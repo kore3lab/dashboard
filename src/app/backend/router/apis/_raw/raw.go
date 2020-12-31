@@ -48,7 +48,7 @@ func DeleteRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
 	// url parameter validation
-	v := []string{"CLUSTER", "GROUP", "VERSION", "RESOURCETYPE", "NAME"}
+	v := []string{"CLUSTER", "VERSION", "RESOURCE", "NAME"}
 	if err := g.ValidateUrl(v); err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error())
 		return
@@ -63,9 +63,9 @@ func DeleteRaw(c *gin.Context) {
 	namespaceSet := (namespace != "")
 	group := c.Param("GROUP")
 	version := c.Param("VERSION")
-	kind := c.Param("RESOURCETYPE")
+	resource := c.Param("RESOURCE")
 	name := c.Param("NAME")
-	if err := api.DELETE(namespaceSet, namespace, group, version, kind, name); err != nil {
+	if err := api.DELETE(namespaceSet, namespace, group, version, resource, name); err != nil {
 		g.SendMessage(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -77,7 +77,7 @@ func GetRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
 	// url parameter validation
-	v := []string{"CLUSTER", "VERSION", "RESOURCETYPE"}
+	v := []string{"CLUSTER", "VERSION", "RESOURCE"}
 	if err := g.ValidateUrl(v); err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error())
 		return
@@ -92,20 +92,20 @@ func GetRaw(c *gin.Context) {
 	namespaceSet := (namespace != "")
 	group := c.Param("GROUP")
 	version := c.Param("VERSION")
-	kind := c.Param("RESOURCETYPE")
+	resource := c.Param("RESOURCE")
 	name := c.Param("NAME")
 
 	var r interface{}
 	var err error
 
 	if name == "" {
-		r, err = api.List(namespaceSet, namespace, group, version, kind)
+		r, err = api.List(namespaceSet, namespace, group, version, resource)
 		if err != nil {
 			g.SendMessage(http.StatusInternalServerError, err.Error())
 			return
 		}
 	} else {
-		r, err = api.GET(namespaceSet, namespace, group, version, kind, name)
+		r, err = api.GET(namespaceSet, namespace, group, version, resource, name)
 		if err != nil {
 			g.SendMessage(http.StatusInternalServerError, err.Error())
 			return
