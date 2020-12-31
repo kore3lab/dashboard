@@ -222,25 +222,62 @@ $ npm run start:backend
 |KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
 
 
-### 제공 API
+### API
 
-|apis                               |이름                               |비고  |예                                                  |   |
-|---                                |---                                |---   |---                                                 |---|
-|/api/contexts                      |k8s cluster context 리스트 조회    |      |http://localhost:3001/apis/context                  |   |
-|/api/cluster/:cluster/topology     |토플로지 그래프 조회               |      |http://localhost:3001/apis/cluster/apps-05/topology |   |
-|/api/_raw/:context:/:apiGroups/*   |해당 context 의 kubernetes Raw API |      |아래 참조                                           |   |
+|apis                               |이름                             |비고                                                |
+|---                                |---                              |---                                                 |
+|/api/clusters                      |k8s cluster context 리스트 조회  |http://localhost:3001/api/clusters                  |
+|/api/clusters/:cluster/topology    |토플로지 그래프 조회             |http://localhost:3001/api/clusters/apps-05/topology |
 
 
-### Raw API
+### Kubernetes Raw API
 > [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
 
-* 패턴
-  * `:context` : kubeconfig Context 이름
-  * `:apiGroups` : api Groups `kubectl api-resources -o wide` 으로 조회 가능
+* Apply & Patch
+
+|URL                    |Method |설명   |
+|---                    |---    |---    |
+|/raw/clusters/:cluster |POST   |Apply  |
+|/raw/clusters/:cluster |PUT    |Patch  |
+
+
+* CORE apiGroup URL Pettern
+
+|URL                                                                        |Method |설명                             |
+|---                                                                        |---    |---                              |
+|/raw/clusters/:cluster/api/:version/:resource                              |GET    |non-namespaced 리소스 목록 조회  |
+|/raw/clusters/:cluster/api/:version/:resource:/:name                       |GET    |non-namespaced 리소스 조회       |
+|/raw/clusters/:cluster/api/:version/:resource:/:name                       |DELETE |non-namespaced 리소스 삭제       |
+|/raw/clusters/:cluster/api/:version/namespaces/:resource:                  |GET    |namespaced 리소스 목록조회       |
+|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |GET    |namespaced 리소스 조회           |
+|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |DELETE |N\namespaced 리소스 삭제         |
+
+* apiGroup URL Pettern
+
+|URL                                                                                  |Method |설명                             |
+|---                                                                                  |---    |---                              |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource                             |GET    |non-namespaced 리소스 목록 조회  |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |GET    |non-namespaced 리소스 조회       |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |DELETE |non-namespaced 리소스 삭제       |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:resource:                 |GET    |namespaced 리소스 목록조회       |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |GET    |namespaced 리소스 조회           |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |DELETE |namespaced 리소스 삭제           |
+
+
+* Raw API 호출 예제
 
 ```
-/api/_raw/:context:/:apiGroups/*
+$ curl http://localhost:3001/raw/clusters/apps-05/api/v1/nodes/apps-113                                  # core api
+$ curl http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/services/kubernetes          # namespaced core api
+$ curl http://localhost:3001/raw/clusters/apps-05/apis/metrics.k8s.io/v1beta1/nodes/apps-115             # apiGroup api
+$ curl http://localhost:3001/raw/clusters/apps-05/apis/apps/v1/namespaces/kube-system/deployments/nginx  # namespaced apiGroup api
 ```
+
+* 변수
+  * `:cluster` : kubeconfig Context 이름
+  * `:apiGroups` : api Groups `kubectl api-resources -o wide` 으로 조회 가능
+  * `:version` :  `apiGroup` 버전
+  * `:resource` : 리소스 이름
 
 * apiGroups
 ```
@@ -249,29 +286,6 @@ $ kubectl api-resources -o wide
 # CRD 경우
 $ kubectl get crd
 $ kubectl get crd virtualservices.networking.istio.io -o jsonpath="{.spec.group}"
-```
-
-
-* Raw API 호출 예제
-
-```
-# Root URL 정의
-$ export RootUrl="http://localhost:3001/api/_raw/$(kubectl config current-context)"
-
-
-# core API (Core 그룹은 공백값)
-$ curl ${RootUrl}//v1/pods
-$ curl ${RootUrl}//v1/namespaces 
-$ curl ${RootUrl}//v1/nodes
-$ curl ${RootUrl}/apps/v1/deployments 
-
-# core API (in namespace)
-$ curl ${RootUrl}//v1/namespaces/kube-system/pods
-$ curl ${RootUrl}/apps/v1/namespaces/kube-system/deployments
-
-# CRD 
-$ curl ${RootUrl}/networking.istio.io/v1alpha3/virtualservices
-$ curl ${RootUrl}/networking.istio.io/v1alpha3/namespaces/bookinfo/virtualservices
 ```
 
 ### Dashboard

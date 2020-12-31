@@ -33,65 +33,68 @@ func CreateUrlMappings() {
 
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // restful-api docs
 	Router.GET("/healthy", healthy)                                           // healthy
+	Router.GET("/api/clusters", api.ListContexts)
 
-	clustersAPI := Router.Group("/api/clusters")
+	clustersAPI := Router.Group("/api/clusters/:CLUSTER")
 	{
-		clustersAPI.GET("/", api.ListContexts)
-		clustersAPI.GET("/:CLUSTER/topology", api.Topology)
-		clustersAPI.GET("/:CLUSTER/topology/namespaces/:NAMESPACE", api.Topology)
-		clustersAPI.GET("/:CLUSTER/dashboard", api.Dashboard)
+		clustersAPI.GET("/topology", api.Topology)
+		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)
+		clustersAPI.GET("/dashboard", api.Dashboard)
 	}
-	rawAPI := Router.Group("/api/_raw")
+
+	// RAW-API POST/PUT (apply, patch)
+	Router.POST("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
+	Router.PUT("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
+
+	// RAW-API Core
+	//      non-Namespaced
+	//          /api/v1/namespaces/acornsoft-dashboard
+	//          /api/v1/nodes/apps-113
+	//      Namespaced
+	//          /api/v1/namespaces/default/services/kubernetes
+	//          /api/v1/namespaces/default/serviceaccounts/default
+	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION")
 	{
-		rawAPI.POST("/:CLUSTER", _raw.ApplyRaw)
-		rawAPI.PUT("/:CLUSTER", _raw.ApplyRaw)
-		rawAPI.GET("/:CLUSTER/:GROUP/:VERSION/*PATH", _raw.GetRaw)
-		rawAPI.DELETE("/:CLUSTER/:GROUP/:VERSION/*PATH", _raw.DeleteRaw)
+		rawAPI.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"
+		rawAPI.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"
+		rawAPI.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"
+		rawAPI.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"
+		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"
+		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"
+	}
+
+	// RAW-API Grouped
+	//      non-Namespaced
+	//          /apis/metrics.k8s.io/v1beta1/nodes/apps-115
+	//      Namespaced
+	//          /apis/apps/v1/namespaces/kube-system/deployments/nginx
+	//          /apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings/clusterrolebinding-2g782
+	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION")
+	{
+		rawAPIs.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"
+		rawAPIs.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"
+		rawAPIs.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"
+		rawAPIs.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"
+		rawAPIs.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"
+		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"
 	}
 
 }
 
 /**
-  Route URL "PATH" resolved handler
-      "/:CLUSTER/:GROUP/:VERSION/:RESOURCETYPE/:NAME"
-      "/:CLUSTER/:GROUP/:VERSION/:RESOURCETYPE"
-      "/:CLUSTER/:GROUP/:VERSION/namespaces/:NAMESPACE/:RESOURCETYPE/:NAME"
-      "/:CLUSTER/:GROUP/:VERSION/namespaces/:NAMESPACE/:RESOURCETYPE"
+  RAW-API  URL Route resolved handler
 */
 func route() gin.HandlerFunc {
-
 	return func(c *gin.Context) {
-
-		if strings.HasPrefix(c.Request.RequestURI, "/api/_raw") && c.Param("PATH") != "" {
-
-			path := c.Param("PATH")
-			arr := strings.Split(path, "/")
-			if len(arr) >= 2 {
-				namespace := ""
-				kind := ""
-				name := ""
-				if arr[1] == "namespaces" && len(arr) > 2 {
-					namespace = arr[2]
-					kind = arr[3]
-					if len(arr) > 4 {
-						name = arr[4]
-					}
-				} else {
-					kind = arr[1]
-					if len(arr) > 2 {
-						name = arr[2]
-					}
-				}
-
+		if strings.HasPrefix(c.Request.RequestURI, "/raw/clusters") {
+			if c.Param("RESOURCE") == "" {
 				c.Params = append(c.Params,
-					gin.Param{Key: "NAMESPACE", Value: namespace},
-					gin.Param{Key: "RESOURCETYPE", Value: kind},
-					gin.Param{Key: "NAME", Value: name})
-				c.Next()
-
+					gin.Param{Key: "RESOURCE", Value: c.Param("A")},
+					gin.Param{Key: "NAME", Value: c.Param("B")})
+			} else if c.Param("A") == "namespaces" {
+				c.Params = append(c.Params, gin.Param{Key: "NAMESPACE", Value: c.Param("B")})
 			}
 		}
-
 	}
 }
 
