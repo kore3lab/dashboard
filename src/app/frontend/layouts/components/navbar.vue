@@ -32,7 +32,7 @@ export default {
 	},
 	async fetch() {
 		// context 리스트 조회
-		let resp = await axios.get(`${this.backendUrl()}/api/clusters/`);
+		let resp = await axios.get(`${this.backendUrl()}/api/clusters`);
 		if(resp.data.contexts) this.contexts(resp.data.contexts);
 		this.$data.ctx = this.$route.query.context ? this.$route.query.context: resp.data.currentContext;
 		// namespace 로딩

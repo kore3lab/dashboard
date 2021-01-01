@@ -1,0 +1,37 @@
+{
+    "kind": "Deployment",
+    "apiVersion": "apps/v1",
+    "metadata": {
+        "name": "my-app",
+        "namespace": "default",
+        "labels": {
+            "app": "my-app"
+        }
+    },
+    "spec": {
+        "replicas": 1,
+        "selector": {
+            "matchLabels": {
+                "app": "my-app"
+            }
+        },
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "my-app"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "name": "nginx",
+                        "image": "nginx",
+                        "resources": {}
+                    }
+                ]
+            }
+        },
+        "strategy": {}
+    },
+    "status": {}
+}

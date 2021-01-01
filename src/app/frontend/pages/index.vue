@@ -240,9 +240,7 @@ export default {
 					this.$data.nodes = resp.data.nodes;
 					this.$data.workloads = resp.data.workloads;
 				})
-				.catch((error) => {
-					this.$root.toast(error.message, "danger");
-				});
+				.catch(e => { this.msghttp(e);})
 			// chart
 			axios.get(`${this.dashboardUrl()}/api/v1/node?sortBy=d,creationTimestamp&context=${ctx}`)
 				.then((resp) => {
@@ -291,9 +289,7 @@ export default {
 
 					
 				})
-				.catch((error) => {
-					this.$root.toast(error.message, "danger");
-				});
+				.catch(e => { this.msghttp(e);});
 		})
 
 

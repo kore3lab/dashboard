@@ -13,7 +13,7 @@
 				<div class="col-sm-2">
 					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select>
 				</div>
-				<div class="col-sm-2 text-right">
+				<div class="col-sm-8 text-right">
 					<b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button>
 				</div>
 			</div>
@@ -79,10 +79,7 @@ export default {
 						}
 					}).data(resp.data).render();
 				})
-				.catch((error) => {
-					this.toast(error.message);
-					console.log(error);
-				});
+				.catch(e => { this.msghttp(e);})
 		}
 	}
 }

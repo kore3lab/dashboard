@@ -1,9 +1,15 @@
 /**
+"k8s.io/client-go/dynamic"
+    관련소스 : https://github.com/kubernetes/client-go/tree/master/dynamic
 
-  https://github.com/kubernetes/dashboard
-      /src/app/backend/resource/deployment/deploy.go
-      DeployAppFromFile() 함수
-      "k8s.io/client-go/dynamic" 활용 참조
+
+Kubernetes API Concepts
+    https://kubernetes.io/docs/reference/using-api/api-concepts/
+
+활용예제 참조
+    https://github.com/kubernetes/dashboard
+        /src/app/backend/resource/deployment/deploy.go
+        DeployAppFromFile() 함수
 */
 package client
 
@@ -19,6 +25,7 @@ import (
 	"k8s.io/client-go/dynamic"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/watch"
 
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	restclient "k8s.io/client-go/rest"
@@ -74,6 +81,33 @@ func (self *DynamicClient) GET(namespaceSet bool, namespace string, group string
 
 	} else {
 		r, err = dynamicClient.Resource(groupVersionResource).Get(context.TODO(), name, metaV1.GetOptions{})
+	}
+
+	return r, err
+
+}
+
+// Watch
+func (self *DynamicClient) Watch(namespaceSet bool, namespace string, group string, version string, kind string, resourceVersion string) (r watch.Interface, err error) {
+
+	// 실행
+	dynamicClient, err := dynamic.NewForConfig(self.config)
+	if err != nil {
+		return
+	}
+
+	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
+	groupVersionResource := schema.GroupVersionResource{Group: group, Version: version, Resource: kind}
+	opts := metaV1.ListOptions{Watch: true}
+	if resourceVersion != "" {
+		opts.ResourceVersion = resourceVersion
+	}
+
+	if namespaceSet {
+		r, err = dynamicClient.Resource(groupVersionResource).Namespace(namespace).Watch(context.TODO(), opts)
+
+	} else {
+		r, err = dynamicClient.Resource(groupVersionResource).Watch(context.TODO(), opts)
 	}
 
 	return r, err

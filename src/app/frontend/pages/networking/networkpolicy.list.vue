@@ -108,9 +108,7 @@ export default {
 					this.$data.origin = data;
 					this.$data.items = data;
 				})
-				.catch((error) => {
-					this.$root.toast(error.message, "danger");
-				});
+				.catch(e => { this.msghttp(e);});
 		}
 	},
 	beforeDestroy(){

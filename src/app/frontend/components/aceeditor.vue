@@ -22,8 +22,8 @@ export default {
 			highlightActiveLine: true,
 			tabSize: 4,
 			wrap: true,
-			fontSize: 14,
-			fontFamily: `'Roboto Mono Regular', monospace`,
+			fontSize: 12,
+			// fontFamily: `'Roboto Mono Regular', monospace`,
 		});
 		this.editor.setReadOnly(false);
 		this.editor.session.setMode("ace/mode/yaml");
