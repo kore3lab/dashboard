@@ -17,6 +17,7 @@
                     "sleep",
                     "3600"
                 ],
+                "imagePullPolicy": "IfNotPresent",
                 "resources": {}
             }
         ],

@@ -43,13 +43,15 @@
 							<div class="card-header"><h3 class="card-title">Meta data</h3></div>
 							<div class="card-body">
 								<dl class="row">
-									<dt class="col-sm-2">Annotations<i class="fas fa-edit ml-2 text-secondary"></i></dt>
+									<dt class="col-sm-2">Annotations</dt>
+									<!-- <dt class="col-sm-2">Annotations<i class="fas fa-edit ml-2 text-secondary"></i></dt> -->
 									<dd class="col-sm-10 text-truncate">
 										<ul class="list-unstyled mb-0">
 											<li v-for="(value, name) in raw.metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
 										</ul>
 									</dd>
-									<dt class="col-sm-2">Labels<i class="fas fa-edit ml-2 text-secondary"></i></dt>
+									<dt class="col-sm-2">Labels</dt>
+									<!-- <dt class="col-sm-2">Labels<i class="fas fa-edit ml-2 text-secondary"></i></dt> -->
 									<dd class="col-sm-10">
 										<ul class="list-unstyled mb-0">
 											<li v-for="(value, name) in raw.metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>

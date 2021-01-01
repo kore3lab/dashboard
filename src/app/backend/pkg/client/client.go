@@ -6,9 +6,12 @@
 Kubernetes API Concepts
     https://kubernetes.io/docs/reference/using-api/api-concepts/
 
+Patch
+    https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/
+
 활용예제 참조
-    https://github.com/kubernetes/dashboard
-        /src/app/backend/resource/deployment/deploy.go
+    kubernetes-dashboard
+        https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/deployment/deploy.go
         DeployAppFromFile() 함수
 */
 package client
@@ -17,9 +20,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
@@ -29,20 +34,43 @@ import (
 
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	restclient "k8s.io/client-go/rest"
+	// "encoding/json"
 )
 
 // type resourceVerber struct {
 type DynamicClient struct {
-	config *restclient.Config
+	config       *restclient.Config
+	resource     schema.GroupVersionResource
+	namespace    string
+	namespaceSet bool
 }
 
 // RestfulClient 리턴
 func NewDynamicClient(config *restclient.Config) DynamicClient {
-	return DynamicClient{config: config}
+	return DynamicClient{
+		config:       config,
+		namespaceSet: false,
+	}
+}
+
+// RestfulClient 리턴
+func NewDynamicClientSchema(config *restclient.Config, group string, version string, resource string) DynamicClient {
+	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
+	return DynamicClient{
+		config:       config,
+		resource:     schema.GroupVersionResource{Group: group, Version: version, Resource: resource},
+		namespaceSet: false,
+	}
 }
 
 // List
-func (self *DynamicClient) List(namespaceSet bool, namespace string, group string, version string, kind string) (r *unstructured.UnstructuredList, err error) {
+func (self *DynamicClient) SetNamespace(namespace string) {
+	self.namespace = namespace
+	self.namespaceSet = (namespace != "")
+}
+
+// List
+func (self *DynamicClient) List(opts metaV1.ListOptions) (r *unstructured.UnstructuredList, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -50,14 +78,11 @@ func (self *DynamicClient) List(namespaceSet bool, namespace string, group strin
 		return
 	}
 
-	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-	groupVersionResource := schema.GroupVersionResource{Group: group, Version: version, Resource: kind}
-
-	if namespaceSet {
-		r, err = dynamicClient.Resource(groupVersionResource).Namespace(namespace).List(context.TODO(), metaV1.ListOptions{})
+	if self.namespaceSet {
+		r, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).List(context.TODO(), opts)
 
 	} else {
-		r, err = dynamicClient.Resource(groupVersionResource).List(context.TODO(), metaV1.ListOptions{})
+		r, err = dynamicClient.Resource(self.resource).List(context.TODO(), opts)
 	}
 
 	return r, err
@@ -65,7 +90,7 @@ func (self *DynamicClient) List(namespaceSet bool, namespace string, group strin
 }
 
 // GET
-func (self *DynamicClient) GET(namespaceSet bool, namespace string, group string, version string, kind string, name string) (r *unstructured.Unstructured, err error) {
+func (self *DynamicClient) GET(name string, opts metaV1.GetOptions) (r *unstructured.Unstructured, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -73,14 +98,11 @@ func (self *DynamicClient) GET(namespaceSet bool, namespace string, group string
 		return
 	}
 
-	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-	groupVersionResource := schema.GroupVersionResource{Group: group, Version: version, Resource: kind}
-
-	if namespaceSet {
-		r, err = dynamicClient.Resource(groupVersionResource).Namespace(namespace).Get(context.TODO(), name, metaV1.GetOptions{})
+	if self.namespaceSet {
+		r, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Get(context.TODO(), name, opts)
 
 	} else {
-		r, err = dynamicClient.Resource(groupVersionResource).Get(context.TODO(), name, metaV1.GetOptions{})
+		r, err = dynamicClient.Resource(self.resource).Get(context.TODO(), name, opts)
 	}
 
 	return r, err
@@ -88,34 +110,28 @@ func (self *DynamicClient) GET(namespaceSet bool, namespace string, group string
 }
 
 // Watch
-func (self *DynamicClient) Watch(namespaceSet bool, namespace string, group string, version string, kind string, resourceVersion string) (r watch.Interface, err error) {
+func (self *DynamicClient) Watch(opts metaV1.ListOptions) (output watch.Interface, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
 	if err != nil {
 		return
 	}
+	opts.Watch = true
 
-	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-	groupVersionResource := schema.GroupVersionResource{Group: group, Version: version, Resource: kind}
-	opts := metaV1.ListOptions{Watch: true}
-	if resourceVersion != "" {
-		opts.ResourceVersion = resourceVersion
-	}
-
-	if namespaceSet {
-		r, err = dynamicClient.Resource(groupVersionResource).Namespace(namespace).Watch(context.TODO(), opts)
+	if self.namespaceSet {
+		output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Watch(context.TODO(), opts)
 
 	} else {
-		r, err = dynamicClient.Resource(groupVersionResource).Watch(context.TODO(), opts)
+		output, err = dynamicClient.Resource(self.resource).Watch(context.TODO(), opts)
 	}
 
-	return r, err
+	return output, err
 
 }
 
 // DELETE
-func (self *DynamicClient) DELETE(namespaceSet bool, namespace string, group string, version string, kind string, name string) (err error) {
+func (self *DynamicClient) DELETE(name string, opts metaV1.DeleteOptions) (err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -123,13 +139,10 @@ func (self *DynamicClient) DELETE(namespaceSet bool, namespace string, group str
 		return
 	}
 
-	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-	groupVersionResource := schema.GroupVersionResource{Group: group, Version: version, Resource: kind}
-
-	if namespaceSet {
-		err = dynamicClient.Resource(groupVersionResource).Namespace(namespace).Delete(context.TODO(), name, metaV1.DeleteOptions{})
+	if self.namespaceSet {
+		err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Delete(context.TODO(), name, opts)
 	} else {
-		err = dynamicClient.Resource(groupVersionResource).Delete(context.TODO(), name, metaV1.DeleteOptions{})
+		err = dynamicClient.Resource(self.resource).Delete(context.TODO(), name, opts)
 	}
 
 	return err
@@ -189,26 +202,26 @@ func (self *DynamicClient) POST(payload io.Reader, isUpdate bool) (output *unstr
 			return output, err
 		}
 
-		// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-		groupVersionResource := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
+		self.resource = schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
+		self.namespace = data.GetNamespace()
 
 		// update 인 경우 resourceVersion 을 조회 & 수정
 		if isUpdate {
-			r, err := dynamicClient.Resource(groupVersionResource).Namespace(data.GetNamespace()).Get(context.TODO(), data.GetName(), metaV1.GetOptions{})
+			r, err := dynamicClient.Resource(self.resource).Namespace(self.namespace).Get(context.TODO(), data.GetName(), metaV1.GetOptions{})
 			if err != nil {
 				return output, err
 			}
 			data.SetResourceVersion(r.GetResourceVersion())
 			if resource.Namespaced {
-				output, err = dynamicClient.Resource(groupVersionResource).Namespace(data.GetNamespace()).Update(context.TODO(), data, metaV1.UpdateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Update(context.TODO(), data, metaV1.UpdateOptions{})
 			} else {
-				output, err = dynamicClient.Resource(groupVersionResource).Update(context.TODO(), data, metaV1.UpdateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Update(context.TODO(), data, metaV1.UpdateOptions{})
 			}
 		} else {
 			if resource.Namespaced {
-				output, err = dynamicClient.Resource(groupVersionResource).Namespace(data.GetNamespace()).Create(context.TODO(), data, metaV1.CreateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Create(context.TODO(), data, metaV1.CreateOptions{})
 			} else {
-				output, err = dynamicClient.Resource(groupVersionResource).Create(context.TODO(), data, metaV1.CreateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Create(context.TODO(), data, metaV1.CreateOptions{})
 			}
 		}
 
@@ -216,4 +229,27 @@ func (self *DynamicClient) POST(payload io.Reader, isUpdate bool) (output *unstr
 
 	}
 
+}
+
+// Patch
+func (self *DynamicClient) PATCH(name string, patchType types.PatchType, payload io.Reader, opts metaV1.PatchOptions) (output *unstructured.Unstructured, err error) {
+
+	data, err := ioutil.ReadAll(payload)
+	if err != nil {
+		return output, err
+	}
+
+	// 실행
+	dynamicClient, err := dynamic.NewForConfig(self.config)
+	if err != nil {
+		return output, err
+	}
+
+	if self.namespaceSet {
+		output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Patch(context.TODO(), name, patchType, data, opts)
+	} else {
+		output, err = dynamicClient.Resource(self.resource).Patch(context.TODO(), name, patchType, data, opts)
+	}
+
+	return output, err
 }
