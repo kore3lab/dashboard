@@ -232,13 +232,14 @@ $ npm run start:backend
 
 ### Kubernetes Raw API
 > [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
+> [OepnAPI spec.](https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json)
 
-* Apply & Patch
+* Apply & Update
 
 |URL                    |Method |설명   |
 |---                    |---    |---    |
 |/raw/clusters/:cluster |POST   |Apply  |
-|/raw/clusters/:cluster |PUT    |Patch  |
+|/raw/clusters/:cluster |PUT    |Update |
 
 
 * CORE apiGroup URL Pettern
@@ -248,9 +249,11 @@ $ npm run start:backend
 |/raw/clusters/:cluster/api/:version/:resource                              |GET    |non-namespaced 리소스 목록 조회  |
 |/raw/clusters/:cluster/api/:version/:resource:/:name                       |GET    |non-namespaced 리소스 조회       |
 |/raw/clusters/:cluster/api/:version/:resource:/:name                       |DELETE |non-namespaced 리소스 삭제       |
+|/raw/clusters/:cluster/api/:version/:resource:/:name                       |PATCH  |non-namespaced 리소스 수정       |
 |/raw/clusters/:cluster/api/:version/namespaces/:resource:                  |GET    |namespaced 리소스 목록조회       |
 |/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |GET    |namespaced 리소스 조회           |
 |/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |DELETE |N\namespaced 리소스 삭제         |
+|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |PATCH  |N\namespaced 리소스 수정         |
 
 * apiGroup URL Pettern
 
@@ -259,12 +262,14 @@ $ npm run start:backend
 |/raw/clusters/:cluster/apis/:apiGroup/:version/:resource                             |GET    |non-namespaced 리소스 목록 조회  |
 |/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |GET    |non-namespaced 리소스 조회       |
 |/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |DELETE |non-namespaced 리소스 삭제       |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |PATCH  |non-namespaced 리소스 수정       |
 |/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:resource:                 |GET    |namespaced 리소스 목록조회       |
 |/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |GET    |namespaced 리소스 조회           |
 |/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |DELETE |namespaced 리소스 삭제           |
+|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |PATCH  |namespaced 리소스 수정           |
 
 
-* Raw API 호출 예제
+* Raw API 호출 예제 (GET, DELETE)
 
 ```
 $ curl http://localhost:3001/raw/clusters/apps-05/api/v1/nodes/apps-113                                  # core api
@@ -287,6 +292,44 @@ $ kubectl api-resources -o wide
 $ kubectl get crd
 $ kubectl get crd virtualservices.networking.istio.io -o jsonpath="{.spec.group}"
 ```
+
+* Raw API - PATCH
+> https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/
+  * [RFC 7396 (JSON Merge Patch)](https://tools.ietf.org/html/rfc7386)  : `Content-Type : application/merge-patch+json`
+  * [RFC 6902 (JSON Patch)](https://tools.ietf.org/html/rfc6902) : `Content-Type : application/json-patch+json`
+  * Strategic	Strategic merge patch : `Content-Type : application/strategic-merge-patch+json`
+
+```
+# Merge Patch example
+
+$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/pods/busybox -d @- <<EOF
+{
+    "metadata": {
+        "labels": {
+            "app": "busybox-merge"
+        }
+    }
+}
+EOF
+
+$ kubectl get po busybox -o jsonpath="{.metadata.labels}"
+```
+
+```
+# JSON Patch example
+
+$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/pods/busybox -d @- <<EOF
+[
+    {
+        "op": "replace", 
+        "path": "/metadata/labels/app", 
+        "value":"busybox-json"
+    }
+]EOF
+
+$ kubectl get po busybox -o jsonpath="{.metadata.labels}"
+```
+
 
 ### Dashboard
 > Kubernetes dashbaord
@@ -322,3 +365,10 @@ http://localhost:3002/topology.html   # topology graph
 http://localhost:3002/mesh.html       # mesh graph (deprecated)
 http://localhost:3002/rbac.html       # rbac graph
 ```
+
+## Link
+* https://github.com/acornsoftlab/dashboard
+* https://github.com/kubernetes/client-go
+* https://github.com/kubernetes/dashboard
+* https://bootstrap-vue.org/docs/components
+* https://github.com/gin-gonic/gin
