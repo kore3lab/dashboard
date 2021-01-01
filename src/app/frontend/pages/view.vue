@@ -8,7 +8,21 @@
 			<c-navigator :group="group"></c-navigator>
 			<div class="row mb-2">
 				<div class="col-sm-10">
-					<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ badge }}</span>{{ crd }}<small class="text-muted ml-2">/ {{ name }}<small><i class="fas fa-trash ml-2"></i></small></small></h1>
+					<b-overlay :show="deleteOverlay.visible" rounded="sm">
+					<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ badge }}</span>{{ crd }}<small class="text-muted ml-2">/ {{ name }}<small><i class="fas fa-trash ml-2" @click="deleteOverlay.visible = true"></i></small></small></h1>
+					<template #overlay>
+						<div v-if="deleteOverlay.processing" class="text-center">
+							<b-spinner small class="mr-2" label="please wait"></b-spinner><span>Watching DELETE status...</span>
+						</div>
+						<div v-else class="text-center">
+							<p>Are you sure DELETE it?</p>
+							<div class="text-center">
+								<b-button variant="outline-danger" size="sm" class="mr-1" @click="deleteOverlay.visible = false">Cancel</b-button>
+								<b-button variant="outline-success" size="sm" @click="onDelete">OK</b-button>
+							</div>
+						</div>
+					</template>
+					</b-overlay>
 				</div>
 				<div class="col-sm-2 text-right">
 					<b-button variant="secondary" size="sm" @click="$router.go(-1)">Cancel</b-button>
@@ -67,7 +81,7 @@
 			<b-tab title="Yaml">
 				<div class="row mb-2">
 					<div class="col-sm-12 text-right">
-						<b-button variant="primary" size="sm" @click="onPatch">Apply</b-button>
+						<b-button variant="primary" size="sm" @click="onPatch">Patch</b-button>
 						<b-button variant="secondary" size="sm" @click="onReset">Reset</b-button>
 					</div>
 				</div>
@@ -105,7 +119,12 @@ export default {
 			crd : this.$route.query.crd ?  this.$route.query.crd: "pod",
 			name : this.$route.query.name ? this.$route.query.name: "httpbin",
 			origin: { metadata: {}, spec: {} },
-			raw: { metadata: {}, spec: {} }
+			raw: { metadata: {}, spec: {} },
+			deleteOverlay: {
+				visible : false,
+				processing : false,
+				timer: null
+			}
 		}
 	},
 	layout: "default",
@@ -119,8 +138,7 @@ export default {
 	methods: {
 		// 조회
 		query() {
-			let params = this.$route.query;
-			axios.get(`${this.dashboardUrl()}/api/v1/_raw/${params.url}?context=${this.currentContext()}`)
+			axios.get(`${this.dashboardUrl()}/api/v1/_raw/${this.$route.query.url}?context=${this.currentContext()}`)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
@@ -135,26 +153,48 @@ export default {
 
 					if (spec) this.$jsonTree.create(spec, this.$refs["wrapSpec"]);
 
-				}).catch( error => {
-					this.toast(error.message, "danger");
-				});
+				})
+				.catch(e => { this.msghttp(e);});
 		},
-		// apply
 		onPatch() {
-			axios.put(`${this.backendUrl()}/api/_raw/${this.currentContext()}`, this.raw)
+			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
+				})
+				.catch(e => { this.msghttp(e);});
+		},
+		onDelete() {
+			this.deleteOverlay.processing = true;
+			axios.delete(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+				.then( resp => {
+					this.watch();
+				})
+				.catch(e => { this.msghttp(e);});
+		},
+		watch() {
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+				.then( resp => {
+					if (resp.status == "404") {
+						this.deleteOverlay.visible = false;
+						this.deleteOverlay.processing = false;
+						this.$router.go(-1);
+					} else {
+						setTimeout(() => { this.watch(); }, 3000);
+					}
 				}).catch( error => {
-					this.toast(error.message, "danger");
+					if(error.response && error.response.status == "404") {
+						this.deleteOverlay.visible = false;
+						this.deleteOverlay.processing = false;
+						this.$router.go(-1);
+					} else {
+						this.msghttp(error);
+					}
 				});
 		},
-		// reset
 		onError(error) {
-			// this.mesbox(error.message);
-			this.toast(error.message, "danger");
+			this.mesbox(error.message);
 		},
-		// reset
 		onReset() {
 			this.raw = Object.assign({}, this.origin);
 		}

@@ -22,9 +22,7 @@
 				</div><!--//END -->
 				<!-- 버튼 -->
 				<div class="col-sm-5 text-right dropdown">
-					<b-dropdown text="Create" variant="primary" size="sm">
-						<b-dropdown-item class="dropdown-item"><nuxt-link :to="{ path:'/create', query:{ context: currentContext(), group: 'Storage', crd: 'Persistent Volume Claim' } }">from Yaml</nuxt-link></b-dropdown-item>
-					</b-dropdown>
+					<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Storage&crd=PersistentVolumeClaim`)">Create</b-button>
 				</div><!--//END -->
 			</div>
 		</div>
@@ -129,7 +127,7 @@ export default {
 					});
 					this.onFiltered(this.items);
 				})
-				.catch((error) => { this.$root.toast(error.message, "danger");})
+				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {

@@ -19,6 +19,28 @@ Vue.mixin({
         footerClass: "p-1",
       });
     },
+    confirm(msg, callback) {
+      this.$bvModal
+        .msgBoxConfirm(msg, {
+          title: "",
+          variant: "info",
+          buttonSize: "sm",
+          footerClass: "p-1",
+        })
+        .then(callback)
+        .catch((err) => {});
+    },
+    msghttp(error) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        this.toast(error.response.data.message, "warning");
+      } else {
+        this.toast(error.message, "danger");
+      }
+    },
     backendUrl() {
       return `${location.protocol}//${location.hostname}:${this.$config.backendPort}`;
     },

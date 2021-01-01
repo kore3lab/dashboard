@@ -1,23 +1,18 @@
 <template>
 <!-- content-wrapper -->
 <div class="content-wrapper">
+
+	<!-- Content Header (Page header) -->
 	<div class="content-header">
-		<div class="container-fluid">
-			<div class="row mb-2">
-				<div class="col-sm-12">
-					<ol class="breadcrumb">
-					<li class="breadcrumb-item"><nuxt-link to="/">Home</nuxt-link></li>
-					<li class="breadcrumb-item active">{{ group }}</li>
-					</ol>
-				</div>
-			</div>
+		<div class="container-flui">
+			<c-navigator :group="group"></c-navigator>
 			<div class="row mb-2">
 				<div class="col-sm-10">
-					<h1 class="m-0 text-dark">Create {{ crd }}</h1>
+					<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ badge }}</span>Create {{ crd }}</h1>
 				</div>
 				<div class="col-sm-2 text-right">
-					<b-button variant="primary" size="sm">Apply</b-button>
-					<b-button variant="secondary" size="sm" @click="$router.go(-1)">Cancel</b-button>
+					<b-button variant="primary" size="sm"  @click="onApply">Apply</b-button>
+					<b-button variant="secondary" size="sm" @click="$router.go(-1)">Back</b-button>
 				</div>
 			</div>
 		</div>
@@ -27,8 +22,8 @@
 		<div class="row">
 			<div class="col-md-12">
 				<div class="card">
-					<div class="card-header"><h3 class="card-title"></h3></div>
-					<c-aceeditor class="card-body" style="min-height: calc(100vh - 210px - 60px)" id="wrapEditor"></c-aceeditor>
+					<div class="card-header"></div>
+					<c-aceeditor class="card-body" v-model="raw" v-on:error="onError" style="min-height: calc(100vh - 210px - 60px)"></c-aceeditor>
 				</div>
 			</div>
 		</div>
@@ -39,22 +34,56 @@
 
 </template>
 <script>
-import VueAceEditor from "@/components/aceeditor"
+
+import axios			from "axios"
+import VueAceEditor 	from "@/components/aceeditor"
+import VueNavigator 	from "@/components/navigator"
 
 export default {
+	components: {
+		"c-aceeditor": { extends: VueAceEditor },
+		"c-navigator": { extends: VueNavigator }
+	},
 	data() {
 		return {
 			badge: this.$route.query.crd ? this.$route.query.crd.substring(0,1): "P",
 			group: this.$route.query.group ?  this.$route.query.group: "Workload", 
 			crd : this.$route.query.crd ?  this.$route.query.crd: "pod",
-			raw: { metadata: {}, spec: {} }
+			raw: { metadata: {}, spec: {} },
+			template: null
 		}
 	},
 	layout: "default",
-	components: {
-		"c-aceeditor": {
-			extends: VueAceEditor
+	created() {
+		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+	},
+	mounted() {
+		try { 
+			let filename = this.crd.toLowerCase().replaceAll(" ", "");
+			console.log(filename);
+			this.template = require(`~/assets/template/${filename}.json`); 
+			this.raw = Object.assign({}, this.template);
+		} catch (ex) {
+			console.log(`can't find "${this.crd}" template o n ~/assets/template`); 
 		}
+		
+	},
+	beforeDestroy(){
+		this.$nuxt.$off('navbar-context-selected')
+	},
+	methods: {
+		onApply() {
+			axios.post(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
+				.then( resp => {
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
+					this.toast("Apply OK", "info");
+				})
+				.catch(e => { this.msghttp(e);});
+		},
+		onError(error) {
+			this.toast(error.message, "danger");
+		},
 	}
 }
 </script>

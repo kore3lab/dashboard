@@ -1,0 +1,27 @@
+{
+    "kind": "Pod",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "busybox",
+        "namespace": "default",
+        "labels": {
+            "app": "busybox"
+        }
+    },
+    "spec": {
+        "containers": [
+            {
+                "name": "busybox",
+                "image": "busybox",
+                "command": [
+                    "sleep",
+                    "3600"
+                ],
+                "resources": {}
+            }
+        ],
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
+    },
+    "status": {}
+}

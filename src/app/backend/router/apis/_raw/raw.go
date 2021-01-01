@@ -8,6 +8,7 @@ package _raw
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/client"
@@ -107,7 +108,11 @@ func GetRaw(c *gin.Context) {
 	} else {
 		r, err = api.GET(namespaceSet, namespace, group, version, resource, name)
 		if err != nil {
-			g.SendMessage(http.StatusInternalServerError, err.Error())
+			if strings.HasSuffix(err.Error(), "not found") {
+				g.SendMessage(http.StatusNotFound, err.Error())
+			} else {
+				g.SendMessage(http.StatusInternalServerError, err.Error())
+			}
 			return
 		}
 	}
