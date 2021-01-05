@@ -60,13 +60,14 @@ $ cd dashboard
 $ npm i
 
 # graph
-$ cd src/app/graph
+$ cd ../src/app/graph
 $ npm i
 ```
 
 * run
 
 ```
+$ cd ../../..
 $ npm run start
 ```
 
