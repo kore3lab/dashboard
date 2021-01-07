@@ -25,7 +25,7 @@
 						<ul class="nav nav-treeview">
 							<!-- <li class="nav-item small"><nuxt-link to="/list"  class="nav-link"><i class="nav-icon text-sm mr-0">A</i><p>pplocations</p></nuxt-link></li> -->
 							<!-- <li class="nav-item small"><nuxt-link to="/list"  class="nav-link"><i class="nav-icon text-sm mr-0">W</i><p>orkloads</p></nuxt-link></li> -->
-							<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>Pods</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/workload/deployment.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>eployments</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/workload/statefulset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>tateful Sets</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/workload/cornjob.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ron Jobs</p></nuxt-link></li>
