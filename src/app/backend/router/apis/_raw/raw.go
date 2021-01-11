@@ -13,6 +13,7 @@ import (
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/client"
 	"github.com/acornsoftlab/dashboard/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -22,14 +23,8 @@ import (
 func ApplyRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	// url parameter validation
-	if err := g.ValidateUrl([]string{"CLUSTER"}); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
-		return
-	}
-
 	// api clinet
-	context := g.C.Param("CLUSTER")
+	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
 	api := client.NewDynamicClient(config.Value.KubeConfigs[context])
 
 	// invoke POST
@@ -47,14 +42,15 @@ func DeleteRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
 	// url parameter validation
-	v := []string{"CLUSTER", "VERSION", "RESOURCE", "NAME"}
+	v := []string{"VERSION", "RESOURCE", "NAME"}
 	if err := g.ValidateUrl(v); err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// instancing dynamic client
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[g.C.Param("CLUSTER")], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	// invoke delete
@@ -70,14 +66,15 @@ func GetRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
 	// url parameter validation
-	v := []string{"CLUSTER", "VERSION", "RESOURCE"}
+	v := []string{"VERSION", "RESOURCE"}
 	if err := g.ValidateUrl(v); err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// instancing dynamic client
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[g.C.Param("CLUSTER")], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	var r interface{}
@@ -110,14 +107,15 @@ func PatchRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
 	// url parameter validation
-	v := []string{"CLUSTER", "VERSION", "RESOURCE", "NAME"}
+	v := []string{"VERSION", "RESOURCE", "NAME"}
 	if err := g.ValidateUrl(v); err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// instancing dynamic client
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[g.C.Param("CLUSTER")], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	var r interface{}

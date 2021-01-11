@@ -15,12 +15,13 @@ import (
 	sidedb "github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/database"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclient "k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+
+	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
 )
 
 func main() {
@@ -41,8 +42,8 @@ func main() {
 	log.SetLevel(log.InfoLevel)
 
 	kubeconfig = flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets (defaults to in-cluster config)")
-	dbFile = flag.String("db-file", "/tmp/metrics.db", "What file to use as a SQLite3 database.")
-	metricResolution = flag.Duration("metric-resolution", 1*time.Minute, "The resolution at which dashboard-metrics-scraper will poll metrics.")
+	dbFile = flag.String("db-file", "metrics.db", "What file to use as a SQLite3 database.")
+	metricResolution = flag.Duration("metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	metricDuration = flag.Duration("metric-duration", 15*time.Minute, "The duration after which metrics are purged from the database.")
 	logLevel = flag.String("log-level", "info", "The log level")
 	// When running in a scoped namespace, disable Node lookup and only capture metrics for the given namespace(s)
@@ -61,20 +62,9 @@ func main() {
 		log.SetLevel(level)
 	}
 
-	// This should only be run in-cluster so...
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		log.Fatalf("Unable to generate a client config: %s", err)
-	}
-
-	log.Infof("Kubernetes host: %s", config.Host)
-	log.Infof("Namespace(s): %s", *metricNamespace)
-
-	// Generate the metrics client
-	clientset, err := metricsclient.NewForConfig(config)
-	if err != nil {
-		log.Fatalf("Unable to generate a clientset: %s", err)
-	}
+	// configuration
+	//      customized by acornsoft-dashboard
+	config.Setup(*kubeconfig)
 
 	// Create the db "connection"
 	db, err := sql.Open("sqlite3", *dbFile)
@@ -108,10 +98,11 @@ func main() {
 			return
 
 		case <-ticker.C:
-			err = update(clientset, db, metricDuration, metricNamespace)
-			if err != nil {
-				break
+			// customized by acornsoft-dashboard
+			for _, ctx := range config.Value.Contexts {
+				err = update(ctx, db, metricDuration, metricNamespace)
 			}
+			// --END
 		}
 	}
 }
@@ -119,10 +110,18 @@ func main() {
 /**
 * Update the Node and Pod metrics in the provided DB
  */
-func update(client *metricsclient.Clientset, db *sql.DB, metricDuration *time.Duration, metricNamespace *[]string) error {
+func update(cluster string, db *sql.DB, metricDuration *time.Duration, metricNamespace *[]string) error {
 	nodeMetrics := &v1beta1.NodeMetricsList{}
 	podMetrics := &v1beta1.PodMetricsList{}
 	var err error
+
+	// customized by acornsoft-dashboard
+	client, err := metricsclient.NewForConfig(config.Value.KubeConfigs[cluster])
+	if err != nil {
+		log.Fatalf("Unable to generate a clientset: %s", err)
+		return err
+	}
+	// --END
 
 	// If no namespace is provided, make a call to the Node
 	if len(*metricNamespace) == 1 && (*metricNamespace)[0] == "" {
@@ -147,20 +146,20 @@ func update(client *metricsclient.Clientset, db *sql.DB, metricDuration *time.Du
 	}
 
 	// Insert scrapes into DB
-	err = sidedb.UpdateDatabase(db, nodeMetrics, podMetrics)
+	err = sidedb.UpdateDatabase(db, cluster, nodeMetrics, podMetrics) // customized by acornsoft-dashboard
 	if err != nil {
 		log.Errorf("Error updating database: %s", err)
 		return err
 	}
 
 	// Delete rows outside of the metricDuration time
-	err = sidedb.CullDatabase(db, metricDuration)
+	err = sidedb.CullDatabase(db, cluster, metricDuration)
 	if err != nil {
-		log.Errorf("Error culling database: %s", err)
+		log.Errorf("Error culling database: %s on %s", err, cluster) // customized by acornsoft-dashboard
 		return err
 	}
 
-	log.Infof("Database updated: %d nodes, %d pods", len(nodeMetrics.Items), len(podMetrics.Items))
+	log.Infof("Database updated: %s cluster, %d nodes, %d pods", cluster, len(nodeMetrics.Items), len(podMetrics.Items)) // customized by acornsoft-dashboard
 	return nil
 }
 

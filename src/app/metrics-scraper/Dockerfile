@@ -31,7 +31,7 @@ RUN echo "Building for $GOARCH" \
     && GOARCH=${GOARCH} hack/build.sh 
 
 # Create a nonroot user for final image
-RUN useradd -u 10001 nonroot 
+# RUN useradd -u 10001 nonroot 
 
 # Final stage: the running container.
 FROM scratch AS final
@@ -44,7 +44,8 @@ COPY --from=builder /etc/passwd /etc/passwd
 
 # Declare the port on which the webserver will be exposed.
 EXPOSE 8080
-USER nonroot
+#USER nonroot
 
+ENV KUBECONFIG /app/.kube/config
 # Run the compiled binary.
 ENTRYPOINT ["/metrics-sidecar"]
