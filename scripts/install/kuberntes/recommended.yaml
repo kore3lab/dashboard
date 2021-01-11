@@ -81,11 +81,11 @@ rules:
     # Allow Dashboard to get metrics.
   - apiGroups: [""]
     resources: ["services"]
-    resourceNames: ["heapster", "dashboard-metrics-scraper"]
+    resourceNames: ["heapster", "metrics-scraper"]
     verbs: ["proxy"]
   - apiGroups: [""]
     resources: ["services/proxy"]
-    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "dashboard-metrics-scraper", "http:dashboard-metrics-scraper"]
+    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "metrics-scraper", "http:metrics-scraper"]
     verbs: ["get"]
 
 ---
@@ -97,7 +97,6 @@ metadata:
     app: dashboard
   name: acornsoft-dashboard
 rules:
-  # Allow Metrics Scraper to get metrics from the Metrics server
   - apiGroups: ["metrics.k8s.io"]
     resources: ["pods", "nodes"]
     verbs: ["get", "list", "watch"]
@@ -177,11 +176,11 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
           imagePullPolicy: Always
           env:
           - name: SIDECAR_HOST
-            value: "http://dashboard-metrics-scraper:8000"
+            value: "http://metrics-scraper:8000"
           ports:
             - containerPort: 9090
               protocol: TCP
@@ -206,9 +205,6 @@ spec:
       serviceAccountName: dashboard
       nodeSelector:
         "kubernetes.io/os": linux
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
 
 ---
 
@@ -216,15 +212,15 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app: dashboard-metrics-scraper
-  name: dashboard-metrics-scraper
+    app: metrics-scraper
+  name: metrics-scraper
   namespace: acornsoft-dashboard
 spec:
   ports:
     - port: 8000
       targetPort: 8000
   selector:
-    app: dashboard-metrics-scraper
+    app: metrics-scraper
 
 ---
 
@@ -232,24 +228,25 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: dashboard-metrics-scraper
-  name: dashboard-metrics-scraper
+    app: metrics-scraper
+  name: metrics-scraper
   namespace: acornsoft-dashboard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dashboard-metrics-scraper
+      app: metrics-scraper
   template:
     metadata:
       labels:
-        app: dashboard-metrics-scraper
+        app: metrics-scraper
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:
       containers:
-        - name: dashboard-metrics-scraper
-          image: kubernetesui/metrics-scraper:v1.0.6
+        - name: metrics-scraper
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -261,22 +258,15 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 30
           volumeMounts:
-          - mountPath: /tmp
-            name: tmp-volume
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsUser: 1001
-            runAsGroup: 2001
+            - name: dashboard-kubeconfig
+              mountPath: /app/.kube
+      volumes:
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoft-dashboard-kubeconfig
       serviceAccountName: dashboard
       nodeSelector:
         "kubernetes.io/os": linux
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
-      volumes:
-        - name: tmp-volume
-          emptyDir: {}
 
 ---
 
@@ -306,7 +296,6 @@ metadata:
   labels:
     app: backend
   name: backend
-  namespace: acornsoft-dashboard
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -320,7 +309,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: acornsoftlab/acornsoft-dashboard.backend:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
@@ -332,9 +321,6 @@ spec:
             name: tmp-volume
       nodeSelector:
         "kubernetes.io/os": linux
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
       volumes:
         - name: tmp-volume
           emptyDir: {}
@@ -383,7 +369,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT
@@ -400,9 +386,6 @@ spec:
             name: tmp-volume
       nodeSelector:
         "kubernetes.io/os": linux
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
       volumes:
         - name: tmp-volume
           emptyDir: {}

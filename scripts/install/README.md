@@ -115,16 +115,13 @@ EOF
   * `--web.enable-admin-api` 옵션 추가
 
 
-## Application Install
-
-### Install
+## Acoronsoft-dashboard Install
 
 * Deploy
 
 ```
 $ kubectl apply -f kuberntes/recommended.yaml
 ```
-
 
 * Careate configmap `acornsoft-dashboard-kubeconfig`
 

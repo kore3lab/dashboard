@@ -90,11 +90,10 @@ type clientManager struct {
 	insecureConfig *rest.Config
 
 	// multi context 설정정보 map (added by escho)
-	kubeConfigs	map[string]*rest.Config
+	kubeConfigs map[string]*rest.Config
 
 	// 현재(default) context 명 (added by escho)
-	currentContext	string
-
+	currentContext string
 }
 
 // Client returns a kubernetes client. In case dashboard login is enabled and option to skip
@@ -111,10 +110,9 @@ func (self *clientManager) Client(req *restful.Request) (kubernetes.Interface, e
 
 	// added by escho
 	context := req.Request.URL.Query().Get("context")
-	if (len(context) > 0) {
+	if len(context) > 0 {
 		return kubernetes.NewForConfig(self.kubeConfigs[context])
 	}
-
 
 	return self.InsecureClient(), nil
 }
@@ -328,36 +326,42 @@ func (self *clientManager) buildConfigFromFlags(apiserverHost, kubeConfigPath st
 // added by escho
 func (self *clientManager) buildConfigsFromFlags(kubeconfig string) (*rest.Config, error) {
 
-	if len(kubeconfig) > 0 {
-		
-		// Attempt to load external clusters too
-		var loader clientcmd.ClientConfigLoader
-		if kubeconfig != "" { // load from --kubeconfig
-			loader = &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
-		} else {
-			loader = clientcmd.NewDefaultClientConfigLoadingRules()
-		}
-
-		cfg, err := loader.Load()
-		if err != nil {
-			return nil, errors.NewInvalid("cannot load kubecfg")
-		}
-		
-		configs := map[string]*rest.Config{}
-		for context := range cfg.Contexts {
-			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, context, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
-			if err != nil {
-				return nil, errors.NewInvalid("could not create client config")
-			}
-			configs[context] = contextCfg
-		}
-		self.kubeConfigs = configs
-		self.currentContext = cfg.CurrentContext
-		self.insecureConfig = configs[self.currentContext]
-		return self.insecureConfig, nil
+	var loader clientcmd.ClientConfigLoader
+	if kubeconfig != "" { // load from --kubeconfig
+		loader = &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
+	} else {
+		loader = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
 
-	if self.isRunningInCluster() {
+	self.kubeConfigs = map[string]*rest.Config{}
+	cfg, err := loader.Load()
+	if err == nil {
+		for context := range cfg.Contexts {
+			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, context, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
+			if err == nil {
+				self.kubeConfigs[context] = contextCfg
+				if self.currentContext == "" {
+					self.currentContext = context
+				}
+			}
+		}
+		if len(self.kubeConfigs) > 0 {
+			self.currentContext = cfg.CurrentContext
+			if cfg.CurrentContext != "" {
+				self.currentContext = cfg.CurrentContext
+			}
+			self.insecureConfig = self.kubeConfigs[self.currentContext]
+			return self.insecureConfig, nil
+		}
+	}
+
+	if len(self.kubeConfigs) == 0 {
+		cnf, err := rest.InClusterConfig()
+		if err != nil {
+			panic("cannot load kubeconfig inCluster")
+		}
+		self.inClusterConfig = cnf
+		self.kubeConfigs["default"] = self.inClusterConfig
 		return self.inClusterConfig, nil
 	}
 

@@ -13,12 +13,20 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gorilla/mux"
+
+	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
 )
 
 // DashboardRouter defines the usable API routes
 func DashboardRouter(r *mux.Router, db *sql.DB) {
-	r.Path("/nodes/{Name}/metrics/{MetricName}/{Whatever}").HandlerFunc(nodeHandler(db))
-	r.Path("/namespaces/{Namespace}/pod-list/{Name}/metrics/{MetricName}/{Whatever}").HandlerFunc(podHandler(db))
+	r.Path("/dashboard/nodes/{Name}/metrics/{MetricName}/{Whatever}").HandlerFunc(nodeHandler(db))
+	r.Path("/dashboard/namespaces/{Namespace}/pod-list/{Name}/metrics/{MetricName}/{Whatever}").HandlerFunc(podHandler(db))
+	// customized by acornsoft-dashboard
+	r.Path("/clusters/{Cluster}/nodes/{Name}/metrics/{MetricName}").HandlerFunc(nodeHandler(db))
+	r.Path("/clusters/{Cluster}/namespaces/{Namespace}/pods/{Name}/metrics/{MetricName}").HandlerFunc(podHandler(db))
+	r.Path("/nodes/{Name}/metrics/{MetricName}").HandlerFunc(nodeHandler(db))
+	r.Path("/namespaces/{Namespace}/pods/{Name}/metrics/{MetricName}").HandlerFunc(podHandler(db))
+	// --END
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 
@@ -34,10 +42,16 @@ func nodeHandler(db *sql.DB) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		resp, err := getNodeMetrics(db, vars["MetricName"], ResourceSelector{
+		// customized by acornsoft-dashboard
+		clsuter := vars["Cluster"]
+		if clsuter == "" {
+			clsuter = config.Value.CurrentContext
+		}
+		resp, err := getNodeMetrics(db, clsuter, vars["MetricName"], ResourceSelector{
 			Namespace:    "",
 			ResourceName: vars["Name"],
 		})
+		// --END
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -70,10 +84,16 @@ func podHandler(db *sql.DB) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		resp, err := getPodMetrics(db, vars["MetricName"], ResourceSelector{
+		// customized by acornsoft-dashboard
+		clsuter := vars["Cluster"]
+		if clsuter == "" {
+			clsuter = config.Value.CurrentContext
+		}
+		resp, err := getPodMetrics(db, clsuter, vars["MetricName"], ResourceSelector{
 			Namespace:    vars["Namespace"],
 			ResourceName: vars["Name"],
 		})
+		// --END
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -102,17 +122,17 @@ func podHandler(db *sql.DB) http.HandlerFunc {
 	return fn
 }
 
-func getRows(db *sql.DB, table string, metricName string, selector ResourceSelector) (*sql.Rows, error) {
+func getRows(db *sql.DB, cluster string, table string, metricName string, selector ResourceSelector) (*sql.Rows, error) { // customized by acornsoft-dashboard
 	var query string
 	var values []interface{}
 	var args []string
 	orderBy := []string{"name", "time"}
 	if metricName == "cpu" {
-		query = "select sum(cpu), name, uid, time from %s "
+		query = fmt.Sprintf("select sum(cpu), name, uid, time from %s where cluster='%s' and ", table, cluster) // customized by acornsoft-dashboard
 	} else {
 		//default to metricName == "memory/usage"
 		// metricName = "memory"
-		query = "select sum(memory), name, uid, time from %s "
+		query = fmt.Sprintf("select sum(memory), name, uid, time from %s where cluster='%s' and ", table, cluster) // customized by acornsoft-dashboard
 	}
 
 	if table == "pods" {
@@ -143,7 +163,7 @@ func getRows(db *sql.DB, table string, metricName string, selector ResourceSelec
 		values = append(values, selector.UID)
 	}
 
-	query = fmt.Sprintf(query+" where "+strings.Join(args, " and ")+" group by name, time order by %v;", table, strings.Join(orderBy, ", "))
+	query = fmt.Sprintf(query+strings.Join(args, " and ")+" group by name, time order by %v;", strings.Join(orderBy, ", ")) // customized by acornsoft-dashboard
 
 	return db.Query(query, values...)
 }
@@ -152,8 +172,8 @@ func getRows(db *sql.DB, table string, metricName string, selector ResourceSelec
 	getPodMetrics: With a database connection and a resource selector
 	Queries SQLite and returns a list of metrics.
 */
-func getPodMetrics(db *sql.DB, metricName string, selector ResourceSelector) (SidecarMetricResultList, error) {
-	rows, err := getRows(db, "pods", metricName, selector)
+func getPodMetrics(db *sql.DB, cluster string, metricName string, selector ResourceSelector) (SidecarMetricResultList, error) { // customized by acornsoft-dashboard
+	rows, err := getRows(db, cluster, "pods", metricName, selector) // customized by acornsoft-dashboard
 	if err != nil {
 		log.Errorf("Error getting pod metrics: %v", err)
 		return SidecarMetricResultList{}, err
@@ -222,9 +242,9 @@ func getPodMetrics(db *sql.DB, metricName string, selector ResourceSelector) (Si
 	getNodeMetrics: With a database connection and a resource selector
 	Queries SQLite and returns a list of metrics.
 */
-func getNodeMetrics(db *sql.DB, metricName string, selector ResourceSelector) (SidecarMetricResultList, error) {
+func getNodeMetrics(db *sql.DB, cluster string, metricName string, selector ResourceSelector) (SidecarMetricResultList, error) { // customized by acornsoft-dashboard
 	resultList := make(map[string]SidecarMetric)
-	rows, err := getRows(db, "nodes", metricName, selector)
+	rows, err := getRows(db, cluster, "nodes", metricName, selector) // customized by acornsoft-dashboard
 
 	if err != nil {
 		log.Errorf("Error getting node metrics: %v", err)

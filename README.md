@@ -2,7 +2,7 @@
 
 ## Preparation
 
-아래 소프트웨어가 설치 및 $PATH 변수에 추가 필요
+아래 소프트웨어 설치 및 $PATH 변수에 추가 필요
 
 * Curl 7+
 * Git 2.13.2+
@@ -21,7 +21,7 @@ $ git clone https://github.com/acornsoftlab/dashboard.git
 $ cd dashboard
 ```
 
-* `subtree` 구성된 kubernetes/dashboard 에서 사용하지 않는 파일을 제외하도록 지정하고 소스 트리를 업데이트
+* `subtree`로 구성된 소스 중 사용되지 않는 파일을 제외하도록 지정하고 소스 트리를 업데이트합니다.
 
 ```
 # sparse checkout 옵션 지정
@@ -42,6 +42,14 @@ $ cat <<EOF> .git/info/sparse-checkout
 /dashboard/package*.*
 /dashboard/go.*
 /dashboard/gulpfile.babel.js
+!/src/app/metrics-scraper
+/src/app/metrics-scraper/hack/build.sh
+/src/app/metrics-scraper/pkg
+/src/app/metrics-scraper/vendor
+/src/app/metrics-scraper/Dockerfile
+/src/app/metrics-scraper/go.*
+/src/app/metrics-scraper/*.go
+!/src/app/metrics-scraper/**/*_test.go
 EOF
 
 # 트리 업데이트
@@ -49,7 +57,7 @@ $ git read-tree HEAD -m -u
 ```
 
 
-* npm install
+* Install dependencies (frontend, kubernetes-dashboard, graph)
 
 ```
 # frontend
@@ -64,15 +72,14 @@ $ cd ../src/app/graph
 $ npm i
 ```
 
-* run
+* Run
 
 ```
 $ cd ../../..
 $ npm run start
 ```
 
-
-* validation
+* Verified running
 
 ```
 # frontend
@@ -84,29 +91,27 @@ $ curl http://localhost:3001/healthy
 # dashboard
 $ curl http://localhost:9090/api/v1/pod
 
+# metrics scraper
+$ curl http://localhost:8000/api/v1
+
 # graph
 http://localhost:3002/topology.html
 ```
 
-* Dashboard 개발 시  `dashboard-metrics-scraper` 실행 필요
-
-```
-$ kubectl port-forward  svc/dashboard-metrics-scraper -n kubernetes-dashboard 8000
-```
-
 ## NPM 
 
-* 개발
+* Develop
 ```
-$ npm run start               # 실행 (backend, dashboard, frontend)
-$ npm run start:frontend      # frontend 실행
-$ npm run start:backend       # backend 실행
-$ npm run start:dashboard     # kubernetes dashboard backend 실행
-$ npm run start:graph         # graph 실행
-$ npm run start:graph:backend # 그래프 개발 실행 (backend + graph)
+$ npm run start                 # 실행 (backend, dashboard, frontend, metrics-scraper)
+$ npm run start:frontend        # frontend 실행
+$ npm run start:backend         # backend 실행
+$ npm run start:dashboard       # kubernetes dashboard backend 실행
+$ npm run start:metrics-scraper # metrics scraper 실행
+$ npm run start:graph           # graph 실행
+$ npm run start:graph:backend   # 그래프 개발 실행 (backend + graph)
 ```
 
-* 빌드
+* Build
 ```
 $ npm run build:frontend      # frontend 빌드 (using on docker build)
 $ npm run build:graph         # 그래프 빌드 frontend 에 변경된 최신 그래프 적용시 사용
@@ -114,34 +119,42 @@ $ npm run run                 # frontend container 에서 nuxt 실행 (docker im
 ```
 
 * Containerization
+  * default tag : "latest" (.npmrc 파일 참조)
+  * `--acornsoft-dashboard:docker_image_tag=<value>` 옵션으로 latest 대신 tag 지정 가능
 
 ```
 # docker build
 $ npm run docker:build:frontend
 $ npm run docker:build:backend
 $ npm run docker:build:dashboard
+$ npm run docker:build:metrics-scraper
 
 # docker push
 $ npm run docker:push:frontend    
 $ npm run docker:push:backend
 $ npm run docker:push:dashboard
+$ npm run docker:push:metrics-scraper
 
 # docker build & push
 $ npm run docker:build:push:frontend    
 $ npm run docker:build:push:backend
 $ npm run docker:build:push:dashboard
+$ npm run docker:build:push:metrics-scraper
 
 # all (frontend, backend, dashboard)
 $ npm run docker:build        # build
 $ npm run docker:build:push   # build & push
-```
 
+# tag 를 옵션으로 지정하는 예
+$ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
+```
 
 ### Using ports
 * 3000 : front-end
 * 3001 : backend (restful-api)
 * 3002 : graph 개발
 * 9090 : kubernetes dashboard backend
+* 8000 : metrics scraper
 
 
 ## Deployment
@@ -150,16 +163,17 @@ $ npm run docker:build:push   # build & push
 ### Deploy on Docker
 
 ```
-$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend acornsoftlab/acornsoft-dashboard.backend:v0.1.1
-$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --name dashboard acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
-$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1
+$ docker run --rm -d -p 8000:8000 -v ${HOME}/.kube/config:/app/.kube/config --name metrics-scraper ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1
+$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --link metrics-scraper:metrics-scraper -e SIDECAR_HOST="http://metrics-scraper:8000" --name dashboard ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
+$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
 $ docker ps
 ```
+
 
 ### Deploy on Kubernetes
 
 [Install on Kubernetes](./scripts/install/README.md)
-
 
 
 ## Front-End
@@ -200,7 +214,7 @@ $ npm run start:frontend
 [패스트캠퍼스 Vue.js 수업 자료](https://joshua1988.github.io/vue-camp/textbook.html)
 
 ## Back-End
-> Custom backend rest-api
+> Backend rest-api
 
 * backend restful api 
 * language :  go-lang 1.15
@@ -225,133 +239,75 @@ $ npm run start:backend
 
 ### API
 
-|apis                               |이름                             |비고                                                |
-|---                                |---                              |---                                                 |
-|/api/clusters                      |k8s cluster context 리스트 조회  |http://localhost:3001/api/clusters                  |
-|/api/clusters/:cluster/topology    |토플로지 그래프 조회             |http://localhost:3001/api/clusters/apps-05/topology |
-
-
-### Kubernetes Raw API
-> [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
-> [OepnAPI spec.](https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json)
-
-* Apply & Update
-
-|URL                    |Method |설명   |
-|---                    |---    |---    |
-|/raw/clusters/:cluster |POST   |Apply  |
-|/raw/clusters/:cluster |PUT    |Update |
-
-
-* CORE apiGroup URL Pettern
-
-|URL                                                                        |Method |설명                             |
-|---                                                                        |---    |---                              |
-|/raw/clusters/:cluster/api/:version/:resource                              |GET    |non-namespaced 리소스 목록 조회  |
-|/raw/clusters/:cluster/api/:version/:resource:/:name                       |GET    |non-namespaced 리소스 조회       |
-|/raw/clusters/:cluster/api/:version/:resource:/:name                       |DELETE |non-namespaced 리소스 삭제       |
-|/raw/clusters/:cluster/api/:version/:resource:/:name                       |PATCH  |non-namespaced 리소스 수정       |
-|/raw/clusters/:cluster/api/:version/namespaces/:resource:                  |GET    |namespaced 리소스 목록조회       |
-|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |GET    |namespaced 리소스 조회           |
-|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |DELETE |N\namespaced 리소스 삭제         |
-|/raw/clusters/:cluster/api/:version/namespaces/:namespace/:resource/:name  |PATCH  |N\namespaced 리소스 수정         |
-
-* apiGroup URL Pettern
-
-|URL                                                                                  |Method |설명                             |
-|---                                                                                  |---    |---                              |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource                             |GET    |non-namespaced 리소스 목록 조회  |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |GET    |non-namespaced 리소스 조회       |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |DELETE |non-namespaced 리소스 삭제       |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/:resource:/:name                      |PATCH  |non-namespaced 리소스 수정       |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:resource:                 |GET    |namespaced 리소스 목록조회       |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |GET    |namespaced 리소스 조회           |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |DELETE |namespaced 리소스 삭제           |
-|/raw/clusters/:cluster/apis/:apiGroup/:version/namespaces/:namespace/:resource/:name |PATCH  |namespaced 리소스 수정           |
-
-
-* Raw API 호출 예제 (GET, DELETE)
-
-```
-$ curl http://localhost:3001/raw/clusters/apps-05/api/v1/nodes/apps-113                                  # core api
-$ curl http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/services/kubernetes          # namespaced core api
-$ curl http://localhost:3001/raw/clusters/apps-05/apis/metrics.k8s.io/v1beta1/nodes/apps-115             # apiGroup api
-$ curl http://localhost:3001/raw/clusters/apps-05/apis/apps/v1/namespaces/kube-system/deployments/nginx  # namespaced apiGroup api
-```
-
-* 변수
-  * `:cluster` : kubeconfig Context 이름
-  * `:apiGroups` : api Groups `kubectl api-resources -o wide` 으로 조회 가능
-  * `:version` :  `apiGroup` 버전
-  * `:resource` : 리소스 이름
-
-* apiGroups
-```
-$ kubectl api-resources -o wide
-
-# CRD 경우
-$ kubectl get crd
-$ kubectl get crd virtualservices.networking.istio.io -o jsonpath="{.spec.group}"
-```
-
-* Raw API - PATCH
-> https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/
-  * [RFC 7396 (JSON Merge Patch)](https://tools.ietf.org/html/rfc7386)  : `Content-Type : application/merge-patch+json`
-  * [RFC 6902 (JSON Patch)](https://tools.ietf.org/html/rfc6902) : `Content-Type : application/json-patch+json`
-  * Strategic	Strategic merge patch : `Content-Type : application/strategic-merge-patch+json`
-
-```
-# Merge Patch example
-
-$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/pods/busybox -d @- <<EOF
-{
-    "metadata": {
-        "labels": {
-            "app": "busybox-merge"
-        }
-    }
-}
-EOF
-
-$ kubectl get po busybox -o jsonpath="{.metadata.labels}"
-```
-
-```
-# JSON Patch example
-
-$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/clusters/apps-05/api/v1/namespaces/default/pods/busybox -d @- <<EOF
-[
-    {
-        "op": "replace", 
-        "path": "/metadata/labels/app", 
-        "value":"busybox-json"
-    }
-]EOF
-
-$ kubectl get po busybox -o jsonpath="{.metadata.labels}"
-```
+[Acornsoft Dashbard Backend](https://github.com/acornsoftlab/dashboard/blob/master/src/app/backend/README.md) 참조 
 
 
 ### Dashboard
-> Kubernetes dashbaord
+> Wrapping Kubernetes-dashbaord
 
 * Kubernetes dashboard 프로젝트(https://github.com/kubernetes/dashboard) 활용
 * https://github.com/kubernetes/dashboard repository 를  `subtree` 로 구성 
 
+
 ### `subtree` 구성 방법
 
 ```
-$ mkdir aconsoftlab.dashboard
-$ cd aconsoftlab.dashboard
-$ echo "# Dashboard" >> README.md
-$ git init
-$ git add README.md
-$ git commit -m "initialize"
-$ git remote add origin git@github.com:acornsoftlab/dashboard.git
-$ git subtree add --prefix=dashboard https://github.com/kubernetes/dashboard.git master
+$ git subtree add --squash --prefix=dashboard https://github.com/kubernetes/dashboard.git master
 ```
 
+### Metrics-Scraper
+> Wrapping Kubernetes-sig dashbaord-metrics-scraper
+
+* Kubernetes dashboard-metrics-scraper(https://github.com/kubernetes-sigs/dashboard-metrics-scraper) 활용
+* https://github.com/kubernetes-sigs/dashboard-metrics-scraper repository 를  `subtree` 로 구성 
+
+
+### `subtree` 구성 방법
+
+```
+$ git subtree add --squash --prefix=src/app/metrics-scraper https://github.com/kubernetes-sigs/dashboard-metrics-scraper.git master
+```
+
+### Run
+
+```
+$ npm run start:metrics-scraper
+```
+
+* 환경변수 (env)
+
+|변수명     |설명                 |기본값               |
+|---        |---                  |---                  |
+|KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
+
+
+### API
+
+|URL Pattern                                                                 |Method |설명                               |
+|---                                                                         |---    |---                                |
+|/api/v1/clusters/:cluster/nodes/:node/metrics/:metrics                      |GET    |클러스터 Node metrics 조회         |
+|/api/v1/nodes/:node/metrics/:metrics                                        |GET    |default 클러스터 노드 metrics 조회 |
+|/api/v1/clusters/:cluster/namespaces/:namespaces/pods/:pod/metrics/:metrics |GET    |클러스터 Pod metrics 조회          |
+|/api/v1/namespaces/:namespaces/pods/:pod/metrics/:metrics                   |GET    |default 클러스터 Pod metrics 조회  |
+
+* 변수
+  * `:cluster` : Kubeconfig context name
+  * `:node` :  Node name
+  * `:metrics` : `cpu` or `memory`
+  * `:pod` : Pod name
+
+* Examples
+
+```
+$ curl -X GET http://localhost:8000/api/v1/clusters/apps-05/nodes/apps-114/metrics/cpu
+$ curl -X GET http://localhost:8000/api/v1/nodes/apps-114/metrics/cpu
+$ curl -X GET http://localhost:8000/api/v1/clusters/apps-06/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
+$ curl -X GET http://localhost:8000/api/v1/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
+```
+
+
 ## Graph
+> D3.js based javascript graph library
 
 ### Build
 
