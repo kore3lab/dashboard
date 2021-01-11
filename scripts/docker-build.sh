@@ -8,31 +8,31 @@ if [ "$#" -lt 3 ]; then
 fi
 
 build() {
-	if [[ "${MODULE}" == *"frontend"* ]];	then docker build --tag ${FRONTEND}:${TAG} ${ROOT};					fi
-	if [[ "${MODULE}" == *"backend"* ]];	then docker build --tag ${BACKEND}:${TAG} ${ROOT}/src/app/backend;	fi
-	if [[ "${MODULE}" == *"dashboard"* ]];	then docker build --tag ${DASHBOARD}:${TAG} ${ROOT}/dashboard;		fi
+	if [[ "${MODULE}" == *"frontend"* ]];			then docker build --tag ${FRONTEND}:${TAG} ${ROOT};							fi
+	if [[ "${MODULE}" == *"backend"* ]];			then docker build --tag ${BACKEND}:${TAG} ${ROOT}/src/app/backend;			fi
+	if [[ "${MODULE}" == *"dashboard"* ]];			then docker build --tag ${DASHBOARD}:${TAG} ${ROOT}/dashboard;				fi
+	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker build --tag ${SCRAPER}:${TAG} ${ROOT}/src/app/metrics-scraper;	fi
 }
 push() {
-	if [[ "${MODULE}" == *"frontend"* ]];	then docker push ${FRONTEND}:${TAG};	fi
-	if [[ "${MODULE}" == *"backend"* ]];	then docker push ${BACKEND}:${TAG};		fi
-	if [[ "${MODULE}" == *"dashboard"* ]];	then docker push ${DASHBOARD}:${TAG};	fi
+	if [[ "${MODULE}" == *"frontend"* ]];			then docker push ${FRONTEND}:${TAG};	fi
+	if [[ "${MODULE}" == *"backend"* ]];			then docker push ${BACKEND}:${TAG};		fi
+	if [[ "${MODULE}" == *"dashboard"* ]];			then docker push ${DASHBOARD}:${TAG};	fi
+	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker push ${SCRAPER}:${TAG};		fi
 }
-# latest() {
-# 	if [[ "${MODULE}" == *"frontend"* ]];	then docker tag ${FRONTEND}:${TAG} ${FRONTEND}:latest;		docker push ${FRONTEND}:latest;		fi
-# 	if [[ "${MODULE}" == *"backend"* ]];	then docker tag ${BACKEND:${TAG}} ${BACKEND}:latest;		docker push ${BACKEND}:latest;		fi
-# 	if [[ "${MODULE}" == *"dashboard"* ]];	then docker tag ${DASHBOARD}:${TAG} ${DASHBOARD}:latest;	docker push ${DASHBOARD}:latest;	fi
-# }
-
-GROUP="acornsoftlab/"
-PROJECT="acornsoft-dashboard"
-ROOT="$(pwd)"
-FRONTEND="${GROUP}${PROJECT}.frontend"
-BACKEND="${GROUP}${PROJECT}.backend"
-DASHBOARD="${GROUP}${PROJECT}.dashboard"
 
 MODULE="$1"
 COMMAND="$2"
 TAG="$3"
+GROUP="$4"
+
+if [ "${GROUP}" == "" ];	then GROUP="ghcr.io/acornsoftlab";	fi
+PROJECT="acornsoft-dashboard"
+ROOT="$(pwd)"
+FRONTEND="${GROUP}/${PROJECT}.frontend"
+BACKEND="${GROUP}/${PROJECT}.backend"
+DASHBOARD="${GROUP}/${PROJECT}.dashboard"
+SCRAPER="${GROUP}/${PROJECT}.metrics-scraper"
+
 
 echo "Module  : ${MODULE}"
 echo "Command : ${COMMAND}"

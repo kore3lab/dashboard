@@ -13,7 +13,7 @@ import (
 
 // Manager provides a handler for all api calls
 func Manager(r *mux.Router, db *sql.DB) {
-	dashboardRouter := r.PathPrefix("/api/v1/dashboard").Subrouter()
+	dashboardRouter := r.PathPrefix("/api/v1").Subrouter() // customized by acornsoft-dashboard
 	dashboardProvider.DashboardRouter(dashboardRouter, db)
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
 }

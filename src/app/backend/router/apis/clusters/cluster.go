@@ -5,46 +5,36 @@ import (
 
 	"github.com/acornsoftlab/dashboard/model/v1alpha1"
 	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
 )
 
 func Topology(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	// parameter validation
-	if err := g.ValidateUrl([]string{"CLUSTER"}); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
-		return
-	}
-	cluster := c.Param("CLUSTER")
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
 	namespace := c.Param("NAMESPACE")
 
 	topology := model.NewTopology(cluster)
 	if err := topology.Get(namespace); err != nil {
-		g.Send(500, err.Error())
+		g.SendMessage(500, err.Error())
+	} else {
+		g.Send(http.StatusOK, topology)
 	}
-
-	g.Send(http.StatusOK, topology)
-	// g.SendMessage(http.StatusOK, fmt.Sprintf("There are %d pods in the cluster %s", len(pods.Items), cluster))
 
 }
 
 func Dashboard(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	// parameter validation
-	if err := g.ValidateUrl([]string{"CLUSTER"}); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
-		return
-	}
-	cluster := c.Param("CLUSTER")
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
 
 	dashboard := model.NewDashboard(cluster)
 	if err := dashboard.Get(); err != nil {
-		g.Send(500, err.Error())
+		g.SendMessage(500, err.Error())
+	} else {
+		g.Send(http.StatusOK, dashboard)
 	}
-
-	g.Send(http.StatusOK, dashboard)
-	// g.SendMessage(http.StatusOK, fmt.Sprintf("There are %d pods in the cluster %s", len(pods.Items), cluster))
 
 }

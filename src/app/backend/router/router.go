@@ -35,16 +35,25 @@ func CreateUrlMappings() {
 	Router.GET("/healthy", healthy)                                           // healthy
 	Router.GET("/api/clusters", api.ListContexts)
 
+	// API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER")
 	{
 		clustersAPI.GET("/topology", api.Topology)
 		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)
 		clustersAPI.GET("/dashboard", api.Dashboard)
 	}
+	clustersAPI_ := Router.Group("/api")
+	{
+		clustersAPI_.GET("/topology", api.Topology)
+		clustersAPI_.GET("/topology/namespaces/:NAMESPACE", api.Topology)
+		clustersAPI_.GET("/dashboard", api.Dashboard)
+	}
 
 	// RAW-API POST/PUT (apply, patch)
 	Router.POST("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
 	Router.PUT("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
+	Router.POST("/raw", _raw.ApplyRaw)
+	Router.PUT("/raw", _raw.ApplyRaw)
 
 	// RAW-API Core
 	//      non-Namespaced
@@ -64,6 +73,17 @@ func CreateUrlMappings() {
 		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
 		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 	}
+	rawAPI_ := Router.Group("/raw/api/:VERSION")
+	{
+		rawAPI_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
+		rawAPI_.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
+		rawAPI_.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
+		rawAPI_.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - patch
+		rawAPI_.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
+		rawAPI_.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
+		rawAPI_.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
+		rawAPI_.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
+	}
 
 	// RAW-API Grouped
 	//      non-Namespaced
@@ -82,6 +102,17 @@ func CreateUrlMappings() {
 		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
 		rawAPIs.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
 	}
+	rawAPIs_ := Router.Group("/raw/apis/:GROUP/:VERSION")
+	{
+		rawAPIs_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
+		rawAPIs_.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
+		rawAPIs_.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete
+		rawAPIs_.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                          > apiGroup - patch
+		rawAPIs_.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"          > namespaced apiGroup - list
+		rawAPIs_.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - get
+		rawAPIs_.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
+		rawAPIs_.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
+	}
 
 }
 
@@ -90,7 +121,7 @@ func CreateUrlMappings() {
 */
 func route() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.RequestURI, "/raw/clusters") {
+		if strings.HasPrefix(c.Request.RequestURI, "/raw/clusters") || strings.HasPrefix(c.Request.RequestURI, "/raw/api") {
 			if c.Param("RESOURCE") == "" {
 				c.Params = append(c.Params,
 					gin.Param{Key: "RESOURCE", Value: c.Param("A")},
