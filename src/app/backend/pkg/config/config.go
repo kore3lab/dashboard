@@ -1,15 +1,11 @@
 package config
 
 import (
-	"os"
-
-	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 type conf struct {
-	KubeConfigPath string
 	CurrentContext string
 	KubeConfigs    map[string]*rest.Config
 	Contexts       []string
@@ -17,19 +13,12 @@ type conf struct {
 
 var Value = &conf{}
 
-func Setup() {
-	// "GIN_MODE"
-	//      "debug", "release", "test"
-	//      https://github.com/gin-gonic/gin/blob/master/mode.go
-	Value.KubeConfigPath = lang.NVL(os.Getenv("KUBECONFIG"), os.Getenv("HOME")+"/.kube/config")
-
-	// kubeconf Context
-	kubeconfig := Value.KubeConfigPath
-
+func Setup(kubeconfig string) {
 	// KUBECONFIG 로드 룰
-	//  1. "kubeconfig" Path에서 KUBECONFIG 를 로드한다.
-	//  2. "kubeconfig" 값이 없다면(공백이면) default Path "~/.kube/config" 에서 로드한다.
-	//  3. 모두 실패하는 경우 마지막으로 in-cluster  KUBECONFIG 을 로드한다.
+	//  1순위. "--kubeconfig" 옵션에서 로드한다.
+	//  2순위. env "KUBECONFIG" 값으로 로드한다.
+	//  3순위."~/.kube/config" 에서 로드한다.
+	//  4순위. in-cluster-config 로드한다.
 	var loader clientcmd.ClientConfigLoader
 	if kubeconfig != "" { // load from --kubeconfig
 		loader = &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}

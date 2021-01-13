@@ -20,7 +20,7 @@ kind: Secret
 metadata:
   labels:
     app: dashboard
-  name: dashboard-certs
+  name: kubernetes-dashboard-certs
   namespace: acornsoft-dashboard
 type: Opaque
 
@@ -31,7 +31,7 @@ kind: Secret
 metadata:
   labels:
     app: dashboard
-  name: dashboard-csrf
+  name: kubernetes-dashboard-csrf
   namespace: acornsoft-dashboard
 type: Opaque
 data:
@@ -44,7 +44,7 @@ kind: Secret
 metadata:
   labels:
     app: dashboard
-  name: dashboard-key-holder
+  name: kubernetes-dashboard-key-holder
   namespace: acornsoft-dashboard
 type: Opaque
 
@@ -55,7 +55,7 @@ apiVersion: v1
 metadata:
   labels:
     app: dashboard
-  name: dashboard-settings
+  name: kubernetes-dashboard-settings
   namespace: acornsoft-dashboard
 
 ---
@@ -71,12 +71,12 @@ rules:
   # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
   - apiGroups: [""]
     resources: ["secrets"]
-    resourceNames: ["dashboard-key-holder", "dashboard-certs", "dashboard-csrf"]
+    resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs", "kubernetes-dashboard-csrf"]
     verbs: ["get", "update", "delete"]
     # Allow Dashboard to get and update 'dashboard-settings' config map.
   - apiGroups: [""]
     resources: ["configmaps"]
-    resourceNames: ["dashboard-settings"]
+    resourceNames: ["kubernetes-dashboard-settings"]
     verbs: ["get", "update"]
     # Allow Dashboard to get metrics.
   - apiGroups: [""]
@@ -165,7 +165,6 @@ metadata:
   namespace: acornsoft-dashboard
 spec:
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: dashboard
@@ -178,19 +177,13 @@ spec:
         - name: dashboard
           image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
           imagePullPolicy: Always
-          env:
-          - name: SIDECAR_HOST
-            value: "http://metrics-scraper:8000"
+          args:
+            - --namespace=acornsoft-dashboard
+            - --kubeconfig=/app/.kube/config
+            - --sidecar-host=http://metrics-scraper:8000
           ports:
             - containerPort: 9090
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     scheme: HTTP
-          #     path: /
-          #     port: 9090
-          #   initialDelaySeconds: 30
-          #   timeoutSeconds: 30
           volumeMounts:
             - name: dashboard-kubeconfig
               mountPath: /app/.kube
@@ -247,6 +240,8 @@ spec:
         - name: metrics-scraper
           image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1
           imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -258,12 +253,21 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 30
           volumeMounts:
-            - name: dashboard-kubeconfig
-              mountPath: /app/.kube
+            - mountPath: /app/.kube
+              name: dashboard-kubeconfig
+            - mountPath: /tmp
+              name: tmp-volume
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 2001
       volumes:
         - name: dashboard-kubeconfig
           configMap:
             name: acornsoft-dashboard-kubeconfig
+        - name: tmp-volume
+          emptyDir: {}
       serviceAccountName: dashboard
       nodeSelector:
         "kubernetes.io/os": linux
@@ -298,7 +302,6 @@ metadata:
   name: backend
 spec:
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: backend
@@ -311,22 +314,25 @@ spec:
         - name: backend
           image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1
           imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
           ports:
-            - containerPort: 3001
+            - containerPort: 3000
               protocol: TCP
           volumeMounts:
-          - name: dashboard-kubeconfig
-            mountPath: /app/.kube
+          - mountPath: /app/.kube
+            name: dashboard-kubeconfig
           - mountPath: /tmp
             name: tmp-volume
-      nodeSelector:
-        "kubernetes.io/os": linux
       volumes:
-        - name: tmp-volume
-          emptyDir: {}
         - name: dashboard-kubeconfig
           configMap:
             name: acornsoft-dashboard-kubeconfig
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: dashboard
+      nodeSelector:
+        "kubernetes.io/os": linux
 
 ---
 

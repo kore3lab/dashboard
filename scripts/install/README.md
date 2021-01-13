@@ -115,13 +115,7 @@ EOF
   * `--web.enable-admin-api` 옵션 추가
 
 
-## Acoronsoft-dashboard Install
-
-* Deploy
-
-```
-$ kubectl apply -f kuberntes/recommended.yaml
-```
+## Install Acoronsoft-dashboard
 
 * Careate configmap `acornsoft-dashboard-kubeconfig`
 
@@ -132,15 +126,90 @@ $ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.k
 $ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
 ```
 
+
+* Deploy
+
+```
+$ kubectl apply -f kuberntes/recommended.yaml
+```
+
+
 ### NodePort
 * Frontend: 30080
 * Backend : 30081
 * Dashboard backend : 30090
 
-
-## Verify
+### Verify
 
 * Web UI : http://<server>:30080/
 * Kiali UI : http://<server>:32080/kiali
 * Kiali embedding UI (kiosk mode) : http://<server>:32080/kiali/console/graph/namespaces/?kiosk=true
+
+
+## Install Acoronsoft-dashboard - "in-cluster" mode
+> Install for Single Cluster
+
+```
+# create namespace
+
+$ NAMESPACE="dashboard"
+$ kubectl create ns ${NAMESPACE}
+
+
+# install metrics-scraper
+
+$ kubectl run metrics-scraper -n ${NAMESPACE}\
+  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:latest --port=8000\
+  -- --db-file=metrics.db
+$ kubectl expose pod metrics-scraper -n ${NAMESPACE} --port=8000 --name=metrics-scraper
+
+
+# install backend
+
+$ kubectl run backend -n ${NAMESPACE}\
+  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.backend:latest --port=3001
+$ kubectl expose pod backend -n ${NAMESPACE} --name=backend --type='NodePort' --port=3001
+
+
+# install kubernetes-dashoard
+
+$ kubectl create role acornsoft-dashboard -n ${NAMESPACE} --resource=* --verb=*
+$ kubectl create rolebinding acornsoft-dashboard -n ${NAMESPACE} --role=acornsoft-dashboard --serviceaccount=${NAMESPACE}:default
+$ kubectl create secret generic kubernetes-dashboard-csrf -n ${NAMESPACE} --from-literal="csrf="
+$ kubectl create clusterrolebinding acornsoft-dashboard --clusterrole=cluster-admin --serviceaccount=${NAMESPACE}:default
+
+$ kubectl run dashboard -n ${NAMESPACE}\
+  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:latest --port=9090\
+  -- --namespace=${NAMESPACE} --sidecar-host=http://metrics-scraper:8000
+
+$ kubectl expose pod dashboard -n ${NAMESPACE}  --name=dashboard --type='NodePort' --port=9090
+
+
+# install frontend
+
+$ BACKEND_PORT="$(kubectl get svc/backend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
+$ DASHBOARD_PORT="$(kubectl get svc/dashboard -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
+
+$ kubectl run frontend -n ${NAMESPACE} --image=ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:latest  --port=3000\
+  --env="BACKEND_PORT=${BACKEND_PORT}"\
+  --env="DASHBOARD_PORT=${DASHBOARD_PORT}"
+$ kubectl expose pod frontend -n ${NAMESPACE} --name=frontend --type='NodePort' --port=3000
+
+
+# open in your browser
+
+$ echo "http://<end-point ip>:$(kubectl get svc/frontend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
+```
+
+* Clean-up
+
+```
+$ kubectl delete -n ${NAMESPACE} pod/backend pod/dashboard pod/frontend pod/metrics-scraper
+$ kubectl delete -n ${NAMESPACE} service/backend service/dashboard service/frontend service/metrics-scraper
+$ kubectl delete -n ${NAMESPACE} role/acornsoft-dashboard rolebinding/acornsoft-dashboard
+$ kubectl delete -n ${NAMESPACE} secret/kubernetes-dashboard-csrf
+$ kubectl delete clusterrolebinding/acornsoft-dashboard
+$ kubectl delete ns ${NAMESPACE}
+```
+
 

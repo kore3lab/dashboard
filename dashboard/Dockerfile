@@ -24,11 +24,7 @@ COPY --from=builder /usr/src/app/i18n/locale_conf.json          /app/
 
 WORKDIR /app
 
-ENV KUBECONFIG /app/.kube/config
-ENV INSECURE_BIND_ADDR 0.0.0.0
-ENV BIND_ADDR 0.0.0.0
-ENV SIDECAR_HOST http://localhost:8000
+ENV KUBECONFIG ""
 
-ENTRYPOINT /app/acornsoft-dashboard.dashboard --kubeconfig=${KUBECONFIG} --insecure-bind-address=${INSECURE_BIND_ADDR} --bind-address=${BIND_ADDR} --sidecar-host=${SIDECAR_HOST}
-
+ENTRYPOINT ["/app/acornsoft-dashboard.dashboard", "--insecure-bind-address=0.0.0.0", "--bind-address=0.0.0.0"]
 EXPOSE 9090
