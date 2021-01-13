@@ -20,7 +20,8 @@ FROM scratch
 
 COPY --from=builder /usr/src/app/acornsoft-dashboard.backend /app/
 
-ENV KUBECONFIG  "/app/.kube/config"
+ENV KUBECONFIG  ""
+ENV GIN_MODE=release
 
 ENTRYPOINT [ "/app/acornsoft-dashboard.backend" ]
 
