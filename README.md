@@ -163,10 +163,32 @@ $ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
 ### Deploy on Docker
 
 ```
-$ docker run --rm -d -p 3001:3001 -v ${HOME}/.kube/config:/app/.kube/config --name backend ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1
-$ docker run --rm -d -p 8000:8000 -v ${HOME}/.kube/config:/app/.kube/config --name metrics-scraper ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1
-$ docker run --rm -d -p 9090:9090 -v ${HOME}/.kube/config:/app/.kube/config --link metrics-scraper:metrics-scraper -e SIDECAR_HOST="http://metrics-scraper:8000" --name dashboard ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
-$ docker run --rm -d -p 3000:3000 -e BACKEND_PORT="3001" -e DASHBOARD_PORT="9090" --name frontend ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+$ docker run --rm -d\
+    --name metrics-scraper -p 8000:8000\
+    -v ${HOME}/.kube/config:/app/.kube/config\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1\
+    --kubeconfig=/app/.kube/config --db-file=metrics.db
+
+$ docker run --rm -d\
+    --name backend -p 3001:3001\
+    -v ${HOME}/.kube/config:/app/.kube/config\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1\
+    --kubeconfig=/app/.kube/config
+
+$ docker run --rm -d\
+    --name dashboard -p 9090:9090\
+    -v ${HOME}/.kube/config:/app/.kube/config\
+    --link metrics-scraper:metrics-scraper\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1\
+    --kubeconfig=/app/.kube/config\
+    --sidecar-host=http://metrics-scraper:8000
+
+$ docker run --rm -d\
+    --name frontend -p 3000:3000\
+    -e BACKEND_PORT="3001"\
+    -e DASHBOARD_PORT="9090"\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+
 $ docker ps
 ```
 
@@ -230,6 +252,13 @@ $ npm run start:frontend
 $ npm run start:backend
 ```
 
+* Argument
+
+|변수명     |설명                 |기본값               |
+|---        |---                  |---                  |
+|kubeconfig |kubeconfig 파일 위치 |                     |
+
+
 * 환경변수 (env)
 
 |변수명     |설명                 |기본값               |
@@ -237,12 +266,13 @@ $ npm run start:backend
 |KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
 
 
+
 ### API
 
 [Acornsoft Dashbard Backend](https://github.com/acornsoftlab/dashboard/blob/master/src/app/backend/README.md) 참조 
 
 
-### Dashboard
+## Dashboard
 > Wrapping Kubernetes-dashbaord
 
 * Kubernetes dashboard 프로젝트(https://github.com/kubernetes/dashboard) 활용
@@ -255,7 +285,28 @@ $ npm run start:backend
 $ git subtree add --squash --prefix=dashboard https://github.com/kubernetes/dashboard.git master
 ```
 
-### Metrics-Scraper
+### Run
+
+```
+$ npm run start:dashboard
+```
+
+* Argument
+
+|변수명               |설명                                    |기본값                |
+|---                  |---                                     |---                   |
+|--kubeconfig         |kubeconfig 파일 위치                    |                      |
+|--sidecar-host       |metrics 정보(metrics-scraper) 요청 URL  |http://localhost:8000 |
+
+
+* 환경변수 (env)
+
+|변수명     |설명                                     |기본값                                 |
+|---          |---                                    |---                                    |
+|KUBECONFIG   |kubeconfig 파일 위치                   |${HOME}/.kube/config                   |
+
+
+## Metrics-Scraper
 > Wrapping Kubernetes-sig dashbaord-metrics-scraper
 
 * Kubernetes dashboard-metrics-scraper(https://github.com/kubernetes-sigs/dashboard-metrics-scraper) 활용
@@ -273,6 +324,17 @@ $ git subtree add --squash --prefix=src/app/metrics-scraper https://github.com/k
 ```
 $ npm run start:metrics-scraper
 ```
+
+* Argument
+
+|변수명               |설명                       |기본값           |
+|---                  |---                        |---              |
+|--kubeconfig         |kubeconfig 파일 위치       |                 |
+|--db-file            |sqllite database file path |/tmp/metrics.db  |
+|--metric-resolution  |metrics 수집 주기          |1m0s             |
+|--metric-duration    |metrics 적산값 유지 기간   |15m0s            |
+|--log-level          |로그 레벨                  |                 |
+|--namespace          |                           |                 |
 
 * 환경변수 (env)
 

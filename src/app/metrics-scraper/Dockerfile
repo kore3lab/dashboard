@@ -46,6 +46,6 @@ COPY --from=builder /etc/passwd /etc/passwd
 EXPOSE 8080
 #USER nonroot
 
-ENV KUBECONFIG /app/.kube/config
+ENV KUBECONFIG ""
 # Run the compiled binary.
 ENTRYPOINT ["/metrics-sidecar"]
