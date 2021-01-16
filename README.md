@@ -166,20 +166,20 @@ $ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
 $ docker run --rm -d\
     --name metrics-scraper -p 8000:8000\
     -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2\
     --kubeconfig=/app/.kube/config --db-file=metrics.db
 
 $ docker run --rm -d\
     --name backend -p 3001:3001\
     -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2\
     --kubeconfig=/app/.kube/config
 
 $ docker run --rm -d\
     --name dashboard -p 9090:9090\
     -v ${HOME}/.kube/config:/app/.kube/config\
     --link metrics-scraper:metrics-scraper\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.2\
     --kubeconfig=/app/.kube/config\
     --sidecar-host=http://metrics-scraper:8000
 
@@ -187,7 +187,7 @@ $ docker run --rm -d\
     --name frontend -p 3000:3000\
     -e BACKEND_PORT="3001"\
     -e DASHBOARD_PORT="9090"\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
 
 $ docker ps
 ```
@@ -216,11 +216,11 @@ $ npm run start:frontend
 
 * 환경변수 (env)
 
-|변수명           |설명                             |기본값 |
-|---              |---                              |---    |
-|BACKEND_PORT     |backend 서비스 포트              |3001   |
-|BDASHBOARD_PORT  |kubernetes-dashboard 서비스 포트 |9090   |
-|KIALI_PORT       |kiali 서비스 포트                |20001  |
+|이름             |기본값 |설명                             |
+|---              |---    |---                              |
+|BACKEND_PORT     |3001   |backend 서비스 포트              |
+|BDASHBOARD_PORT  |9090   |kubernetes-dashboard 서비스 포트 |
+|KIALI_PORT       |20001  |kiali 서비스 포트                |
 
 ```
 $ export BACKEND_PORT="3001"
@@ -252,19 +252,20 @@ $ npm run start:frontend
 $ npm run start:backend
 ```
 
-* Argument
+* Arguments
 
-|변수명     |설명                 |기본값               |
-|---        |---                  |---                  |
-|kubeconfig |kubeconfig 파일 위치 |                     |
+|이름                   |기본값                 |설명                                                                                       |
+|---                    |---                    |---                                                                                        |
+|--kubeconfig           |                       |kubeconfig 파일 위치                                                                       |
+|--log-level            |info                   |로그 레벨(panic,fatal,error,warning,info,debug,trace) https://github.com/sirupsen/logrus)  |
+|--metrics-scraper-url  |http://localhost:8000  |metrics-scraper api url                                                                    |
 
 
 * 환경변수 (env)
 
-|변수명     |설명                 |기본값               |
-|---        |---                  |---                  |
-|KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
-
+|이름       |기본값 |설명                 |
+|---        |---    |---                  |
+|KUBECONFIG |       |kubeconfig 파일 위치 |
 
 
 ### API
@@ -291,19 +292,20 @@ $ git subtree add --squash --prefix=dashboard https://github.com/kubernetes/dash
 $ npm run start:dashboard
 ```
 
-* Argument
+* Arguments
+ [Dashboard arguments]https://github.com/kubernetes/dashboard/blob/570ff985b70aa1b7297a7a1d2377123eac4c537f/docs/common/dashboard-arguments.md) 참조
 
-|변수명               |설명                                    |기본값                |
-|---                  |---                                     |---                   |
-|--kubeconfig         |kubeconfig 파일 위치                    |                      |
-|--sidecar-host       |metrics 정보(metrics-scraper) 요청 URL  |http://localhost:8000 |
+|이름                 |기본값                |설명                                    |
+|---                  |---                   |---                                     |
+|--kubeconfig         |                      |kubeconfig 파일 위치                    |
+|--sidecar-host       |http://localhost:8000 |metrics 정보(metrics-scraper) 요청 URL  |
 
 
 * 환경변수 (env)
 
-|변수명     |설명                                     |기본값                                 |
-|---          |---                                    |---                                    |
-|KUBECONFIG   |kubeconfig 파일 위치                   |${HOME}/.kube/config                   |
+|이름         |기본값 |설명                 |
+|---          |---    |---                  |
+|KUBECONFIG   |       |kubeconfig 파일 위치 |
 
 
 ## Metrics-Scraper
@@ -325,32 +327,33 @@ $ git subtree add --squash --prefix=src/app/metrics-scraper https://github.com/k
 $ npm run start:metrics-scraper
 ```
 
-* Argument
+* Arguments
 
-|변수명               |설명                       |기본값           |
-|---                  |---                        |---              |
-|--kubeconfig         |kubeconfig 파일 위치       |                 |
-|--db-file            |sqllite database file path |/tmp/metrics.db  |
-|--metric-resolution  |metrics 수집 주기          |1m0s             |
-|--metric-duration    |metrics 적산값 유지 기간   |15m0s            |
-|--log-level          |로그 레벨                  |                 |
-|--namespace          |                           |                 |
+|이름                 |기본값               |설명                       |
+|---                  |---                  |---                        |
+|--kubeconfig         |kubeconfig 파일 위치 |                           |
+|--db-file            |/tmp/metrics.db      |sqllite database file path |
+|--metric-resolution  |1m0s                 |metrics 수집 주기          |
+|--metric-duration    |15m0s                |metrics 적산값 유지 기간   |
+|--log-level          |                     |로그 레벨                  |
+|--namespace          |                     |                           |
 
 * 환경변수 (env)
 
-|변수명     |설명                 |기본값               |
-|---        |---                  |---                  |
-|KUBECONFIG |kubeconfig 파일 위치 |${HOME}/.kube/config |
+|이름       |기본값 |설명                 |
+|---        |---    |---                  |
+|KUBECONFIG |       |kubeconfig 파일 위치 |
 
 
 ### API
 
-|URL Pattern                                                                 |Method |설명                               |
-|---                                                                         |---    |---                                |
-|/api/v1/clusters/:cluster/nodes/:node/metrics/:metrics                      |GET    |클러스터 Node metrics 조회         |
-|/api/v1/nodes/:node/metrics/:metrics                                        |GET    |default 클러스터 노드 metrics 조회 |
-|/api/v1/clusters/:cluster/namespaces/:namespaces/pods/:pod/metrics/:metrics |GET    |클러스터 Pod metrics 조회          |
-|/api/v1/namespaces/:namespaces/pods/:pod/metrics/:metrics                   |GET    |default 클러스터 Pod metrics 조회  |
+|URL Pattern                                                                  |Method |설명                               |
+|---                                                                          |---    |---                                |
+|/api/v1/clusters/:cluster                                                    |GET    |클러스터 summary metrics  조회     |
+|/api/v1/clusters/:cluster/nodes/:node/metrics/:metrics                       |GET    |클러스터 Node metrics 조회         |
+|/api/v1/nodes/:node/metrics/:metrics                                         |GET    |default 클러스터 노드 metrics 조회 |
+|/api/v1/clusters/:cluster/namespaces/:namespaces/pods/:pod/metrics/:metrics  |GET    |클러스터 Pod metrics 조회          |
+|/api/v1/namespaces/:namespaces/pods/:pod/metrics/:metrics                    |GET    |default 클러스터 Pod metrics 조회  |
 
 * 변수
   * `:cluster` : Kubeconfig context name

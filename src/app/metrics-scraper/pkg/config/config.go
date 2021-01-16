@@ -1,6 +1,7 @@
 package config // add by acornsoft-dashboard
 
 import (
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -33,7 +34,6 @@ func Setup(kubeconfig string) {
 	// kubeconfig 파일 로드
 	cfg, err := loader.Load()
 	if err == nil {
-
 		for key := range cfg.Contexts {
 			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, key, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
 			if err == nil {
@@ -41,16 +41,16 @@ func Setup(kubeconfig string) {
 				Value.KubeConfigs[key] = contextCfg
 			}
 		}
-
 		Value.CurrentContext = cfg.CurrentContext
-
+	} else {
+		log.Warnf("cannot load kubeconfig: %s (cause=%v)", kubeconfig, err)
 	}
 
 	// 로드된 context가 없다면 in-cluster 모드
 	if len(Value.Contexts) == 0 {
 		cnf, err := rest.InClusterConfig()
 		if err != nil {
-			panic("cannot load kubeconfig inCluster")
+			log.Panic("cannot load kubeconfig inCluster")
 		}
 		Value.KubeConfigs["default"] = cnf
 		Value.Contexts = []string{"default"}

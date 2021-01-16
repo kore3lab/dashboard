@@ -11,38 +11,34 @@
 	<!-- Main content -->
 	<section class="content">
 		<div class="container-fluid">
-
 			<!-- @@@@ -->
-
 			<!-- row -->
 			<div class="row">
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-warning">
-						<div class="inner"><h3>{{ cluster.nodes }}</h3><p>Nodes</p></div>
+						<div class="inner"><h3>{{ summary.nodes.usage }}</h3><p>Nodes</p></div>
 						<div class="icon"><i class="fas fa-server"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-success">
-						<div class="inner"><h3>{{ cluster.cpu }}<small>%</small></h3><p>CPU</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.cpu["percent"],0) }}<small>%</small></h3><p>CPU</p></div>
 						<div class="icon"><i class="fas fa-microchip"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-info">
-						<div class="inner"><h3>{{ cluster.memory }}<small>%</small></h3><p>Memory</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.memory["percent"],0) }}<small>%</small></h3><p>Memory</p></div>
 						<div class="icon"><i class="fas fa-memory"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-secondary">
-						<div class="inner"><h3>{{ cluster.storage }}<small>%</small></h3><p>Storage</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.storage["percent"],0) }}<small>%</small></h3><p>Storage</p></div>
 						<div class="icon"><i class="fas fa-hdd"></i></div>
 					</div>
 				</div>
-			</div>
-			<!-- /.row -->
-
+			</div><!-- /.row -->
 			<!-- row -->
 			<div class="row">
 				<div class="col-lg-7">
@@ -60,20 +56,20 @@
 									<span class="badge badge-secondary font-weight-light ml-1">{{ nd.roles }}</span>
 								</p>
 								<p class="d-flex flex-column text-center p-2">
-									<span class="text-lg">{{ nd.cpu.percent }}<small>%</small></span>
-									<span class="text-muted text-sm font-weight-light">{{ nd.cpu.usage }}/{{ nd.cpu.allocatable }} m</span>
+									<span class="text-lg">{{ nd.usage.cpu.percent }}<small>%</small></span>
+									<span class="text-muted text-sm font-weight-light">{{ Number(nd.usage.cpu.usage).toLocaleString() }}/{{ Number(nd.usage.cpu.allocatable).toLocaleString() }} m</span>
 								</p>
 								<p class="d-flex flex-column text-center p-2">
-									<span class="text-lg">{{ nd.memory.percent }}<small>%</small></span>
-									<span class="text-muted text-sm font-weight-light">{{ nd.memory.usage }}/{{ nd.memory.allocatable }} Mib</span>
+									<span class="text-lg">{{ nd.usage.memory.percent }}<small>%</small></span>
+									<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} Mib</span>
 								</p>
 								<p class="d-flex flex-column text-center p-2">
-									<span class="text-lg">{{ nd.storage.percent }}<small>%</small></span>
-									<span class="text-muted text-sm font-weight-light">{{ nd.storage.usage }}/{{ nd.storage.allocatable }} Gib</span>
+									<span class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></span>
+									<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024),2)).toLocaleString() }} Gib</span>
 								</p>
 								<p class="d-flex flex-column text-center  p-2">
-									<span class="text-lg">{{ nd.pods.percent }}<small>%</small></span>
-									<span class="text-muted text-sm font-weight-light">{{ nd.pods.usage }}/{{ nd.pods.allocatable }} ea</span>
+									<span class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></span>
+									<span class="text-muted text-sm font-weight-light">{{ nd.usage.pod.usage }}/{{ nd.usage.pod.allocatable }} ea</span>
 								</p>
 							</div>
 						</div>
@@ -97,9 +93,8 @@
 						</div>
 					</div>
 				</div>
-			</div>
-			<!-- /.row -->
-
+			</div><!-- /.row -->
+			<!-- row -->
 			<div class="row">
 				<div class="col-sm">
 					<div class="info-box">
@@ -107,7 +102,7 @@
 							<span class="info-box-text">Daemon Sets</span>
 							<span class="info-box-number">{{ workloads.daemonset.ready }} / {{ workloads.daemonset.available }}</span>
 						</div>
-						<a href="#" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></a>
+						<nuxt-link to="/workload/daemonset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
 				</div>
 				<div class="col-sm">
@@ -116,7 +111,7 @@
 							<span class="info-box-text">Deployments</span>
 							<span class="info-box-number">{{ workloads.deployment.ready }} / {{ workloads.deployment.available }}</span>
 						</div>
-						<a href="#" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></a>
+						<nuxt-link to="/workload/deployment.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
 				</div>
 				<div class="col-sm">
@@ -125,7 +120,7 @@
 							<span class="info-box-text">Replica Sets</span>
 							<span class="info-box-number">{{ workloads.replicaset.ready }} / {{ workloads.replicaset.available }}</span>
 						</div>
-						<a href="#" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></a>
+						<nuxt-link to="/workload/replicaset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
 				</div>
 				<div class="col-sm">
@@ -134,7 +129,7 @@
 							<span class="info-box-text">Stateful Sets</span>
 							<span class="info-box-number">{{ workloads.statefulset.ready }} / {{ workloads.statefulset.available }}</span>
 						</div>
-						<a href="#" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></a>
+						<nuxt-link to="/workload/statefulset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
 				</div>
 				<div class="col-sm">
@@ -143,13 +138,11 @@
 							<span class="info-box-text">Pods</span>
 							<span class="info-box-number">{{ workloads.pod.ready }} / {{ workloads.pod.available }}</span>
 						</div>
-						<a href="#" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></a>
+						<nuxt-link to="/workload/pod.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
 				</div>
-			</div>
-			<!-- /.row -->
-
-
+			</div><!-- /.row -->
+			<!-- row -->
 			<div class="row">
 				<div class="col-md-6">
 					<div class="card">
@@ -175,8 +168,7 @@
 						</div>
 					</div>
 				</div>
-			</div>
-			<!-- /.row -->
+			</div><!-- /.row -->
 			<!-- //@@@@ -->
 		</div>
 	</section>
@@ -188,11 +180,10 @@ import "@/assets/css/hexagons.css"
 import VueChartJs	from "vue-chartjs"
 import axios		from "axios"
 
-
 export default {
 	data() {
 		return {
-			cluster: {},
+			summary: { nodes: {}, cpu: {}, memory: {}, storage: {} },
 			nodes: {},
 			workloads: { daemonset: {}, deployment: {}, replicaset: {}, statefulset: {}, pod: {} },
 			chart: {
@@ -236,62 +227,45 @@ export default {
 			if(!ctx) return;
 			axios.get(`${this.backendUrl()}/api/clusters/${ctx}/dashboard`)
 				.then((resp) => {
-					this.$data.cluster = resp.data.cluster;
+					this.$data.summary = resp.data.summary;
 					this.$data.nodes = resp.data.nodes;
 					this.$data.workloads = resp.data.workloads;
+
+					if (resp.data.metrics && resp.data.metrics.cpu && resp.data.metrics.cpu.dataPoints ) {
+						let labels = [], data = [];
+						resp.data.metrics.cpu.dataPoints.forEach(d => {
+							let dt = new Date(d.x*1000);
+							labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
+							data.push(d.y);
+						});
+						this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable;
+						this.$data.chart.data.cpu = {
+							labels: labels, 
+							datasets: [
+								{ backgroundColor : "rgba(60,141,188,0.9)", data: data }
+							]
+						};
+					}
+					if (resp.data.metrics && resp.data.metrics.memory && resp.data.metrics.memory.dataPoints ) {
+						let labels = [], data = [];
+						resp.data.metrics.memory.dataPoints.forEach(d => {
+							let dt = new Date(d.x*1000);
+							labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
+							data.push(Math.round(d.y/(1024*1024)));
+						});
+						this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.memory.allocatable/(1024*1024);
+						this.$data.chart.data.memory = {
+							labels: labels, 
+							datasets: [
+								{ backgroundColor : "rgba(210, 214, 222, 1)", data: data }
+							]
+						};
+					}
+
 				})
 				.catch(e => { this.msghttp(e);})
-			// chart
-			axios.get(`${this.dashboardUrl()}/api/v1/node?sortBy=d,creationTimestamp&context=${ctx}`)
-				.then((resp) => {
-					let cpuCapacity = 0, memoryCapacity = 0
-					for(let i in resp.data.nodes) {
-						let el = resp.data.nodes[i];
-						cpuCapacity += el.allocatedResources.cpuCapacity;
-						memoryCapacity += el.allocatedResources.memoryCapacity;
-					}
-					this.$data.cpuCapacity = 24000;
 
-					let metrics = resp.data.cumulativeMetrics;
-					metrics.forEach(el => {
-						if(el.metricName == "cpu/usage_rate") {
-							let labels = [], data = [];
-							el.dataPoints.forEach(d => {
-								let dt = new Date(d.x*1000);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
-								data.push(d.y);
-							});
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = cpuCapacity;
-							this.$data.cpuCapacity = cpuCapacity;
-							this.$data.chart.data.cpu = {
-								labels: labels, 
-								datasets: [
-									{ backgroundColor : "rgba(60,141,188,0.9)", data: data }
-								]
-							};
-
-						} else if(el.metricName == "memory/usage") {
-							let labels = [], data = [];
-							el.dataPoints.forEach(d => {
-								let dt = new Date(d.x*1000);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
-								data.push(Math.round(d.y/(1024*1024)));
-							});
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = memoryCapacity/(1024*1024);
-							this.$data.chart.data.memory = {
-								labels: labels, 
-								datasets: [
-									{ backgroundColor : "rgba(210, 214, 222, 1)", data: data }
-								]
-							};
-						}
-					});
-
-					
-				})
-				.catch(e => { this.msghttp(e);});
 		})
-
 
 		this.$nuxt.$emit("navbar-context-selected",);
 		this.timer = setInterval(function(){

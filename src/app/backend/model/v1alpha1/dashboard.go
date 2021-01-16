@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	resty "github.com/go-resty/resty/v2"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
-	"github.com/dustin/go-humanize"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -19,43 +22,33 @@ import (
 
 type Dashboard struct {
 	context   string
-	Cluster   dashboardCluster          `json:"cluster"`
-	Nodes     map[string]*dashboardNode `json:"nodes"`
-	Workloads dashboardWorkload         `json:"workloads"`
-}
-type dashboardCluster struct {
-	Nodes   string `json:"nodes"`
-	Cpu     string `json:"cpu"`
-	Memory  string `json:"memory"`
-	Storage string `json:"storage"`
-	Pods    string `json:"pods"`
+	Summary   map[string]*dashboardUsage    `json:"summary"`
+	Nodes     map[string]dashboardNode      `json:"nodes"`
+	Workloads map[string]dashboardAvailable `json:"workloads"`
+	Metrics   map[string]interface{}        `json:"metrics"`
 }
 type dashboardNode struct {
-	Address string                 `json:"address"`
-	Status  string                 `json:"status"`
-	Roles   string                 `json:"roles"`
-	Cpu     *dashboardNodeResource `json:"cpu"`
-	Memory  *dashboardNodeResource `json:"memory"`
-	Storage *dashboardNodeResource `json:"storage"`
-	Pods    *dashboardNodeResource `json:"pods"`
-}
-type dashboardWorkload struct {
-	DaemonSet   dashboardAvailable `json:"daemonset"`
-	Deployment  dashboardAvailable `json:"deployment"`
-	ReplicaSet  dashboardAvailable `json:"replicaset"`
-	StatefulSet dashboardAvailable `json:"statefulset"`
-	Pod         dashboardAvailable `json:"pod"`
+	Address string                     `json:"address"`
+	Status  string                     `json:"status"`
+	Roles   string                     `json:"role"`
+	Usage   map[string]*dashboardUsage `json:"usage"`
 }
 type dashboardAvailable struct {
 	Ready     int `json:"ready"`
 	Available int `json:"available"`
 }
 
-type dashboardNodeResource struct {
-	Allocatable string `json:"allocatable"`
-	Usage       string `json:"usage"`
-	Percent     string `json:"percent"`
+type dashboardUsage struct {
+	Allocatable int64   `json:"allocatable"`
+	Usage       int64   `json:"usage"`
+	Percent     float32 `json:"percent"`
 }
+
+type dashboardMetrics struct {
+	Allocatable int64         `json:"allocatable"`
+	DataPoints  []interface{} `json:"dataPoints"`
+}
+
 type resource struct {
 	cpu     int64
 	memory  int64
@@ -66,7 +59,7 @@ type resource struct {
 func NewDashboard(contextName string) Dashboard {
 	return Dashboard{
 		context: contextName,
-		Nodes:   make(map[string]*dashboardNode),
+		Nodes:   make(map[string]dashboardNode),
 	}
 }
 
@@ -74,33 +67,33 @@ func (self *Dashboard) Get() error {
 
 	conf := config.Value.KubeConfigs[self.context]
 
-	//api client
 	apiClient, err := kubernetes.NewForConfig(conf)
 	if err != nil {
 		return err
 	}
 
-	//metrics client
 	metricsClient, err := metricsclientset.NewForConfig(conf)
 	if err != nil {
 		return err
 	}
 
-	// node list
 	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	// pod list
 	podList, err := apiClient.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 
-	// daemonset list (ready count)
+	// init variables
+	self.Workloads = make(map[string]dashboardAvailable)
+
+	// self.Workloads.DaemonSet
 	dsList, err := apiClient.AppsV1().DaemonSets("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
+		log.Errorf("Unable to get daemonsets (cause=%v)", err)
 		return err
 	}
 	ready := 0
@@ -109,9 +102,9 @@ func (self *Dashboard) Get() error {
 			ready += 1
 		}
 	}
-	self.Workloads.DaemonSet = dashboardAvailable{Available: len(dsList.Items), Ready: ready}
+	self.Workloads["daemonset"] = dashboardAvailable{Available: len(dsList.Items), Ready: ready}
 
-	// deployment list (ready count)
+	// self.Workloads.Deployment
 	deployList, err := apiClient.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -122,11 +115,12 @@ func (self *Dashboard) Get() error {
 			ready += 1
 		}
 	}
-	self.Workloads.Deployment = dashboardAvailable{Available: len(deployList.Items), Ready: ready}
+	self.Workloads["deployment"] = dashboardAvailable{Available: len(deployList.Items), Ready: ready}
 
-	// replicaSet list (ready count)
+	// self.Workloads.ReplicaSet
 	rsList, err := apiClient.AppsV1().ReplicaSets("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
+		log.Errorf("Unable to get replicasets (cause=%v)", err)
 		return err
 	}
 	ready = 0
@@ -135,11 +129,12 @@ func (self *Dashboard) Get() error {
 			ready += 1
 		}
 	}
-	self.Workloads.ReplicaSet = dashboardAvailable{Available: len(rsList.Items), Ready: ready}
+	self.Workloads["replicaset"] = dashboardAvailable{Available: len(rsList.Items), Ready: ready}
 
-	// setatefulset list (ready count)
+	// self.Workloads.StatefulSet
 	sfsList, err := apiClient.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
+		log.Errorf("Unable to get statefulsets (cause=%v)", err)
 		return err
 	}
 	ready = 0
@@ -148,80 +143,57 @@ func (self *Dashboard) Get() error {
 			ready += 1
 		}
 	}
-	self.Workloads.StatefulSet = dashboardAvailable{Available: len(sfsList.Items), Ready: ready}
+	self.Workloads["statefulset"] = dashboardAvailable{Available: len(sfsList.Items), Ready: ready}
 
-	// 노드 status, 리소스 allocatable
-	allocate := map[string]resource{}
+	// self.Nodes.Address/Status/Roles 외 리소스 allocatable
 	allocateTotal := resource{}
 
 	for _, m := range nodeList.Items {
-		r := resource{
-			cpu:     m.Status.Allocatable.Cpu().MilliValue(),
-			memory:  m.Status.Allocatable.Memory().Value(),
-			storage: m.Status.Allocatable.Storage().Value(),
-			pods:    m.Status.Allocatable.Pods().Value(),
-		}
-
-		self.Nodes[m.Name] = &dashboardNode{
+		self.Nodes[m.Name] = dashboardNode{
 			Address: m.Status.Addresses[0].Address,
 			Status:  findNodeStatus(m),
 			Roles:   findNodeRoles(m),
-			Cpu: &dashboardNodeResource{
-				Allocatable: humanize.Comma(r.cpu),
-			},
-			Memory: &dashboardNodeResource{
-				Allocatable: humanize.Comma(r.memory / (1024 * 1024)),
-			},
-			Storage: &dashboardNodeResource{
-				Allocatable: humanize.Comma(r.storage / (1024 * 1024)),
-			},
-			Pods: &dashboardNodeResource{
-				Allocatable: humanize.Comma(r.pods),
+			Usage: map[string]*dashboardUsage{
+				"cpu":     {Allocatable: m.Status.Allocatable.Cpu().MilliValue()},
+				"memory":  {Allocatable: m.Status.Allocatable.Memory().Value()},
+				"storage": {Allocatable: m.Status.Allocatable.Storage().Value()},
+				"pod":     {Allocatable: m.Status.Allocatable.Pods().Value()},
 			},
 		}
-		allocate[m.Name] = r
-		allocateTotal.cpu = +r.cpu
-		allocateTotal.memory += r.memory
-		allocateTotal.storage += r.storage
-		allocateTotal.pods += r.pods
+
+		allocateTotal.cpu = +m.Status.Allocatable.Cpu().MilliValue()
+		allocateTotal.memory += m.Status.Allocatable.Memory().Value()
+		allocateTotal.storage += m.Status.Allocatable.Storage().Value()
+		allocateTotal.pods += m.Status.Allocatable.Pods().Value()
 	}
 
-	//beta1 <NODE> metrics list
 	versionedNodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
-	fmt.Println(versionedNodeMetrics)
 	if err != nil {
+		log.Errorf("Unable to get node metries (cause=%v)", err)
 		return err
 	}
 
-	//versioned (beta1) <NODE>  metrics 변환
 	nodeMetrics := &metricsapi.NodeMetricsList{}
 	err = metricsV1beta1api.Convert_v1beta1_NodeMetricsList_To_metrics_NodeMetricsList(versionedNodeMetrics, nodeMetrics, nil)
 	if err != nil {
+		log.Errorf("Unable to convert node metries (cause=%v)", err)
 		return err
 	}
 
-	// 리소스 Usage 입력,  Percent 계산
+	// self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
 	usageTotal := resource{}
-	usage := coreV1.ResourceList{}
 	for _, m := range nodeMetrics.Items {
-		fmt.Println(m.CreationTimestamp)
-		m.Usage.DeepCopyInto(&usage)
 		nd := self.Nodes[m.Name]
-		r := allocate[m.Name]
-		nd.Cpu.Usage = humanize.Comma(m.Usage.Cpu().MilliValue())
-		nd.Cpu.Percent = percent(m.Usage.Cpu().MilliValue(), r.cpu, 2)
-		nd.Memory.Usage = humanize.Comma(m.Usage.Memory().Value() / (1024 * 1024))
-		nd.Memory.Percent = percent(m.Usage.Memory().Value(), r.memory, 2)
-		nd.Storage.Usage = humanize.Comma(m.Usage.Storage().Value() / (1024 * 1024))
-		nd.Storage.Percent = percent(m.Usage.Storage().Value(), r.storage, 2)
+		parsePercentUsage(m.Usage.Cpu().MilliValue(), nd.Usage["cpu"])
+		parsePercentUsage(m.Usage.Memory().Value(), nd.Usage["memory"])
+		parsePercentUsage(m.Usage.Storage().Value(), nd.Usage["storage"])
 
 		usageTotal.cpu += m.Usage.Cpu().MilliValue()
 		usageTotal.memory += m.Usage.Memory().Value()
 		usageTotal.storage += m.Usage.Storage().Value()
-
 	}
 
-	//노드별 파드 수 & running 파드 수
+	// self.Workloads.Pods (노드별 파드 수 & running 파드 수)
 	usagePods := map[string]int64{}
 	ready = 0
 	for _, m := range podList.Items {
@@ -232,28 +204,51 @@ func (self *Dashboard) Get() error {
 			}
 		}
 	}
-	self.Workloads.Pod = dashboardAvailable{Available: len(podList.Items), Ready: ready}
+	self.Workloads["pod"] = dashboardAvailable{Available: len(podList.Items), Ready: ready}
 
+	// self.Nodes.Pods
 	for n, p := range usagePods {
-		self.Nodes[n].Pods.Usage = humanize.Comma(p)
-		self.Nodes[n].Pods.Percent = percent(p, allocate[n].pods, 2)
+		parsePercentUsage(p, self.Nodes[n].Usage["pod"])
 		usageTotal.pods += p
 	}
 
-	self.Cluster = dashboardCluster{
-		Nodes:   fmt.Sprintf("%d", len(nodeList.Items)),
-		Cpu:     percent(usageTotal.cpu, allocateTotal.cpu, 0),
-		Memory:  percent(usageTotal.memory, allocateTotal.memory, 0),
-		Storage: percent(usageTotal.storage, allocateTotal.storage, 0),
-		Pods:    percent(usageTotal.pods, allocateTotal.pods, 0),
+	// self.Summary (usage percent)
+	self.Summary = map[string]*dashboardUsage{
+		"nodes":   {Allocatable: int64(len(nodeList.Items)), Usage: int64(len(nodeList.Items))},
+		"cpu":     {Allocatable: allocateTotal.cpu, Usage: usageTotal.cpu},
+		"memory":  {Allocatable: allocateTotal.memory, Usage: usageTotal.memory},
+		"storage": {Allocatable: allocateTotal.storage, Usage: usageTotal.storage},
+	}
+	parsePercentUsages(self.Summary)
+
+	// self.Metrics
+	client := resty.New()
+	_, err = client.R().
+		SetHeader("Content-Type", "application/json").
+		SetResult(&self.Metrics).
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
+
+	if err != nil {
+		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)
 	}
 
 	return nil
 
 }
 
-func percent(a int64, b int64, decimal int) string {
-	return fmt.Sprintf(fmt.Sprintf("%%.%df", decimal), lang.DivideRound(a, b, (decimal+2))*100)
+func parsePercentUsages(usages map[string]*dashboardUsage) {
+	for _, usage := range usages {
+		usage.Percent = percent(usage.Usage, usage.Allocatable)
+	}
+}
+
+func parsePercentUsage(v int64, usage *dashboardUsage) {
+	usage.Usage = v
+	usage.Percent = percent(v, usage.Allocatable)
+}
+
+func percent(a int64, b int64) float32 {
+	return float32(lang.DivideRound(a, b, 4) * 100)
 }
 
 const (
