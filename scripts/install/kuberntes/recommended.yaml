@@ -175,7 +175,7 @@ spec:
     spec:
       containers:
         - name: dashboard
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.2
           imagePullPolicy: Always
           args:
             - --namespace=acornsoft-dashboard
@@ -238,7 +238,7 @@ spec:
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -312,7 +312,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -375,7 +375,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.1
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT
