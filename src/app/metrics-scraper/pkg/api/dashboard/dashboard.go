@@ -27,7 +27,7 @@ func DashboardRouter(r *mux.Router, db *sql.DB) {
 	r.Path("/nodes/{Name}/metrics/{MetricName}").HandlerFunc(nodeHandler(db))
 	r.Path("/namespaces/{Namespace}/pods/{Name}/metrics/{MetricName}").HandlerFunc(podHandler(db))
 	// --END
-	r.PathPrefix("/").HandlerFunc(defaultHandler)
+	// r.PathPrefix("/").HandlerFunc(defaultHandler)    // by acornsoft-dashboard
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {

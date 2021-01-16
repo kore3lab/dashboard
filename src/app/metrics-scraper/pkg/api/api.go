@@ -15,6 +15,7 @@ import (
 func Manager(r *mux.Router, db *sql.DB) {
 	dashboardRouter := r.PathPrefix("/api/v1").Subrouter() // customized by acornsoft-dashboard
 	dashboardProvider.DashboardRouter(dashboardRouter, db)
+	dashboardProvider.DashboardExpandRouter(dashboardRouter, db) // customized by acornsoft-dashboard
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
 }
 
