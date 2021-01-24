@@ -126,6 +126,13 @@ $ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.k
 $ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
 ```
 
+* metrics-server 가 설치되어 있지 않다면 metrics-server 설치
+
+```
+$ kubectl get deploy metrics-server
+
+$ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
 
 * Deploy
 
@@ -144,6 +151,40 @@ $ kubectl apply -f kuberntes/recommended.yaml
 * Web UI : http://<server>:30080/
 * Kiali UI : http://<server>:32080/kiali
 * Kiali embedding UI (kiosk mode) : http://<server>:32080/kiali/console/graph/namespaces/?kiosk=true
+
+## Helm Charts
+
+* dry-run
+
+```
+$ kubectl create ns acornsoft-dashboard
+$ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
+  --set dashboard.service.type=NodePort \
+  --set dashboard.service.nodePort=30090 \
+  --set backend.service.type=NodePort \
+  --set backend.service.nodePort=30081 \
+  --set frontend.service.type=NodePort \
+  --set frontend.service.nodePort=30080
+```
+
+* install
+
+```
+$ helm install -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
+  --set dashboard.service.type=NodePort \
+  --set dashboard.service.nodePort=30090 \
+  --set backend.service.type=NodePort \
+  --set backend.service.nodePort=30081 \
+  --set frontend.service.type=NodePort \
+  --set frontend.service.nodePort=30080
+
+$ helm list
+```
+
+* uninstall
+```
+$ helm uninstall acornsoft-dashboard
+```
 
 
 ## Install Acoronsoft-dashboard - "in-cluster" mode
@@ -211,5 +252,4 @@ $ kubectl delete -n ${NAMESPACE} secret/kubernetes-dashboard-csrf
 $ kubectl delete clusterrolebinding/acornsoft-dashboard
 $ kubectl delete ns ${NAMESPACE}
 ```
-
 
