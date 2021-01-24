@@ -1,0 +1,67 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: frontend
+  name: frontend
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - name: http
+{{- if hasKey .Values.frontend.service "nodePort" }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+{{- end }}
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: frontend
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: frontend
+  name: frontend
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.frontend.service.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      acornsoft.dashboard: frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        acornsoft.dashboard: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:{{ .Chart.AppVersion }}
+          imagePullPolicy: Always
+          env:
+          - name: BACKEND_PORT
+            value: "30081"
+          - name: DASHBOARD_PORT
+            value: "30090"
+          - name: KIALI_PORT
+            value: "32080"
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+          volumeMounts:
+          - mountPath: /tmp
+            name: tmp-volume
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: {{ .Chart.Name }}
+      nodeSelector:
+        "kubernetes.io/os": linux

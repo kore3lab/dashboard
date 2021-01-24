@@ -1,0 +1,68 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: backend
+  name: backend
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  ports:
+    - name: http
+{{- if hasKey .Values.backend.service "nodePort" }}
+      nodePort: {{ .Values.backend.service.nodePort }}
+{{- end }}
+      port: 3001
+      protocol: TCP
+      targetPort: 3001
+  selector:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: backend
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: backend
+  name: backend
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.backend.service.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      acornsoft.dashboard: backend
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        acornsoft.dashboard: backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:{{ .Chart.AppVersion }}
+          imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
+            - --metrics-scraper-url=http://metrics-scraper:8000
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+          - mountPath: /app/.kube
+            name: dashboard-kubeconfig
+          - mountPath: /tmp
+            name: tmp-volume
+      volumes:
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoft-dashboard-kubeconfig
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: {{ .Chart.Name }}
+      nodeSelector:
+        "kubernetes.io/os": linux

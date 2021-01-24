@@ -1,0 +1,23 @@
+{{- if and .Values.metricsScraper.persistence.enabled (not .Values.metricsScraper.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: acornsoft-dashboard-metrics-scraper
+  labels:
+    app: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - {{ .Values.metricsScraper.persistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.metricsScraper.persistence.size | quote }}
+{{- if .Values.metricsScraper.persistence.storageClass }}
+{{- if (eq "-" .Values.metricsScraper.persistence.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.metricsScraper.persistence.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}
