@@ -1,0 +1,47 @@
+image:
+  pullPolicy: IfNotPresent  #Always
+
+dashboard:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    # type: NodePort
+    # nodePort: 30090
+
+backend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    # type: NodePort
+    # nodePort: 30081
+
+frontend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    # type: NodePort
+    # nodePort: 30080
+
+metricsScraper:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    # type: NodePort
+    # nodePort: 30088
+  persistence:
+    enabled: false
+    accessMode: ReadWriteOnce
+    size: 8Gi
+  ## database data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on GKE, AWS & OpenStack)
+  ##   
+  # storageClass: "-"
+  ##
+  ## Reuse exist Persistent Volume Claim
+  ##
+  #persistence:
+  #  existingClaim: "exist-pvc"
+

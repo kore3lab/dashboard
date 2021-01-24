@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard
+  namespace: {{ .Release.Namespace }}
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard-certs
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard-csrf
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+  csrf: ""
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard-key-holder
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard-settings
+  namespace: {{ .Release.Namespace }}
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard
+  namespace: {{ .Release.Namespace }}
+rules:
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs", "kubernetes-dashboard-csrf"]
+    verbs: ["get", "update", "delete"]
+    # Allow Dashboard to get and update 'dashboard-settings' config map.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["kubernetes-dashboard-settings"]
+    verbs: ["get", "update"]
+    # Allow Dashboard to get metrics.
+  - apiGroups: [""]
+    resources: ["services"]
+    resourceNames: ["heapster", "metrics-scraper"]
+    verbs: ["proxy"]
+  - apiGroups: [""]
+    resources: ["services/proxy"]
+    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "metrics-scraper", "http:metrics-scraper"]
+    verbs: ["get"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: kubernetes-dashboard
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-dashboard
+    namespace: {{ .Release.Namespace }}
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.dashboard.service.type }}
+  ports:
+    - name: http
+{{- if hasKey .Values.dashboard.service "nodePort" }}
+      nodePort: {{ .Values.dashboard.service.nodePort }}
+{{- end }}
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: dashboard
+  name: dashboard
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.dashboard.service.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      acornsoft.dashboard: dashboard
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        acornsoft.dashboard: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:{{ .Chart.AppVersion }}
+          imagePullPolicy: Always
+          args:
+            - --namespace={{ .Release.Namespace }}
+            - --kubeconfig=/app/.kube/config
+            - --sidecar-host=http://metrics-scraper:8000
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          volumeMounts:
+            - name: dashboard-kubeconfig
+              mountPath: /app/.kube
+            - mountPath: /tmp
+              name: tmp-volume
+      volumes:
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoft-dashboard-kubeconfig
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: kubernetes-dashboard
+      nodeSelector:
+        "kubernetes.io/os": linux

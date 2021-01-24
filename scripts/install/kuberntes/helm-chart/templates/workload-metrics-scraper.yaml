@@ -1,0 +1,86 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: metrics-scraper
+  name: metrics-scraper
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.metricsScraper.service.type }}
+  ports:
+    - name: http
+{{- if hasKey .Values.metricsScraper.service "nodePort" }}
+      nodePort: {{ .Values.metricsScraper.service.nodePort }}
+{{- end }}
+      port: 8000
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: metrics-scraper
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    acornsoft.dashboard: metrics-scraper
+  name: metrics-scraper
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.metricsScraper.service.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      acornsoft.dashboard: metrics-scraper
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        acornsoft.dashboard: metrics-scraper
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
+    spec:
+      containers:
+        - name: metrics-scraper
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:{{ .Chart.AppVersion }}
+          imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          volumeMounts:
+            - mountPath: /app/.kube
+              name: dashboard-kubeconfig
+            - mountPath: /tmp
+              name: data-volume
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 2001
+      volumes:
+        - name: dashboard-kubeconfig
+          configMap:
+            name: acornsoft-dashboard-kubeconfig
+        - name: data-volume
+      {{- if .Values.metricsScraper.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default "acornsoft-dashboard-metrics-scraper" .Values.metricsScraper.persistence.existingClaim  }}
+      {{- else }}
+          emptyDir: {}
+      {{- end }}
+      serviceAccountName: {{ .Chart.Name }}
+      nodeSelector:
+        "kubernetes.io/os": linux
