@@ -40,7 +40,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Node', name: data.item.name, url: `node/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Test', crd: 'Node', name: data.item.name, url: `api/v1/nodes/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
 							</template>
 						</b-table>
 					</div>
@@ -64,14 +64,16 @@ export default {
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
-				{ key: "ready", label: "준비", sortable: true  },
-				{ key: "cpuRequests", label: "CPU 요청", sortable: true  },
-				{ key: "cpuLimits", label: "CPU 상한", sortable: true  },
-				{ key: "memoryRequests", label: "메모리 요청", sortable: true  },
-				{ key: "memoryLimits", label: "메모리 상한", sortable: true  },
-				{ key: "creationTimestamp", label: "생성시간" }
+				{ key: "ready", label: "상태", sortable: true  },
+				{ key: "creationTimestamp", label: "생성시간" },
+				{ key: "k8sVersion", label: "VERSION" },
+				{ key: "interaalIp", label: "INTERNAL-IP", sortable: true  },
+				{ key: "externalIp", label: "EXTERNAL-IP", sortable: true  },
+				{ key: "usageCpu", label: "CPU 사용량", sortable: true  },
+				{ key: "usageMemory", label: "MEMORY 사용량", sortable: true  },
 			],
 			isBusy: false,
+			metricsItems: [],
 			items: [],
 			totalItems: 0
 		}
@@ -84,25 +86,40 @@ export default {
 	methods: {
 		// 조회
 		query_All() {
+			console.log("this.$router.currentRoute == ", this.$router.currentRoute.fullPath)
+			let interaalIp = {}
+			let exteraalIp = {}
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/node?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/nodes`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.nodes.forEach(el => {
+					resp.data.items.forEach(el => {
+						console.log("adfasdfasdf == ", el)
+						const addresses = el.status.addresses
 						this.items.push({
-							name: el.objectMeta.name,
-							ready: el.ready,
-							cpuRequests: this.toCpuWord(el.allocatedResources.cpuRequests, el.allocatedResources.cpuRequestsFraction),
-							cpuLimits: this.toCpuWord(el.allocatedResources.cpuLimits, el.allocatedResources.cpuLimitsFraction) ,
-							memoryRequests: this.toMemoryWord( el.allocatedResources.memoryRequests, el.allocatedResources.memoryRequestsFraction),
-							memoryLimits: this.toMemoryWord( el.allocatedResources.memoryLimits, el.allocatedResources.memoryLimitsFraction),
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							ready: this.toConditions(el.status.conditions),
+							creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+							k8sVersion: el.status.nodeInfo.kubeletVersion,
+							interaalIp: addresses.find(x => x.type === "InternalIP") ? addresses.find(x => x.type === "InternalIP").address : "<none>",
+							externalIp: addresses.find(x => x.type === "ExternalIP") ? addresses.find(x => x.type === "ExternalIP").address : "<none>",
+							// cpuRequests: this.toCpuWord(el.allocatedResources.cpuRequests, el.allocatedResources.cpuRequestsFraction),
+							// cpuLimits: this.toCpuWord(el.allocatedResources.cpuLimits, el.allocatedResources.cpuLimitsFraction) ,
+							// memoryRequests: this.toMemoryWord( el.allocatedResources.memoryRequests, el.allocatedResources.memoryRequestsFraction),
+							// memoryLimits: this.toMemoryWord( el.allocatedResources.memoryLimits, el.allocatedResources.memoryLimitsFraction),
 						});
 					});
 					this.onFiltered(this.items);
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
+		},
+		async getMetrics() {
+			this.metricsItems = [];
+			let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/metrics.k8s.io/v1beta1/nodes`)
+			resp.data.items.forEach(el => {
+				this.metricsItems.push(el)
+			});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
@@ -122,6 +139,9 @@ export default {
 				return `${(memory/1024).toFixed(2)} (${percent.toFixed(2)}%)`
 			}
 
+		},
+		toConditions(conditions){
+			return conditions.filter(el => el.type === "Ready")[0].status === "True" ? "Ready" : "None"
 		}
 	},
 	beforeDestroy(){

@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Adiministrator', crd: 'Role', name: data.item.name, url: `role/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Adiministrator', crd: 'Role', name: data.item.name, url: `apis/rbac.authorization.k8s.io/v1/namespaces/${data.item.namespace}/roles/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
@@ -73,7 +73,7 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -97,15 +97,15 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/role/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/rbac.authorization.k8s.io/v1/namespaces/${this.$data.selectedNamespace}/roles`)
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							labels: el.objectMeta.labels, 
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							labels: el.metadata.labels, 
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);

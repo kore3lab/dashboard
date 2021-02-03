@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Networking', crd: 'Service', name: data.item.name, url: `service/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Networking', crd: 'Service', name: data.item.name, url: `api/v1/namespaces/${data.item.namespace}/services/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(selector)="data">
 								<ul class="list-unstyled mb-0">
@@ -83,11 +83,12 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
+				{ key: "namespace", label: "네임스페이스", sortable: true },
 				{ key: "selector", label: "셀렉터", sortable: true  },
 				{ key: "cpuRequests", label: "클러스터IP", sortable: true  },
 				{ key: "internalEndpoints", label: "내부 엔드포인트", sortable: true  },
@@ -109,18 +110,18 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/service/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces/${this.$data.selectedNamespace}/services`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.services.forEach(el => {
+					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							selector: el.selector,
-							internalEndpoints: this.toEndpointList(el.internalEndpoint),
-							externalEndpoints: el.externalEndpoints,
-							clusterIP: el.clusterIP,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							// selector: el.selector,
+							// internalEndpoints: this.toEndpointList(el.internalEndpoint),
+							// externalEndpoints: el.externalEndpoints,
+							// clusterIP: el.clusterIP,
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);

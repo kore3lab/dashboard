@@ -43,7 +43,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Storage', crd: 'Storage Class', name: data.item.name, url: `storageclass/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Storage', crd: 'Storage Class', name: data.item.name, url: `apis/storage.k8s.io/v1/storageclasses/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(parameters)="data">
 								<ul class="list-unstyled mb-0">
@@ -92,15 +92,15 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/storageclass?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/storage.k8s.io/v1/storageclasses`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.storageClasses.forEach(el => {
+					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
+							name: el.metadata.name,
 							provisioner: el.provisioner,
-							parameters: el.parameters,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							// parameters: el.parameters,
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);

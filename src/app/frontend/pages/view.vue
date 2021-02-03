@@ -140,7 +140,7 @@ export default {
 	methods: {
 		// 조회
 		query() {
-			axios.get(`${this.dashboardUrl()}/api/v1/_raw/${this.$route.query.url}?context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/${this.$route.query.url}`)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;

@@ -53,7 +53,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Pod', name: data.item.name, url: `pod/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Test', crd: 'Pod', name: data.item.name, url: `api/v1/namespaces/${data.item.namespace}/pods/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
@@ -81,7 +81,7 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			selectedStatus: [],
 			optionsStatus: [
 				{ text: "Running", value: "Running" },
@@ -97,15 +97,19 @@ export default {
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
 				{ key: "namespace", label: "네임스페이스", sortable: true  },
-				{ key: "labels", label: "레이블", sortable: true  },
-				{ key: "nodeName", label: "노드", sortable: true  },
+				{ key: "ready", label: "Ready", sortable: true  },
 				{ key: "status", label: "상태", sortable: true  },
 				{ key: "restartCount", label: "재시작", sortable: true  },
-				{ key: "creationTimestamp", label: "생성시간" }
+				{ key: "creationTimestamp", label: "생성시간", sortable: true },
+				{ key: "nodeName", label: "노드", sortable: true  },
+				{ key: "usageCpu", label: "CPU 사용량", sortable: true  },
+				{ key: "usageMemory", label: "MEMORY 사용량", sortable: true  },
 			],
 			isBusy: false,
+			metricsItems: [],
 			origin: [],
 			items: [],
+			containerStatuses: [],
 			currentPage: 1,
 			totalItems: 0
 		}
@@ -128,18 +132,21 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/pod/${this.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			this.loadMetrics();
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces/${this.$data.selectedNamespace}/pods`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.pods.forEach(el => {
+					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							labels: el.objectMeta.labels,
-							nodeName: el.nodeName,
-							status: el.podStatus.status,
-							restartCount: el.restartCount,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							ready: this.toReady(el.status, el.spec.containers.length),
+							status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+							restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(el => el.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue) : 0,
+							creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+							nodeName: el.spec.nodeName ? el.spec.nodeName : "<none>",
+							usageCpu: this.toUsageHandler('cpu', el.metadata.name),
+							usageMemory: this.toUsageHandler('memory', el.metadata.name),
 						});
 					});
 					this.origin = this.items;
@@ -147,6 +154,106 @@ export default {
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
+		},
+		/**
+		 * 메트릭 값을 리소스별로 단위 계산 후 반환 한다.
+		 * 
+		 * @param {string} resource 구분자 cpu/memory
+		 * @param {string} podName 구분자 pod 이름으로 구분 한다.
+		 * @return {string} 리소스 합산 값의 단위를 추가 해서 반환 한다.
+		 */
+		toUsageHandler(resource, podName) {
+			if (!this.metricsItems.find(x => x.metadata.name === podName)) return "<none>"
+			else {
+				const cpuSize = ["n", "m"]
+				const memorySize = ["Ki", "Mi", "Gi", "Ti", "Pi", "Ei"]
+				const decimals = 2
+
+				const calculator = this.metricsItems.find(x => x.metadata.name === podName)
+					.containers.map(x => x.usage[resource])
+						.map(el => {
+							let calculate = 0
+
+							if (resource == "cpu") {
+								cpuSize.forEach((size, index) => {
+									if (el.indexOf(size) > -1) {
+										calculate= Number(el.split(size)[0]) * (index > 0 ? Math.pow(1000, index + 1) : 1)
+									}
+								}) 
+							}
+							if (resource == "memory") {
+								memorySize.forEach((size, index) => {
+									if (el.indexOf(size) > -1) {
+										calculate= Number(el.split(size)[0]) * Math.pow(1024, index + 1)
+									}
+								})
+							}
+							return calculate
+						})
+						.reduce((accumulator, currentValue) => {
+							return accumulator + currentValue
+						})
+
+				return this.$root.getFormatMetrics(resource, calculator, decimals)
+			}
+		},
+		/**
+		 * 컨테이너의 ready 수를 반환 한다.
+		 * 
+		 * @param {object} status 파드의 status 값.
+		 * @param {number} containersLength 파드의 컨테이너 수.
+		 * @return {string} 컨테이서 총 개수 대비 ready 수 를 반환 한다.
+		 */
+		toReady(status, containersLength) {
+			let ready = ""
+			if ( status.containerStatuses ) {
+				ready = `${status.containerStatuses.filter(el => el.ready).length}/${containersLength}`
+			} else {
+				ready = `0/${containersLength}`
+			}
+			return ready
+		},
+		/**
+		 * 파드의 상태를 반환 한다.
+		 * 
+		 * @param {date} deletionTimestamp 파드의 삭제 시간 값.
+		 * @param {object} statusItems 파드의 status 값.
+		 * @return {string} 파드의 상태 값을 반환 한다.
+		 */
+		toStatus(deletionTimestamp, statusItems) {
+			// 삭제
+			if (deletionTimestamp) {
+				return "Terminating"
+			}
+
+			// Pending
+			if (!statusItems.containerStatuses) {
+				return statusItems.phase
+			}
+
+			// [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
+			if(statusItems.containerStatuses.filter(el => el.ready).length === statusItems.containerStatuses.length) {
+				const state = Object.keys(statusItems.containerStatuses.find(el => el.ready).state)[0]
+				return state.charAt(0).toUpperCase() + state.slice(1)
+			}
+			else {
+				const state = statusItems.containerStatuses.find(el => !el.ready).state
+				return state[Object.keys(state)].reason
+			}
+		},
+		/**
+		 * 리소스 메트릭 값을 반환 한다.
+		 * 
+		 * @async
+		 * @function loadMetrics
+		 * @returns {Promise<object>} 리소스(cpu/memory) 메트릭 값을 반환 한다.
+		 */
+		async loadMetrics() {
+			this.metricsItems = [];
+			let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/metrics.k8s.io/v1beta1/namespaces/${this.$data.selectedNamespace}/pods`)
+			resp.data.items.forEach(el => {
+				this.metricsItems.push(el)
+			});
 		},
 		onFiltered(filteredItems) {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, crashLoopBackOff:0, completed:0, failed:0, unknowen:0 }
@@ -171,7 +278,7 @@ export default {
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		}
+		},
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

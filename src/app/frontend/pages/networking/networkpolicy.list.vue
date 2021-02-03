@@ -94,7 +94,7 @@ export default {
 		query_All() {
 			this.$data.selected = [];
 
-			axios.get(`${this.dashboardUrl()}/api/v1/networkpolicy/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/networkpolicy/${this.$data.selectedNamespace}`)
 				.then((resp) => {
 					let data = [];
 					resp.data.items.forEach(el => {
