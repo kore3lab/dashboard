@@ -40,16 +40,22 @@ export default {
 		this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-
+		/**
+		 * 클러스터의 네임스페이스 목록을 가져 온다.
+		 * 
+		 * @async
+		 * @function loadNamespaces
+		 * @returns {Array} 네이스페이스 값을 [{valu, text}] 값으로 반환 한다.
+		 */
 		async loadNamespaces(){
 			
 			// namespace 리스트 조회
-			let nsList = [{ value: " ", text: "All Namespaces" }];
+			let nsList = [{ value: "", text: "All Namespaces" }];
 
 			if (this.$data.ctx) {
-				let resp = await axios.get(`${this.dashboardUrl()}/api/v1/namespace?context=${this.$data.ctx}`)
-				resp.data.namespaces.forEach(el => {
-					nsList.push({ value: el.objectMeta.name, text: el.objectMeta.name });
+				let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.$data.ctx}/api/v1/namespaces`)
+				resp.data.items.forEach(el => {
+					nsList.push({ value: el.metadata.name, text: el.metadata.name });
 				});
 			}
 			this.currentContext(this.$data.ctx);

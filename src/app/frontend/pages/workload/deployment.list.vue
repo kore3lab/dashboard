@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Deployment', name: data.item.name, url: `deployment/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Deployment', name: data.item.name, url: `apis/apps/v1/namespaces/${data.item.namespace}/deployments/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(images)="data">
 								<ul class="list-unstyled mb-0">
@@ -73,15 +73,16 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
 				{ key: "namespace", label: "네임스페이스", sortable: true  },
-				{ key: "pods", label: "파드", sortable: true  },
+				{ key: "ready", label: "상태", sortable: true  },
+				{ key: "containers", label: "파드", sortable: true  },
+				{ key: "images", label: "이미지", sortable: true  },
 				{ key: "creationTimestamp", label: "생성시간" },
-				{ key: "images", label: "이미지"  },
 			],
 			isBusy: false,
 			items: [],
@@ -98,16 +99,17 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/deployment/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/apps/v1/namespaces/${this.$data.selectedNamespace}/deployments`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.deployments.forEach(el => {
+					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							images: el.containerImages,
-							pods: `${el.pods.current}/${el.pods.desired}`,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							ready: `${el.status.readyReplicas}/${el.status.replicas}`,
+							// images: el.containerImages,
+							// pods: `${el.pods.current}/${el.pods.desired}`,
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);
