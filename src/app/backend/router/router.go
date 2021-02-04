@@ -34,10 +34,13 @@ func CreateUrlMappings() {
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // restful-api docs
 	Router.GET("/healthy", healthy)                                           // healthy
 	Router.GET("/api/clusters", api.ListContexts)
-
+	Router.POST("/api/clusters", api.CreateContexts)
 	// API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER")
 	{
+		clustersAPI.GET("", api.GetContext)
+		clustersAPI.POST("", api.CreateContext)
+		clustersAPI.DELETE("", api.DeleteContext)
 		clustersAPI.GET("/topology", api.Topology)
 		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)
 		clustersAPI.GET("/dashboard", api.Dashboard)
