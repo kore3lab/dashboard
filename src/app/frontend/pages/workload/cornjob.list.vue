@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Cron Job', name: data.item.name, url: `apis/batch/v1beta1/namespaces/${data.item.namespace}/cronjobs/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Cron Job', name: data.item.name, url: `apis/batch/v1beta1/namespaces/${data.item.namespace}/cronjobs/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">

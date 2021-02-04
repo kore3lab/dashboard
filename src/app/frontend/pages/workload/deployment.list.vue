@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Deployment', name: data.item.name, url: `apis/apps/v1/namespaces/${data.item.namespace}/deployments/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Deployment', name: data.item.name, url: `apis/apps/v1/namespaces/${data.item.namespace}/deployments/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(images)="data">
 								<ul class="list-unstyled mb-0">

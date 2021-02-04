@@ -43,7 +43,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Adiministrator', crd: 'Cluster Role', name: data.item.name, rl: `apis/rbac.authorization.k8s.io/v1/clusterroles/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Adiministrator', crd: 'Cluster Role', name: data.item.name, rl: `apis/rbac.authorization.k8s.io/v1/clusterroles/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
