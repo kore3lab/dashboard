@@ -141,8 +141,6 @@ func DeleteContext(c *gin.Context) {
 	conf := config.Value.KubeConfig.DeepCopy()
 	name := c.Param("CLUSTER")
 
-	fmt.Println(conf.Contexts[name])
-
 	if conf.Contexts[name] != nil {
 		if conf.Clusters[conf.Contexts[name].Cluster] != nil {
 			delete(conf.Clusters, conf.Contexts[name].Cluster)
