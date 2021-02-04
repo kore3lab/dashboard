@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Cron Job', name: data.item.name, url: `cronjob/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Cron Job', name: data.item.name, url: `apis/batch/v1beta1/namespaces/${data.item.namespace}/cronjobs/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
@@ -73,7 +73,7 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -101,19 +101,19 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/cronjob/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/batch/v1beta1/namespaces/${this.$data.selectedNamespace}/cronjobs`)
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							labels: el.objectMeta.labels,
-							schedule: el.schedule,
-							suspend: el.suspend,
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							labels: el.metadata.labels,
+							schedule: el.spec.schedule,
+							suspend: el.spec.suspend,
 							active: el.active,
-							lastSchedule: this.$root.getTimestampString(el.lastSchedule),
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							lastSchedule: this.$root.getTimestampString(el.status.lastScheduleTime),
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);
