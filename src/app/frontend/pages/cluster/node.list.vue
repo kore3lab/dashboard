@@ -40,7 +40,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Test', crd: 'Node', name: data.item.name, url: `api/v1/nodes/${data.item.name}`, preurl: $router.currentRoute.fullPath}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Node', name: data.item.name, url: `api/v1/nodes/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 						</b-table>
 					</div>
