@@ -8,7 +8,6 @@
 * Git 2.13.2+
 * Docker 1.13.1+ ([installation manual](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/))
 * Golang 1.13.9+ ([installation manual](https://golang.org/dl/))
-    * Dashboard uses `go mod` for go dependency management, so enable it with running `export GO111MODULE=on`.
 * Node.js 12+ and npm 6+ ([installation with nvm](https://github.com/creationix/nvm#usage))
 * Gulp.js 4+ ([installation manual](https://github.com/gulpjs/gulp/blob/master/docs/getting-started/1-quick-start.md))
 
@@ -30,18 +29,6 @@ $ git config core.sparsecheckout true
 # 대상 파일 지정
 $ cat <<EOF> .git/info/sparse-checkout
 /*
-!/dashboard
-/dashboard/Dockerfile
-/dashboard/.npmrc
-/dashboard/.gitignore
-/dashboard/aio/gulp/*.*
-/dashboard/i18n
-/dashboard/src/app/backend
-/dashboard/.babelrc
-/dashboard/.gitignore
-/dashboard/package*.*
-/dashboard/go.*
-/dashboard/gulpfile.babel.js
 !/src/app/metrics-scraper
 /src/app/metrics-scraper/hack/build.sh
 /src/app/metrics-scraper/pkg
@@ -57,25 +44,20 @@ $ git read-tree HEAD -m -u
 ```
 
 
-* Install dependencies (frontend, kubernetes-dashboard, graph)
+* Install dependencies (frontend,graph)
 
 ```
-# frontend
-$ npm i
-
-# dashboard
-$ cd dashboard
-$ npm i
-
 # graph
 $ cd ../src/app/graph
+$ npm i
+
+$ cd ../../..
 $ npm i
 ```
 
 * Run
 
 ```
-$ cd ../../..
 $ npm run start
 ```
 
@@ -88,24 +70,17 @@ $ curl http://localhost:3000/
 # backend
 $ curl http://localhost:3001/healthy
 
-# dashboard
-$ curl http://localhost:9090/api/v1/pod
-
 # metrics scraper
 $ curl http://localhost:8000/api/v1
-
-# graph
-http://localhost:3002/topology.html
 ```
 
 ## NPM 
 
 * Develop
 ```
-$ npm run start                 # 실행 (backend, dashboard, frontend, metrics-scraper)
+$ npm run start                 # 실행 (backend, frontend, metrics-scraper)
 $ npm run start:frontend        # frontend 실행
 $ npm run start:backend         # backend 실행
-$ npm run start:dashboard       # kubernetes dashboard backend 실행
 $ npm run start:metrics-scraper # metrics scraper 실행
 $ npm run start:graph           # graph 실행
 $ npm run start:graph:backend   # 그래프 개발 실행 (backend + graph)
@@ -126,22 +101,19 @@ $ npm run run                 # frontend container 에서 nuxt 실행 (docker im
 # docker build
 $ npm run docker:build:frontend
 $ npm run docker:build:backend
-$ npm run docker:build:dashboard
 $ npm run docker:build:metrics-scraper
 
 # docker push
 $ npm run docker:push:frontend    
 $ npm run docker:push:backend
-$ npm run docker:push:dashboard
 $ npm run docker:push:metrics-scraper
 
 # docker build & push
 $ npm run docker:build:push:frontend    
 $ npm run docker:build:push:backend
-$ npm run docker:build:push:dashboard
 $ npm run docker:build:push:metrics-scraper
 
-# all (frontend, backend, dashboard)
+# all (frontend, backend)
 $ npm run docker:build        # build
 $ npm run docker:build:push   # build & push
 
@@ -153,7 +125,6 @@ $ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
 * 3000 : front-end
 * 3001 : backend (restful-api)
 * 3002 : graph 개발
-* 9090 : kubernetes dashboard backend
 * 8000 : metrics scraper
 
 
@@ -176,17 +147,8 @@ $ docker run --rm -d\
     --kubeconfig=/app/.kube/config
 
 $ docker run --rm -d\
-    --name dashboard -p 9090:9090\
-    -v ${HOME}/.kube/config:/app/.kube/config\
-    --link metrics-scraper:metrics-scraper\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.2\
-    --kubeconfig=/app/.kube/config\
-    --sidecar-host=http://metrics-scraper:8000
-
-$ docker run --rm -d\
     --name frontend -p 3000:3000\
     -e BACKEND_PORT="3001"\
-    -e DASHBOARD_PORT="9090"\
     ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
 
 $ docker ps
@@ -219,12 +181,10 @@ $ npm run start:frontend
 |이름             |기본값 |설명                             |
 |---              |---    |---                              |
 |BACKEND_PORT     |3001   |backend 서비스 포트              |
-|BDASHBOARD_PORT  |9090   |kubernetes-dashboard 서비스 포트 |
 |KIALI_PORT       |20001  |kiali 서비스 포트                |
 
 ```
 $ export BACKEND_PORT="3001"
-$ export BDASHBOARD_PORT="9090"
 $ export KIALI_PORT="20001"
 $ npm run start:frontend
 ```
@@ -271,41 +231,6 @@ $ npm run start:backend
 ### API
 
 [Acornsoft Dashbard Backend](https://github.com/acornsoftlab/dashboard/blob/master/src/app/backend/README.md) 참조 
-
-
-## Dashboard
-> Wrapping Kubernetes-dashbaord
-
-* Kubernetes dashboard 프로젝트(https://github.com/kubernetes/dashboard) 활용
-* https://github.com/kubernetes/dashboard repository 를  `subtree` 로 구성 
-
-
-### `subtree` 구성 방법
-
-```
-$ git subtree add --squash --prefix=dashboard https://github.com/kubernetes/dashboard.git master
-```
-
-### Run
-
-```
-$ npm run start:dashboard
-```
-
-* Arguments
- [Dashboard arguments]https://github.com/kubernetes/dashboard/blob/570ff985b70aa1b7297a7a1d2377123eac4c537f/docs/common/dashboard-arguments.md) 참조
-
-|이름                 |기본값                |설명                                    |
-|---                  |---                   |---                                     |
-|--kubeconfig         |                      |kubeconfig 파일 위치                    |
-|--sidecar-host       |http://localhost:8000 |metrics 정보(metrics-scraper) 요청 URL  |
-
-
-* 환경변수 (env)
-
-|이름         |기본값 |설명                 |
-|---          |---    |---                  |
-|KUBECONFIG   |       |kubeconfig 파일 위치 |
 
 
 ## Metrics-Scraper
@@ -391,6 +316,5 @@ http://localhost:3002/rbac.html       # rbac graph
 ## Link
 * https://github.com/acornsoftlab/dashboard
 * https://github.com/kubernetes/client-go
-* https://github.com/kubernetes/dashboard
 * https://bootstrap-vue.org/docs/components
 * https://github.com/gin-gonic/gin
