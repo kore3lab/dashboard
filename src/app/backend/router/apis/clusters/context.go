@@ -96,7 +96,7 @@ func CreateContext(c *gin.Context) {
 			cluster.CertificateAuthority = jsonC["certificate-authority"].(string)
 		}
 
-		val, exists = jsonC["client-certificate-data"].(string)
+		val, exists = jsonU["client-certificate-data"].(string)
 
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
@@ -109,7 +109,7 @@ func CreateContext(c *gin.Context) {
 			user.ClientCertificate = jsonU["client-certificate"].(string)
 		}
 
-		val, exists = jsonC["client-key-data"].(string)
+		val, exists = jsonU["client-key-data"].(string)
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
