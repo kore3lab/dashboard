@@ -47,7 +47,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Storage', crd: 'Persistent Volume Claim', name: data.item.name, url: `persistentvolumeclaim/namespace/${data.item.namespace}/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Storage', crd: 'Persistent Volume Claim', name: data.item.name, url: `api/v1/namespaces/${data.item.namespace}/persistentvolumeclaims/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
@@ -81,7 +81,7 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: " ",
+			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -92,7 +92,7 @@ export default {
 				{ key: "volume", label: "볼륨", sortable: true  },
 				{ key: "capacity", label: "용량", sortable: true  },
 				{ key: "accessModes", label: "접근방식", sortable: true  },
-				{ key: "storageClass", label: "클래스", sortable: true  },
+				{ key: "storageClass", label: "스토리지 클래스", sortable: true  },
 				{ key: "creationTimestamp", label: "생성시간" },
 			],
 			isBusy: false,
@@ -110,19 +110,20 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/persistentvolumeclaim/${this.$data.selectedNamespace}?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces/${this.$data.selectedNamespace}/persistentvolumeclaims`)
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							namespace: el.objectMeta.namespace,
-							labels: el.objectMeta.labels, 
-							status: el.status,
-							volume: el.volume,
-							capacity: el.capacity ? el.capacity.storage: "",
-							accessModes: el.accessModes,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							labels: el.metadata.labels, 
+							status: el.status.phase,
+							// volume: el.spec.resources.requests.storage,
+							capacity: el.status.capacity ? el.status.capacity.storage: "",
+							accessModes: el.status.accessModes,
+							storageClass: el.spec.storageClassName,
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.onFiltered(this.items);

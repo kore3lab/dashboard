@@ -6,12 +6,14 @@ dist/
 *.log
 *.js.map
 *.db
+yarn.lock
 
 # IDE specific files:
 .idea/
 *.iml
 *.swp
 .vscode
+.history
 
 # npm debug log:
 npm-debug.log

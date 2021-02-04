@@ -16,7 +16,7 @@
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/cluster/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/cluster/topology"  class="nav-link"><i class="nav-icon text-sm mr-0">T</i><p>opology</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/cluster/servicemesh"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>erviceMesh</p></nuxt-link></li>
+							<!-- <li class="nav-item small"><nuxt-link to="/cluster/servicemesh"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>erviceMesh</p></nuxt-link></li> -->
 							<li class="nav-item small"><nuxt-link to="/cluster/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
 						</ul>
 					</li>

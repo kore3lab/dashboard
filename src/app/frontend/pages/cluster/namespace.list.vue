@@ -49,7 +49,7 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Namespace', name: data.item.name, url: `namespace/name/${data.item.name}`}}">{{ data.value }}</nuxt-link>
+								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Namespace', name: data.item.name, url: `api/v1/namespaces/${data.item.name}`}}">{{ data.value }}</nuxt-link>
 							</template>
 							<template v-slot:cell(labels)="data">
 								<ul class="list-unstyled mb-0">
@@ -84,9 +84,8 @@ export default {
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "이름", sortable: true },
-				{ key: "labels", label: "레이블", sortable: true },
-				{ key: "phase", label: "단계", sortable: true },
-				{ key: "creationTimestamp", label: "생성시간" }
+				{ key: "phase", label: "STATUS", sortable: true },
+				{ key: "creationTimestamp", label: "AGE" }
 			],
 			isBusy: false,
 			items: [],
@@ -112,15 +111,16 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.dashboardUrl()}/api/v1/namespace?sortBy=d,creationTimestamp&context=${this.currentContext()}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces`)
 				.then((resp) => {
 					this.items = [];
-					resp.data.namespaces.forEach(el => {
+					console.log("resp.data == ", resp.data)
+					resp.data.items.forEach(el => {
 						this.items.push({
-							name: el.objectMeta.name,
-							labels: el.objectMeta.labels,
-							phase: el.phase,
-							creationTimestamp: this.$root.getTimestampString(el.objectMeta.creationTimestamp)
+							name: el.metadata.name,
+							// labels: el.metadata.labels,
+							phase: el.status.phase,
+							creationTimestamp: this.$root.getTimestampString(el.metadata.creationTimestamp)
 						});
 					});
 					this.origin = this.items;
