@@ -84,6 +84,7 @@ func CreateContext(c *gin.Context) {
 		context.AuthInfo = fmt.Sprintf("%s", name)
 
 		cluster.Server = jsonC["server"].(string)
+
 		val, exists := jsonC["certificate-authority-data"].(string)
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
