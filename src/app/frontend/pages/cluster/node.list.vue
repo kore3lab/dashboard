@@ -86,15 +86,11 @@ export default {
 	methods: {
 		// 조회
 		query_All() {
-			console.log("this.$router.currentRoute == ", this.$router.currentRoute.fullPath)
-			let interaalIp = {}
-			let exteraalIp = {}
 			this.isBusy = true;
 			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/nodes`)
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
-						console.log("adfasdfasdf == ", el)
 						const addresses = el.status.addresses
 						this.items.push({
 							name: el.metadata.name,

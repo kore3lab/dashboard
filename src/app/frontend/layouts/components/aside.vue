@@ -12,32 +12,6 @@
 			<nav class="mt-2">
 				<ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact" data-widget="treeview" role="menu" data-accordion="false">
 					<li class="nav-item has-treeview menu-open">
-						<a href="#" class="nav-link"><i class="nav-icon fas fa-cloud"></i><p>Test</p></a>
-						<ul class="nav nav-treeview">
-							<li class="nav-item small"><nuxt-link to="/test/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/deployment.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>eployments</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/statefulset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>tateful Sets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/cornjob.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ron Jobs</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/job.list"  class="nav-link"><i class="nav-icon text-sm mr-0">J</i><p>obs</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/daemonset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>aemon Sets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/replicaset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplica Sets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/replicationcontroller.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplication Controllers</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/service.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervices</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/ingress.list"  class="nav-link"><i class="nav-icon text-sm mr-0">I</i><p>ngres</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Valumn Claims</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/storageclass.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>troage Classes</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/serviceaccount.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervice Accounts</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/clusterrole.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>luster Roles</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/clusterrolebinding.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>luster Role Bindings</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/role.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>oles</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/rolebinding.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>ole Bindings</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/test/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
-						</ul>
-					</li>
-					<li class="nav-item has-treeview menu-open">
 						<a href="#" class="nav-link"><i class="nav-icon fas fa-cloud"></i><p>Cluster</p></a>
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/cluster/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
