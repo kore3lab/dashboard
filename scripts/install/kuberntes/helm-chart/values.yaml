@@ -1,13 +1,6 @@
 image:
   pullPolicy: IfNotPresent  #Always
 
-dashboard:
-  replicaCount: 1
-  service:
-    type: ClusterIP
-    # type: NodePort
-    # nodePort: 30090
-
 backend:
   replicaCount: 1
   service:

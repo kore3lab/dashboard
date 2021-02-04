@@ -144,7 +144,6 @@ $ kubectl apply -f kuberntes/recommended.yaml
 ### NodePort
 * Frontend: 30080
 * Backend : 30081
-* Dashboard backend : 30090
 
 ### Verify
 
@@ -159,8 +158,6 @@ $ kubectl apply -f kuberntes/recommended.yaml
 ```
 $ kubectl create ns acornsoft-dashboard
 $ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
-  --set dashboard.service.type=NodePort \
-  --set dashboard.service.nodePort=30090 \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
@@ -171,8 +168,6 @@ $ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./ku
 
 ```
 $ helm install -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
-  --set dashboard.service.type=NodePort \
-  --set dashboard.service.nodePort=30090 \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
@@ -216,24 +211,15 @@ $ kubectl expose pod backend -n ${NAMESPACE} --name=backend --type='NodePort' --
 
 $ kubectl create role acornsoft-dashboard -n ${NAMESPACE} --resource=* --verb=*
 $ kubectl create rolebinding acornsoft-dashboard -n ${NAMESPACE} --role=acornsoft-dashboard --serviceaccount=${NAMESPACE}:default
-$ kubectl create secret generic kubernetes-dashboard-csrf -n ${NAMESPACE} --from-literal="csrf="
 $ kubectl create clusterrolebinding acornsoft-dashboard --clusterrole=cluster-admin --serviceaccount=${NAMESPACE}:default
-
-$ kubectl run dashboard -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:latest --port=9090\
-  -- --namespace=${NAMESPACE} --sidecar-host=http://metrics-scraper:8000
-
-$ kubectl expose pod dashboard -n ${NAMESPACE}  --name=dashboard --type='NodePort' --port=9090
-
 
 # install frontend
 
 $ BACKEND_PORT="$(kubectl get svc/backend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
-$ DASHBOARD_PORT="$(kubectl get svc/dashboard -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
 
 $ kubectl run frontend -n ${NAMESPACE} --image=ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:latest  --port=3000\
-  --env="BACKEND_PORT=${BACKEND_PORT}"\
-  --env="DASHBOARD_PORT=${DASHBOARD_PORT}"
+  --env="BACKEND_PORT=${BACKEND_PORT}"
+
 $ kubectl expose pod frontend -n ${NAMESPACE} --name=frontend --type='NodePort' --port=3000
 
 
@@ -245,10 +231,9 @@ $ echo "http://<end-point ip>:$(kubectl get svc/frontend -n ${NAMESPACE} -o json
 * Clean-up
 
 ```
-$ kubectl delete -n ${NAMESPACE} pod/backend pod/dashboard pod/frontend pod/metrics-scraper
-$ kubectl delete -n ${NAMESPACE} service/backend service/dashboard service/frontend service/metrics-scraper
+$ kubectl delete -n ${NAMESPACE} pod/backend pod/frontend pod/metrics-scraper
+$ kubectl delete -n ${NAMESPACE} service/backend service/frontend service/metrics-scraper
 $ kubectl delete -n ${NAMESPACE} role/acornsoft-dashboard rolebinding/acornsoft-dashboard
-$ kubectl delete -n ${NAMESPACE} secret/kubernetes-dashboard-csrf
 $ kubectl delete clusterrolebinding/acornsoft-dashboard
 $ kubectl delete ns ${NAMESPACE}
 ```

@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------
 # usage
 if [ "$#" -lt 3 ]; then 
-	echo "docker-build.sh <module name - backend/frontend/dashboard/all> <command> <tag>"
+	echo "docker-build.sh <module name - backend/frontend/all> <command> <tag>"
 	echo "    ./docker-build.sh backend build v0.1.0"
 	exit 0; 
 fi
@@ -10,13 +10,11 @@ fi
 build() {
 	if [[ "${MODULE}" == *"frontend"* ]];			then docker build --tag ${FRONTEND}:${TAG} ${ROOT};							fi
 	if [[ "${MODULE}" == *"backend"* ]];			then docker build --tag ${BACKEND}:${TAG} ${ROOT}/src/app/backend;			fi
-	if [[ "${MODULE}" == *"dashboard"* ]];			then docker build --tag ${DASHBOARD}:${TAG} ${ROOT}/dashboard;				fi
 	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker build --tag ${SCRAPER}:${TAG} ${ROOT}/src/app/metrics-scraper;	fi
 }
 push() {
 	if [[ "${MODULE}" == *"frontend"* ]];			then docker push ${FRONTEND}:${TAG};	fi
 	if [[ "${MODULE}" == *"backend"* ]];			then docker push ${BACKEND}:${TAG};		fi
-	if [[ "${MODULE}" == *"dashboard"* ]];			then docker push ${DASHBOARD}:${TAG};	fi
 	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker push ${SCRAPER}:${TAG};		fi
 }
 
@@ -30,7 +28,6 @@ PROJECT="acornsoft-dashboard"
 ROOT="$(pwd)"
 FRONTEND="${GROUP}/${PROJECT}.frontend"
 BACKEND="${GROUP}/${PROJECT}.backend"
-DASHBOARD="${GROUP}/${PROJECT}.dashboard"
 SCRAPER="${GROUP}/${PROJECT}.metrics-scraper"
 
 
