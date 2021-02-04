@@ -84,13 +84,11 @@ var (
 func main() {
 	// Set logging output to standard console out
 	log.SetOutput(os.Stdout)
-	Ab := *argKubeConfigFile
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 	_ = flag.CommandLine.Parse(make([]string, 0)) // Init for glog calls in kubernetes packages
-	*argKubeConfigFile = Ab
-
+	
 	// Initializes dashboard arguments holder so we can read them in other packages
 	initArgHolder()
 
