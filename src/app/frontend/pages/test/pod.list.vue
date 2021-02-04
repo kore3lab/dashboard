@@ -132,7 +132,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			this.loadMetrics();
+			this.getMetrics();
 			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces/${this.$data.selectedNamespace}/pods`)
 				.then((resp) => {
 					this.items = [];
@@ -245,10 +245,10 @@ export default {
 		 * 리소스 메트릭 값을 반환 한다.
 		 * 
 		 * @async
-		 * @function loadMetrics
+		 * @function getMetrics
 		 * @returns {Promise<object>} 리소스(cpu/memory) 메트릭 값을 반환 한다.
 		 */
-		async loadMetrics() {
+		async getMetrics() {
 			this.metricsItems = [];
 			let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/metrics.k8s.io/v1beta1/namespaces/${this.$data.selectedNamespace}/pods`)
 			resp.data.items.forEach(el => {
