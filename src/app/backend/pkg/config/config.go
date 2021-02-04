@@ -1,25 +1,31 @@
 package config
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	"os"
 
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 type conf struct {
-	CurrentContext    string
-	KubeConfigs       map[string]*rest.Config
-	Contexts          []string
-	MetricsScraperUrl string
+	ConfigLoadingRules clientcmd.ClientConfigLoader
+	KubeConfig         *api.Config
+	CurrentContext     string
+	KubeConfigs        map[string]*rest.Config
+	Contexts           []string
+	MetricsScraperUrl  string
 }
 
 var Value = &conf{}
 
-func Setup() {
-	var kubeconfig *string
+var kubeconfig *string
+var loader clientcmd.ClientConfigLoader
+
+func init() {
 	var metricsScraperUrl *string
 	var logLevel *string
 
@@ -54,29 +60,36 @@ func Setup() {
 	//  2순위. env "KUBECONFIG" 값으로 로드한다.
 	//  3순위."~/.kube/config" 에서 로드한다.
 	//  4순위. in-cluster-config 로드한다.
-	var loader clientcmd.ClientConfigLoader
 	if *kubeconfig != "" { // load from --kubeconfig
-		loader = &clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig}
+		Value.ConfigLoadingRules = &clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig}
 	} else {
-		loader = clientcmd.NewDefaultClientConfigLoadingRules()
+		Value.ConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
+	}
+}
+
+// 재로딩 가능한  config 정의
+func Setup() {
+
+	// kubeconfig 파일 로드
+	var err error
+	Value.KubeConfig, err = Value.ConfigLoadingRules.Load()
+	if err != nil {
+		log.Warnf("cannot load kubeconfig: %s (cause=%v)", kubeconfig, err)
 	}
 
 	Value.KubeConfigs = map[string]*rest.Config{}
+	Value.Contexts = []string{}
 
 	// kubeconfig 파일 로드
-	cfg, err := loader.Load()
-	if err == nil {
-		for key := range cfg.Contexts {
-			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, key, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
+	if Value.KubeConfig != nil {
+		for key := range Value.KubeConfig.Contexts {
+			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*Value.KubeConfig, key, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
 			if err == nil {
 				Value.Contexts = append(Value.Contexts, key)
 				Value.KubeConfigs[key] = contextCfg
 			}
 		}
-		Value.CurrentContext = cfg.CurrentContext
-
-	} else {
-		log.Warnf("cannot load kubeconfig: %s (cause=%v)", kubeconfig, err)
+		Value.CurrentContext = Value.KubeConfig.CurrentContext
 	}
 
 	// 로드된 context가 없다면 in-cluster 모드
