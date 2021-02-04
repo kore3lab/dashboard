@@ -137,7 +137,7 @@ func CreateContext(c *gin.Context) {
 
 func DeleteContext(c *gin.Context) {
 	g := app.Gin{C: c}
-
+	
 	conf := config.Value.KubeConfig.DeepCopy()
 	name := c.Param("CLUSTER")
 
@@ -149,7 +149,12 @@ func DeleteContext(c *gin.Context) {
 			delete(conf.AuthInfos, conf.Contexts[name].AuthInfo)
 		}
 		if conf.CurrentContext == name {
-			conf.CurrentContext = ""
+			for _,val := range config.Value.Contexts {
+				if name != val {
+					conf.CurrentContext = val
+					break
+				}
+			}
 		}
 		delete(conf.Contexts, name)
 
