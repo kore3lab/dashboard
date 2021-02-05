@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +17,9 @@ func Manager(r *mux.Router, db *sql.DB) {
 	dashboardRouter := r.PathPrefix("/api/v1").Subrouter() // customized by acornsoft-dashboard
 	dashboardProvider.DashboardRouter(dashboardRouter, db)
 	dashboardProvider.DashboardExpandRouter(dashboardRouter, db) // customized by acornsoft-dashboard
+	r.HandleFunc("/api/kubeconfig",LoadConfig).Methods("PUT")
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
+
 }
 
 // DefaultHandler provides a handler for all http calls
@@ -25,5 +28,14 @@ func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write([]byte(msg))
 	if err != nil {
 		log.Errorf("Error cannot write response: %v", err)
+	}
+}
+
+func LoadConfig (w http.ResponseWriter, _ *http.Request) {
+	config.Setup(config.Value.Kubeconfig)
+	msg := fmt.Sprint("Kubeconfig updata successful")
+	_, err := w.Write([]byte(msg))
+	if err != nil {
+		log.Errorf("Error cannot reload kubeconfig: %v", err)
 	}
 }
