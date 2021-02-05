@@ -141,7 +141,7 @@ spec:
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.2.0
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -219,7 +219,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.2.0
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -287,13 +287,11 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.2.0
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT
             value: "30081"
-          - name: DASHBOARD_PORT
-            value: "30090"
           - name: KIALI_PORT
             value: "32080"
           ports:

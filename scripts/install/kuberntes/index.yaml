@@ -2,8 +2,18 @@ apiVersion: v1
 entries:
   acornsoft-dashboard:
   - apiVersion: v2
+    appVersion: v0.2.0
+    created: "2021-02-05T10:21:21.104686+09:00"
+    description: Acornsoft Kubernetes Dashboard
+    digest: 209eb43555356cc9a640a82df62f2045537d637642c55f60bc4607cbbadf76fb
+    name: acornsoft-dashboard
+    type: application
+    urls:
+    - acornsoft-dashboard-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: v0.1.2
-    created: "2021-01-25T13:28:03.13677+09:00"
+    created: "2021-02-05T10:21:21.104313+09:00"
     description: Acornsoft Kubernetes Dashboard
     digest: 3205f6217826ba691c6f040ab23809cb0a3047ab6f5295bea2100d874b82e519
     name: acornsoft-dashboard
@@ -11,4 +21,4 @@ entries:
     urls:
     - acornsoft-dashboard-0.1.2.tgz
     version: 0.1.2
-generated: "2021-01-25T13:28:03.136127+09:00"
+generated: "2021-02-05T10:21:21.1037+09:00"
