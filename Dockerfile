@@ -24,8 +24,6 @@ RUN npm install --only=production  --no-optional
 
 ENV HOST 0.0.0.0
 ENV BACKEND_PORT 3001
-ENV DASHBOARD_PORT 9090
-ENV KIALI_PORT 20001
 
 ENTRYPOINT [ "npm", "run", "run" ]
 EXPOSE 3000

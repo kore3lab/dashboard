@@ -103,7 +103,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/networking.k8s.io/v1/namespaces/${this.$data.selectedNamespace}/ingresses`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/networking.k8s.io/v1beta1/namespaces/${this.$data.selectedNamespace}/ingresses`)
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
