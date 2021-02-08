@@ -49,10 +49,6 @@ spec:
           env:
           - name: BACKEND_PORT
             value: "30081"
-          - name: DASHBOARD_PORT
-            value: "30090"
-          - name: KIALI_PORT
-            value: "32080"
           ports:
             - containerPort: 3001
               protocol: TCP

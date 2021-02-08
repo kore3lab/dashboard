@@ -114,7 +114,6 @@ export default {
 			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces`)
 				.then((resp) => {
 					this.items = [];
-					console.log("resp.data == ", resp.data)
 					resp.data.items.forEach(el => {
 						this.items.push({
 							name: el.metadata.name,

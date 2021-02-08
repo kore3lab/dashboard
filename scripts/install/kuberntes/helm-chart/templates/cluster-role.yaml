@@ -33,5 +33,5 @@ subjects:
     name: {{ .Chart.Name }}
     namespace: {{ .Release.Namespace }}
   - kind: ServiceAccount
-    name: kubernetes-dashboard
+    name: {{ .Chart.Name }}
     namespace: {{ .Release.Namespace }}

@@ -9,130 +9,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app: dashboard
-  name: dashboard
-  namespace: acornsoft-dashboard
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    app: dashboard
-  name: kubernetes-dashboard-certs
-  namespace: acornsoft-dashboard
-type: Opaque
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    app: dashboard
-  name: kubernetes-dashboard-csrf
-  namespace: acornsoft-dashboard
-type: Opaque
-data:
-  csrf: ""
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    app: dashboard
-  name: kubernetes-dashboard-key-holder
-  namespace: acornsoft-dashboard
-type: Opaque
-
----
-
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  labels:
-    app: dashboard
-  name: kubernetes-dashboard-settings
-  namespace: acornsoft-dashboard
-
----
-
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  labels:
-    app: dashboard
-  name: dashboard
-  namespace: acornsoft-dashboard
-rules:
-  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
-  - apiGroups: [""]
-    resources: ["secrets"]
-    resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs", "kubernetes-dashboard-csrf"]
-    verbs: ["get", "update", "delete"]
-    # Allow Dashboard to get and update 'dashboard-settings' config map.
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    resourceNames: ["kubernetes-dashboard-settings"]
-    verbs: ["get", "update"]
-    # Allow Dashboard to get metrics.
-  - apiGroups: [""]
-    resources: ["services"]
-    resourceNames: ["heapster", "metrics-scraper"]
-    verbs: ["proxy"]
-  - apiGroups: [""]
-    resources: ["services/proxy"]
-    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "metrics-scraper", "http:metrics-scraper"]
-    verbs: ["get"]
-
----
-
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  labels:
-    app: dashboard
+    app: acornsoft-dashboard
   name: acornsoft-dashboard
-rules:
-  - apiGroups: ["metrics.k8s.io"]
-    resources: ["pods", "nodes"]
-    verbs: ["get", "list", "watch"]
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: dashboard
-  name: dashboard
   namespace: acornsoft-dashboard
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: dashboard
-subjects:
-  - kind: ServiceAccount
-    name: dashboard
-    namespace: acornsoft-dashboard
 
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: acornsoft-dashboard
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: acornsoft-dashboard
-subjects:
-  - kind: ServiceAccount
-    name: dashboard
-    namespace: acornsoft-dashboard
 
 ---
 
@@ -140,72 +20,8 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app: dashboard
-  name: dashboard
-  namespace: acornsoft-dashboard
-spec:
-  type: NodePort
-  ports:
-    - name: http
-      nodePort: 30090
-      port: 9090
-      protocol: TCP
-      targetPort: 9090
-  selector:
-    app: dashboard
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: dashboard
-  name: dashboard
-  namespace: acornsoft-dashboard
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: dashboard
-  template:
-    metadata:
-      labels:
-        app: dashboard
-    spec:
-      containers:
-        - name: dashboard
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.dashboard:v0.1.2
-          imagePullPolicy: Always
-          args:
-            - --namespace=acornsoft-dashboard
-            - --kubeconfig=/app/.kube/config
-            - --sidecar-host=http://metrics-scraper:8000
-          ports:
-            - containerPort: 9090
-              protocol: TCP
-          volumeMounts:
-            - name: dashboard-kubeconfig
-              mountPath: /app/.kube
-            - mountPath: /tmp
-              name: tmp-volume
-      volumes:
-        - name: dashboard-kubeconfig
-          configMap:
-            name: acornsoft-dashboard-kubeconfig
-        - name: tmp-volume
-          emptyDir: {}
-      serviceAccountName: dashboard
-      nodeSelector:
-        "kubernetes.io/os": linux
-
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: metrics-scraper
+    app: acornsoft-dashboard
+    acornsoft.dashboard: metrics-scraper
   name: metrics-scraper
   namespace: acornsoft-dashboard
 spec:
@@ -221,24 +37,27 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: metrics-scraper
+    app: acornsoft-dashboard
+    acornsoft.dashboard: metrics-scraper
   name: metrics-scraper
   namespace: acornsoft-dashboard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: metrics-scraper
+      app: acornsoft-dashboard
+      acornsoft.dashboard: metrics-scraper
   template:
     metadata:
       labels:
-        app: metrics-scraper
+        app: acornsoft-dashboard
+        acornsoft.dashboard: metrics-scraper
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.2.0
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -278,7 +97,8 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app: backend
+    app: acornsoft-dashboard
+    acornsoft.dashboard: backend
   name: backend
   namespace: acornsoft-dashboard
 spec:
@@ -298,13 +118,15 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: backend
+    app: acornsoft-dashboard
+    acornsoft.dashboard: backend
   name: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: backend
+      acornsoft.dashboard: backend
   template:
     metadata:
       labels:
@@ -312,7 +134,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.2.0
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -341,7 +163,8 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app: frontend
+    app: acornsoft-dashboard
+    acornsoft.dashboard: frontend
   name: frontend
   namespace: acornsoft-dashboard
 spec:
@@ -361,14 +184,16 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: frontend
+    app: acornsoft-dashboard
+    acornsoft.dashboard: frontend
   name: frontend
   namespace: acornsoft-dashboard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: acornsoft-dashboard
+      acornsoft.dashboard: frontend
   template:
     metadata:
       labels:
@@ -376,15 +201,11 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
+          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.2.0
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT
             value: "30081"
-          - name: DASHBOARD_PORT
-            value: "30090"
-          - name: KIALI_PORT
-            value: "32080"
           ports:
             - containerPort: 3001
               protocol: TCP

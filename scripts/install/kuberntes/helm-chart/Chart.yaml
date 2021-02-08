@@ -1,6 +1,6 @@
 apiVersion: v2
 name: acornsoft-dashboard
 type: application
-version: 0.1.2
-appVersion: v0.1.2
+version: 0.2.0
+appVersion: v0.2.0
 description: Acornsoft Kubernetes Dashboard

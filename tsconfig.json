@@ -34,7 +34,6 @@
   "exclude": [
     "node_modules",
     ".nuxt",
-    "dashboard",
     "dist",
     "aio"
   ]
