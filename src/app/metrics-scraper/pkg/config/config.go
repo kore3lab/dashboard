@@ -7,6 +7,7 @@ import (
 )
 
 type conf struct {
+	Kubeconfig string
 	CurrentContext string
 	KubeConfigs    map[string]*rest.Config
 	Contexts       []string
@@ -29,7 +30,9 @@ func Setup(kubeconfig string) {
 		loader = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
 
+	Value.Kubeconfig = kubeconfig
 	Value.KubeConfigs = map[string]*rest.Config{}
+	Value.Contexts = []string{}
 
 	// kubeconfig 파일 로드
 	cfg, err := loader.Load()

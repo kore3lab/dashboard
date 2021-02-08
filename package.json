@@ -35,19 +35,19 @@
         "nuxt": "^2.14.11"
     },
     "devDependencies": {
+        "@fortawesome/fontawesome-free": "5.13.0",
+        "@nuxt/typescript-build": "^0.6.0",
+        "ace-builds": "^1.4.11",
         "babel-cli": "^6.26.0",
         "babel-preset-env": "1.7.0",
         "babel-register": "^6.26.0",
-        "gulp": "4.0.2",
-        "q": "^1.5.1",
-        "@nuxt/typescript-build": "^0.6.0",
-        "@fortawesome/fontawesome-free": "5.13.0",
-        "ace-builds": "^1.4.11",
         "chart.js": "^2.9.3",
-        "vue-chartjs": "^3.5.0",
+        "concurrently": "5.1.0",
         "expose-loader": "^0.7.5",
+        "gulp": "4.0.2",
         "jquery": "3.4.1",
-        "concurrently": "5.1.0"
+        "q": "^1.5.1",
+        "vue-chartjs": "^3.5.0"
     },
     "engines": {
         "node": ">=10.13.0",
