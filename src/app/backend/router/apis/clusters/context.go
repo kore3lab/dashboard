@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	resty "github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/gin-gonic/gin"
@@ -35,6 +38,7 @@ func CreateContexts(c *gin.Context) {
 			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig")
 		} else {
 			config.Setup()
+			reloadConfigMetricsScraper()
 			ListContexts(g.C)
 		}
 	}
@@ -65,7 +69,7 @@ func CreateContext(c *gin.Context) {
 	name := c.Param("CLUSTER")
 
 	if conf.Contexts[name] != nil {
-		g.SendMessage(http.StatusBadRequest, fmt.Sprintf("exist a context '%s'", name))
+		g.SendMessage(http.StatusBadRequest, fmt.Sprintf("Already exist a context '%s'", name))
 	} else {
 		json := make(map[string]interface{})
 		if g.C.BindJSON(&json) != nil {
@@ -129,6 +133,7 @@ func CreateContext(c *gin.Context) {
 		if err != nil {
 			g.SendMessage(http.StatusBadRequest, "unable to modify kubeconfig")
 		} else {
+			reloadConfigMetricsScraper()
 			config.Setup()
 			ListContexts(g.C)
 		}
@@ -157,10 +162,23 @@ func DeleteContext(c *gin.Context) {
 		if err != nil {
 			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig")
 		} else {
+			reloadConfigMetricsScraper()
 			config.Setup()
 			ListContexts(g.C)
 		}
 	} else {
 		g.SendMessage(http.StatusNotFound, fmt.Sprintf("not found context %s", name))
+	}
+}
+
+// metric-scraper config reload
+func reloadConfigMetricsScraper() {
+	client := resty.New()
+	_, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		Patch(fmt.Sprintf("%s/api/v1/config", config.Value.MetricsScraperUrl))
+
+	if err != nil {
+		log.Errorf("Unable to metrics scraper config reload (cause=%v)", err)
 	}
 }

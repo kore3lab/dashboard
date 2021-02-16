@@ -64,7 +64,8 @@ func main() {
 
 	// configuration
 	//      customized by acornsoft-dashboard
-	config.Setup(*kubeconfig)
+	config.SetKubeconfig(*kubeconfig)
+	config.Setup()
 
 	// Create the db "connection"
 	db, err := sql.Open("sqlite3", *dbFile)
