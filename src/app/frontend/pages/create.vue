@@ -60,13 +60,11 @@ export default {
 	mounted() {
 		try { 
 			let filename = this.crd.toLowerCase().replaceAll(" ", "");
-			console.log(filename);
 			this.template = require(`~/assets/template/${filename}.json`); 
 			this.raw = Object.assign({}, this.template);
 		} catch (ex) {
 			console.log(`can't find "${this.crd}" template o n ~/assets/template`); 
 		}
-		
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

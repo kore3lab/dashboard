@@ -47,6 +47,7 @@
         "vue-chartjs": "^3.5.0",
         "expose-loader": "^0.7.5",
         "jquery": "3.4.1",
+        "admin-lte": "3.1.0-rc",
         "concurrently": "5.1.0"
     },
     "engines": {

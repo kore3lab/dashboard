@@ -1,5 +1,5 @@
 <template>
-<div id="wrapEditor"></div>
+<div id="txtAceEditor"></div>
 </template>
 <script>
 import Ace from "ace-builds/src-noconflict/ace"

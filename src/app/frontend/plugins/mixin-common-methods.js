@@ -56,40 +56,42 @@ Vue.mixin({
      * @param {date} timestamp 변환할 date 값
      * @return {string} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
      */
-    getElapsedTime(timestamp){
+    getElapsedTime(timestamp) {
       const dt = Date.parse(timestamp);
       const elapsedTime = new Date() - dt;
 
-      const second = Math.floor((elapsedTime % (1000*60)) / (1000))
-      const minute = Math.floor((elapsedTime % (1000*60*60)) / (1000*60))
-      const hour = Math.floor((elapsedTime % (1000*60*60*24)) / (1000*60*60))
+      const second = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+      const minute = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+      const hour = Math.floor(
+        (elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
       // const day = Math.floor((elapsedTime % (1000*60*60*24*30)) / (1000*60*60*24))
-      const days = Math.floor(elapsedTime / (1000*60*60*24))
+      const days = Math.floor(elapsedTime / (1000 * 60 * 60 * 24));
       // const month = Math.floor((elapsedTime % (1000*60*60*24*30*12)) / (1000*60*60*24*30))
       // const year = Math.floor(elapsedTime  / (1000*60*60*24*30*12))
 
-      let str = ""
+      let str = "";
       // if(year > 0) str += `${year}y`
       // if(month > 0) str += `${month}m`
       // if(day > 0) str += `${day}d`
-      if ( days > 0 ) {
-        str += `${days}d`
-        if ( days >= 10 ) return str
+      if (days > 0) {
+        str += `${days}d`;
+        if (days >= 10) return str;
       }
-      if ( hour > 0 ) {
-        str += `${hour}h`
-        if ( days < 10 && days > 0 ) return str
+      if (hour > 0) {
+        str += `${hour}h`;
+        if (days < 10 && days > 0) return str;
       }
-      if ( minute > 0 ) {
-        if ( days > 0 || hour > 0 ) return str
-        str += `${minute}m`
+      if (minute > 0) {
+        if (days > 0 || hour > 0) return str;
+        str += `${minute}m`;
       }
 
-      if ( second > 0 ) {
-        if ( hour > 0 || minute > 9 ) return str
-        str += `${second}s`
+      if (second > 0) {
+        if (hour > 0 || minute > 9) return str;
+        str += `${second}s`;
       }
-      return str
+      return str;
     },
     /**
      * 리소스 메트릭 수집 값을 Formatting 한다.
@@ -102,22 +104,26 @@ Vue.mixin({
      * @return {string} 리소스 합산 값의 단위를 변환한다.
      */
     getFormatMetrics(resource, metrics, decimals = 2) {
-      if (metrics === 0) return 0
+      if (metrics === 0) return 0;
 
-      const k = 1024
-      const dm = decimals < 0 ? 0 : decimals
-      const memorySize = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei"]
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const memorySize = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei"];
       // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
       const i = Math.floor(Math.log(metrics) / Math.log(k));
 
       if (resource == "cpu") {
-        if (metrics / 1000000000 > 1) return `${parseFloat((metrics / 1000000000).toFixed(dm))}core`
-        if (metrics / 1000000 > 1) return `${parseFloat((metrics / 1000000).toFixed(dm))}m`
-        return `${parseFloat(metrics)}n`
+        if (metrics / 1000000000 > 1)
+          return `${parseFloat((metrics / 1000000000).toFixed(dm))}core`;
+        if (metrics / 1000000 > 1)
+          return `${parseFloat((metrics / 1000000).toFixed(dm))}m`;
+        return `${parseFloat(metrics)}n`;
       }
-  
-      return `${parseFloat((metrics / Math.pow(k, i)).toFixed(dm))}${memorySize[i]}`
+
+      return `${parseFloat((metrics / Math.pow(k, i)).toFixed(dm))}${
+        memorySize[i]
+      }`;
     },
     getTimestampString(timestamp) {
       let dt = Date.parse(timestamp);

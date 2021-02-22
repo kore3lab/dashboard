@@ -74,7 +74,8 @@
 								<h3 class="card-title" v-else-if="crd=='Role Binding' || crd=='Cluster Role Binding'">Subjects,RoleRef</h3>
 								<h3 class="card-title" v-else>Specification</h3>
 							</div>
-							<div class="card-body" ref="wrapSpec"></div>
+							<c-jsontree id="txtSpec" v-model="raw.spec" class="card-body"></c-jsontree>
+							
 						</div>
 					</div>
 				</div>
@@ -91,7 +92,7 @@
 					<div class="col-md-12">
 						<div class="card">
 							<div class="card-header"></div>
-							<c-aceeditor class="card-body" v-model="raw" v-on:error="onError" style="min-height: calc(100vh - 210px - 60px)"></c-aceeditor>
+							<c-aceeditor id="txtYaml" class="card-body" v-model="raw" v-on:error="onError" style="min-height: calc(100vh - 210px - 60px)"></c-aceeditor>
 						</div>
 					</div>
 				</div>
@@ -107,11 +108,14 @@
 
 import axios			from "axios"
 import VueAceEditor 	from "@/components/aceeditor"
+import VueJsonTree 		from "@/components/jsontree"
 import VueNavigator 	from "@/components/navigator"
+
 
 export default {
 	components: {
 		"c-aceeditor": { extends: VueAceEditor },
+		"c-jsontree": { extends: VueJsonTree },
 		"c-navigator": { extends: VueNavigator }
 	},
 	data() {
@@ -153,7 +157,7 @@ export default {
 					else if(this.$data.crd == "Service Account") spec = resp.data.secrets;
 					else spec = resp.data.spec;
 
-					if (spec) this.$jsonTree.create(spec, this.$refs["wrapSpec"]);
+					// if (spec) this.$jsonTree.create(spec, this.$refs["wrapSpec"]);
 
 				})
 				.catch(e => { this.msghttp(e);});
