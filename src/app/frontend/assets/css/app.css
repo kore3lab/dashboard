@@ -5,27 +5,4 @@
 /* json2html */
 .jsontree_child-nodes {list-style: none;}
 .jsontree_child-nodes {margin-left: 0}
-.jsontree_tree ul {padding-inline-start: 20px;} 
-
-/* default layout */
-.main-sidebar, .main-sidebar::before { width: 17rem;}
-.sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
-.sidebar {margin-left: 3.7rem; padding: 0rem; padding-left: .1rem;}
-.brand-link { margin-left: 3.7rem;}
-#aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
-#aside-contexts > div { margin: .5rem .2rem;}
-#aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
-#aside-contexts p { font-size:x-small; margin: 0;}
-
-
-@media (min-width: 992px) {
-	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-header {
-		margin-left: 17rem;
-	}
-	.sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-header {
-		margin-left: 7.4rem !important;
-	}
-	.sidebar-mini.sidebar-collapse .main-sidebar, .sidebar-mini.sidebar-collapse .main-sidebar::before {
-		width: 7.4rem;
-	}
-}
+.jsontree_tree ul {padding-inline-start: 20px;}

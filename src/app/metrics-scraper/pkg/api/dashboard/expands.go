@@ -23,16 +23,7 @@ type ClusterMetrics struct {
 }
 
 func DashboardExpandRouter(r *mux.Router, db *sql.DB) {
-	r.Path("/config").HandlerFunc(patchHandler(db)).Methods("PATCH")
 	r.Path("/clusters/{Cluster}").HandlerFunc(clusterHandler(db)).Methods("GET")
-}
-
-func patchHandler(db *sql.DB) http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		config.Setup()
-	}
-
 }
 
 func clusterHandler(db *sql.DB) http.HandlerFunc {

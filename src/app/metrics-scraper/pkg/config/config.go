@@ -7,15 +7,16 @@ import (
 )
 
 type conf struct {
-	ConfigLoadingRules clientcmd.ClientConfigLoader
-	CurrentContext     string
-	KubeConfigs        map[string]*rest.Config
-	Contexts           []string
+	Kubeconfig string
+	CurrentContext string
+	KubeConfigs    map[string]*rest.Config
+	Contexts       []string
 }
 
 var Value = &conf{}
 
-func SetKubeconfig(kubeconfig string) {
+func Setup(kubeconfig string) {
+
 	// KUBECONFIG 로드 Rules
 	//  1순위. "--kubeconfig" 옵션에서 로드한다.
 	//  2순위. env "KUBECONFIG" 값으로 로드한다.
@@ -28,19 +29,16 @@ func SetKubeconfig(kubeconfig string) {
 	} else {
 		loader = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
-	Value.ConfigLoadingRules = loader
-}
-
-func Setup() {
 
 	Value.KubeConfigs = map[string]*rest.Config{}
+	Value.Kubeconfig = kubeconfig
 	Value.Contexts = []string{}
 
 	// kubeconfig 파일 로드
-	cfg, err := Value.ConfigLoadingRules.Load()
+	cfg, err := loader.Load()
 	if err == nil {
 		for key := range cfg.Contexts {
-			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, key, &clientcmd.ConfigOverrides{}, Value.ConfigLoadingRules).ClientConfig()
+			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, key, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
 			if err == nil {
 				Value.Contexts = append(Value.Contexts, key)
 				Value.KubeConfigs[key] = contextCfg
@@ -48,7 +46,7 @@ func Setup() {
 		}
 		Value.CurrentContext = cfg.CurrentContext
 	} else {
-		log.Warnf("cannot load kubeconfig (cause=%v)", err)
+		log.Warnf("cannot load kubeconfig: %s (cause=%v)", kubeconfig, err)
 	}
 
 	// 로드된 context가 없다면 in-cluster 모드

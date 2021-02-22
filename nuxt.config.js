@@ -1,4 +1,3 @@
-const webpack = require("webpack");
 export default {
   ssr: false,
   srcDir: "src/app/frontend/",
@@ -25,14 +24,10 @@ export default {
       class: "hold-transition sidebar-mini layout-fixed",
     },
   },
-  css: [
-    "@fortawesome/fontawesome-free/css/all.css",
-    "~/plugins/adminLte/css/adminlte.min.css",
-    "~/assets/css/app.css",
-  ],
+  css: ["~/assets/css/app.css"],
   plugins: [
+    { src: "~/plugins/json-tree", mode: "client" },
     { src: "~/plugins/mixin-common-methods", mode: "client" },
-    { src: "~/plugins/admin-lte", mode: "client" },
   ],
   buildModules: ["@nuxt/typescript-build"],
   modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios"],
@@ -41,9 +36,6 @@ export default {
     babel: {
       compact: true, // for build ERROR "bootstrap-vue icons.js as it exceeds the max of 500KB."
     },
-  },
-  bootstrapVue: {
-    icons: true,
   },
   // using "this.$config.backendPort",...
   publicRuntimeConfig: {
