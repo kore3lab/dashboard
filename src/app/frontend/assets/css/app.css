@@ -12,6 +12,7 @@
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
 .sidebar {margin-left: 3.7rem; padding: 0rem; padding-left: .1rem;}
 .brand-link { margin-left: 3.7rem;}
+.layout-fixed .brand-link { width: 13.2rem;}
 #aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
 #aside-contexts > div { margin: .5rem .2rem;}
 #aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
