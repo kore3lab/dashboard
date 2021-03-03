@@ -58,6 +58,10 @@ func CreateUrlMappings() {
 	Router.POST("/raw", _raw.ApplyRaw)
 	Router.PUT("/raw", _raw.ApplyRaw)
 
+	// API-Group List
+	Router.GET("/raw/clusters/:CLUSTER/apis/", _raw.GetAPIGroupList)
+	Router.GET("/raw/apis/", _raw.GetAPIGroupList)
+
 	// RAW-API Core
 	//      non-Namespaced
 	//          /api/v1/namespaces/acornsoft-dashboard
@@ -65,8 +69,11 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /api/v1/namespaces/default/services/kubernetes
 	//          /api/v1/namespaces/default/serviceaccounts/default
+
+	Router.GET("/raw/clusters/:CLUSTER/api/", _raw.GetRaw) // Core APIVersions
 	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION")
 	{
+		rawAPI.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceLis
 		rawAPI.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
 		rawAPI.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
 		rawAPI.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
@@ -76,8 +83,10 @@ func CreateUrlMappings() {
 		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
 		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 	}
+	Router.GET("/raw/api/", _raw.GetRaw) // Core APIVersions
 	rawAPI_ := Router.Group("/raw/api/:VERSION")
 	{
+		rawAPI_.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceList
 		rawAPI_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
 		rawAPI_.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
 		rawAPI_.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
@@ -94,8 +103,10 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /apis/apps/v1/namespaces/kube-system/deployments/nginx
 	//          /apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings/clusterrolebinding-2g782
+	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", _raw.GetRaw) // APIGroup
 	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION")
 	{
+		rawAPIs.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
 		rawAPIs.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
 		rawAPIs.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
 		rawAPIs.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete
@@ -105,8 +116,10 @@ func CreateUrlMappings() {
 		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
 		rawAPIs.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
 	}
+	Router.GET("/raw/apis/:GROUP", _raw.GetRaw) // APIGroup
 	rawAPIs_ := Router.Group("/raw/apis/:GROUP/:VERSION")
 	{
+		rawAPIs_.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
 		rawAPIs_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
 		rawAPIs_.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
 		rawAPIs_.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete

@@ -17,7 +17,30 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 )
+
+// Get api group list
+func GetAPIGroupList(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	// instancing dynamic client
+	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config.Value.KubeConfigs[context])
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	groups, err := discoveryClient.ServerGroups()
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	g.Send(http.StatusOK, groups)
+
+}
 
 // Create or Update
 func ApplyRaw(c *gin.Context) {
@@ -64,13 +87,6 @@ func DeleteRaw(c *gin.Context) {
 // Get or List
 func GetRaw(c *gin.Context) {
 	g := app.Gin{C: c}
-
-	// url parameter validation
-	v := []string{"VERSION", "RESOURCE"}
-	if err := g.ValidateUrl(v); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
-		return
-	}
 
 	// instancing dynamic client
 	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
