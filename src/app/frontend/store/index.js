@@ -1,7 +1,8 @@
 export const state = () => ({
-  currentContext: "", // 선택된 cluster context
-  contexts: [], // context 리스트
-  namespaces: [], // 현재 context 의 namespace 리스트
+  currentContext: "", // currentContext
+  contexts: [], // context list
+  namespaces: [], // currentContext namespace 리스트
+  resources: [], // currentContext resource 리스트
 });
 export const mutations = {
   setCurrentContext(state, ctx) {
@@ -13,6 +14,9 @@ export const mutations = {
   setNamespaces(state, namespaces) {
     state.namespaces = namespaces;
   },
+  setResources(state, resources) {
+    state.resources = resources;
+  },
 };
 export const getters = {
   getCurrentContext(state) {
@@ -23,5 +27,8 @@ export const getters = {
   },
   getNamespaces(state) {
     return state.namespaces;
+  },
+  getResources(state) {
+    return state.resources;
   },
 };

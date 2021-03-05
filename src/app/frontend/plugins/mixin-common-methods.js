@@ -145,17 +145,22 @@ Vue.mixin({
 
       return Math.floor(seconds) + " seconds";
     },
-    // namespace 리스트 조회
+    // Get currentContext's namespaces
     namespaces(_) {
       if (_) this.$store.commit("setNamespaces", _);
       else return this.$store.getters["getNamespaces"];
     },
-    // context (cluster) 리스트 조회
+    // Get contexts
     contexts(_) {
       if (_) this.$store.commit("setContexts", _);
       else return this.$store.getters["getContexts"];
     },
-    // 현재 선택된 context (cluster) 조회
+    // Get currentContext's resources
+    resources(_) {
+      if (_) this.$store.commit("setResources", _);
+      else return this.$store.getters["getResources"];
+    },
+    // Get a currentContext
     currentContext(_) {
       if (_) this.$store.commit("setCurrentContext", _);
       else return this.$store.getters["getCurrentContext"];
