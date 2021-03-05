@@ -28,3 +28,12 @@ func DivideRound(a int64, b int64, decimal int) float64 {
 	}
 
 }
+
+func ArrayContains(arr []string, str string) bool {
+	for _, s := range arr {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}

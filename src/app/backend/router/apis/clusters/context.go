@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -10,7 +11,11 @@ import (
 
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/config"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/kubernetes"
 	cmd "k8s.io/client-go/tools/clientcmd"
 	cmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
@@ -18,9 +23,64 @@ import (
 func ListContexts(c *gin.Context) {
 	g := app.Gin{C: c}
 
+	//ctx parameter 가 CurrentContext와 다르고 Contexts 에 포함되어 있다면 CurrentContext 변경
+	ctx := c.DefaultQuery("ctx", config.Value.CurrentContext)
+	if ctx != config.Value.CurrentContext && lang.ArrayContains(config.Value.Contexts, ctx) {
+		config.Value.CurrentContext = ctx
+	}
+
+	// client
+	kubeconfig := config.Value.KubeConfigs[config.Value.CurrentContext]
+
+	// namespaces
+	k8sClient, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	nsList, err := k8sClient.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{})
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	namespaces := []string{}
+	for _, ns := range nsList.Items {
+		namespaces = append(namespaces, ns.GetObjectMeta().GetName())
+	}
+
+	// resources
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(kubeconfig)
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resourcesList, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resources := make(map[string]interface{})
+	for _, grpList := range resourcesList {
+		for _, r := range grpList.APIResources {
+			resources[r.Name] = map[string]interface{}{
+				"name":         r.Name,
+				"groupVersion": grpList.GroupVersion,
+				"kind":         r.Kind,
+				"namespaced":   r.Namespaced,
+			}
+		}
+	}
+
 	g.Send(http.StatusOK, map[string]interface{}{
-		"currentContext": config.Value.CurrentContext,
-		"contexts":       config.Value.Contexts,
+		"contexts": config.Value.Contexts,
+		"currentContext": map[string]interface{}{
+			"name":       config.Value.CurrentContext,
+			"resources":  resources,
+			"namespaces": namespaces,
+		},
 	})
 
 }

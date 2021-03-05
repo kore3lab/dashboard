@@ -2,7 +2,7 @@
 <div id="aside-contexts" class="sidebar-contexts d-flex flex-column sidebar-dark-primary border-right border-secondary">
 	<div v-for="(option, index) in contexts()" :key="option" :value="option">
 		<b-overlay :show="showOverlay==option" rounded="sm">
-		<b-button v-bind:id="'btn_aside_cluster_' + option" @click="onContextSelected(option, $event)" v-bind:class="{active: option==currentContext()}" :value="option" class="w-100 text-uppercase">{{ option.substring(0,1) }}</b-button>
+		<b-button v-bind:id="'btn_aside_cluster_' + option" @click="onContextSelected(option)" v-bind:class="{active: option==currentContext()}" :value="option" class="w-100 text-uppercase">{{ option.substring(0,1) }}</b-button>
 		</b-overlay>
 		<p class="text-center text-white text-truncate">{{option}}</p>
 		<b-popover v-bind:target="'btn_aside_cluster_' + option" v-bind:title="option" triggers="hover" boundary="window" boundary-padding="0">
@@ -29,8 +29,23 @@ export default {
 		}
 	},
 	async fetch() {
-		// context 리스트 조회
 		if(!this.currentContext()) {
+			// query or 이전 선택된 context 확인
+			let ctx = this.$route.query.context;
+			if (!ctx) ctx = localStorage.getItem("currentContext");
+			if(ctx) {
+				if( !this.contexts().find(el => el==ctx)) ctx = "";
+			}
+
+			// context 선택
+			this.onContextSelected(ctx)
+		}
+	},
+	mounted() {
+	},
+	methods: {
+		// context select
+		onContextSelected(ctx) {
 			let equals = (a, b) => {
 				if (!a) return false;
 				if (!b) return false;
@@ -42,70 +57,36 @@ export default {
 				return true;
 			};
 
-			this.showOverlay = {"apps-05":false, "apps-06":false}
-
-			let resp = await axios.get(`${this.backendUrl()}/api/clusters`);
-			if(resp.data.contexts) {
-				let local;
-				try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {};
-				if (equals(local,resp.data.contexts)) {
-					this.contexts(local);
-				} else {
-					this.contexts(resp.data.contexts);
-					localStorage.setItem("contexts",resp.data.contexts);
-				}
-			}
-
-			let ctx = this.$route.query.context;
-			if (!ctx) ctx = localStorage.getItem("currentContext");
-			if(ctx) {
-				if( !this.contexts().find(el => el==ctx)) ctx = "";
-			}
-			this.currentContext(ctx ? ctx : resp.data.currentContext);
-				
-			await this.loadNamespaces(ctx);
-			this.$nuxt.$emit("navbar-context-selected");
-		}
-	},
-	mounted() {
-	},
-	methods: {
-		/**
-		 * 클러스터의 네임스페이스 목록을 가져 온다.
-		 * 
-		 * @async
-		 * @function loadNamespaces
-		 * @returns {Array} 네이스페이스 값을 [{valu, text}] 값으로 반환 한다.
-		 */
-		async loadNamespaces(ctx){
-			let nsList = [{ value: "", text: "All Namespaces" }];
-			if (ctx) {
-				let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${ctx}/api/v1/namespaces`)
-				resp.data.items.forEach(el => {
-					nsList.push({ value: el.metadata.name, text: el.metadata.name });
-				});
-			}
-			this.namespaces(nsList);
-		},
-		onContextSelected(ctx, ev) {
-			if (ctx == this.currentContext()) return;
-
 			this.showOverlay = ctx;
-			this.loadNamespaces(ctx).then(() => {
-				this.currentContext(ctx);
-				localStorage.setItem("currentContext", ctx);
-				this.$nuxt.$emit("navbar-context-selected");
-				document.querySelectorAll("#aside-contexts button").forEach(e => {
-					if(e.value) {
-						if(ctx == e.value) e.classList.add("active");
-						else e.classList.remove("active");
+			axios.get(`${this.backendUrl()}/api/clusters?ctx=${ctx}`)
+				.then((resp)=>{
+					if(resp.data.contexts) {
+						let local;
+						try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {};
+						if (equals(local,resp.data.contexts)) {
+							this.contexts(local);
+						} else {
+							this.contexts(resp.data.contexts);
+							localStorage.setItem("contexts",resp.data.contexts);
+						}
 					}
+					this.currentContext(ctx ? ctx : resp.data.currentContext.name);
+					let nsList = [{ value: "", text: "All Namespaces" }];
+					if (resp.data.currentContext.namespaces) {
+						resp.data.currentContext.namespaces.forEach(el => {
+							nsList.push({ value: el, text: el });
+						});
+					}
+					this.namespaces(nsList);
+					this.resources(resp.data.currentContext.resources);
+					localStorage.setItem("currentContext", this.currentContext());
+
+				}).catch(error=> {
+					this.toast(error.message, "danger");
+				}).finally(() => {
+					this.showOverlay = "";
+					this.$nuxt.$emit("navbar-context-selected");
 				});
-			}).catch(error=> {
-				this.toast(error.message, "danger");
-			}).finally(() => {
-				this.showOverlay = ""
-			});
 
 		},
 		onContextDelete(ctx, index) {
