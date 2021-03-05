@@ -19,7 +19,7 @@ export default {
 		value(newVal) {
 			try {
 				if(this.localValue != newVal) {
-					jsonTree.create(newVal, this.$el);
+					jsonTree.create(newVal, this.$el).expand();
 					this.localValue = newVal;
 				}
 			} catch (ex) {

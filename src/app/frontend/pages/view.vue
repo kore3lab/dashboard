@@ -148,16 +148,13 @@ export default {
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
-					let spec = null; 
 
-					if(this.$data.crd == "Config Map" || this.$data.crd == "Secret") spec = resp.data.data;
-					else if(this.$data.crd == "Storage Class") spec = null; // 무시
-					else if(this.$data.crd == "Role" || this.$data.crd == "Cluster Role") spec = resp.data.rules;
-					else if(this.$data.crd == "Role Binding" || this.$data.crd == "Cluster Role Binding") spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} ;
-					else if(this.$data.crd == "Service Account") spec = resp.data.secrets;
-					else spec = resp.data.spec;
-
-					// if (spec) this.$jsonTree.create(spec, this.$refs["wrapSpec"]);
+					if(this.$data.crd == "Config Map" || this.$data.crd == "Secret") this.raw.spec = resp.data.data;
+					else if(this.$data.crd == "Storage Class") this.raw.spec = null; // 무시
+					else if(this.$data.crd == "Role" || this.$data.crd == "Cluster Role") this.raw.spec = resp.data.rules;
+					else if(this.$data.crd == "Role Binding" || this.$data.crd == "Cluster Role Binding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} ;
+					else if(this.$data.crd == "Service Account") this.raw.spec = resp.data.secrets;
+					else this.raw.spec = resp.data.spec;
 
 				})
 				.catch(e => { this.msghttp(e);});
