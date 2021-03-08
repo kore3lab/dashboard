@@ -1,5 +1,5 @@
 <template>
-<div id="wrapEditor"></div>
+<div></div>
 </template>
 <script>
 import "@/components/json-tree/jsonTree.css";
@@ -10,7 +10,8 @@ export default {
 	props:["value"],
 	data () {
 		return {
-			localValue: this.value
+			localValue: this.value,
+			object: null
 		}
 	},
 	mounted(){
@@ -19,8 +20,13 @@ export default {
 		value(newVal) {
 			try {
 				if(this.localValue != newVal) {
-					jsonTree.create(newVal, this.$el).expand();
+					if(this.object) {
+						this.object.loadData(newVal);
+					} else {
+						this.object = jsonTree.create(newVal, this.$el);
+					}
 					this.localValue = newVal;
+					this.object.expand();
 				}
 			} catch (ex) {
 				console.error(ex.message);

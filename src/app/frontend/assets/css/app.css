@@ -2,11 +2,6 @@
 .content a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0rem .3rem}
 .content a.nav-link {padding: .3rem .3rem; color:#aaa}
 
-/* json2html */
-.jsontree_child-nodes {list-style: none;}
-.jsontree_child-nodes {margin-left: 0}
-.jsontree_tree ul {padding-inline-start: 20px;} 
-
 /* default layout */
 .main-sidebar, .main-sidebar::before { width: 17rem;}
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
