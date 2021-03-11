@@ -4,9 +4,9 @@
 
     <div class="content-header">
       <div class="container-fluid">
-        <c-navigator group="Administrator"></c-navigator>
+        <c-navigator group="Networking"></c-navigator>
         <div class="row mb-2">
-          <div class="col-sm-2"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Role Bindings</h1></div>
+          <div class="col-sm-2"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">E</span>Endpoints</h1></div>
           <!-- 검색 (namespace) -->
           <div class="col-sm-2">
             <b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select>
@@ -19,10 +19,6 @@
                 <button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button>
               </div>
             </div>
-          </div><!--//END -->
-          <!-- 버튼 -->
-          <div class="col-sm-6 text-right">
-            <b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=RoleBinding`)">Create</b-button>
           </div><!--//END -->
         </div>
       </div>
@@ -47,15 +43,12 @@
                     </div>
                   </template>
                   <template v-slot:cell(name)="data">
-                    <a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('rbac.authorization.k8s.io','rolebindings',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+                    <a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','endpoints',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
                   </template>
-                  <template v-slot:cell(labels)="data">
+                  <template v-slot:cell(endpoint)="data">
                     <ul class="list-unstyled mb-0">
-                      <li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+                      <li v-for="value in data.item.endpoint" v-bind:key="value">{{ value }}</li>
                     </ul>
-                  </template>
-                  <template v-slot:cell(bindings)="data">
-                    <div v-for="(value, idx) in data.item.bindings" v-bind:key="idx">{{ value }}</div>
                   </template>
                 </b-table>
               </div>
@@ -66,7 +59,7 @@
       </div>
     </section>
     <b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-      <c-view crd="Role Binding" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+      <c-view crd="Endpoint" group="Networking" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
     </b-sidebar>
   </div>
 </template>
@@ -82,17 +75,17 @@ export default {
   data() {
     return {
       selectedNamespace: "",
-      filterOn: ["name"],
       keyword: "",
+      filterOn: ["name"],
       fields: [
-        {key: "name", label: "Name", sortable: true},
-        {key: "namespace", label: "Namespace", sortable: true},
-        {key: "bindings", label: "Bindings", sortable: true},
-        {key: "labels", label: "Labels", sortable: true},
-        {key: "creationTimestamp", label: "Age"},
+        { key: "name", label: "Name", sortable: true },
+        { key: "namespace", label: "Namespace", sortable: true },
+        { key: "endpoint", label: "Endpoints"},
+        { key: "creationTimestamp", label: "Age", sortable: true },
       ],
       isBusy: false,
       items: [],
+      status: true,
       currentPage: 1,
       totalItems: 0,
       sidebar: {
@@ -104,51 +97,47 @@ export default {
   },
   layout: "default",
   created() {
-    this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All());
-    if (this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+    this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+    if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
   },
   methods: {
     // 조회
     query_All() {
       this.isBusy = true;
-      axios.get(this.getApiUrl("rbac.authorization.k8s.io","rolebindings",this.selectedNamespace))
+      axios.get(this.getApiUrl("","endpoints",this.selectedNamespace))
           .then((resp) => {
             this.items = [];
             resp.data.items.forEach(el => {
               this.items.push({
                 name: el.metadata.name,
                 namespace: el.metadata.namespace,
-                bindings: this.getBindings(el),
-                labels: el.metadata.labels,
-                creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+                endpoint: this.onEndpoints(el),
+                creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
               });
             });
             this.onFiltered(this.items);
           })
-          .catch(e => {
-            this.msghttp(e);
-          })
-          .finally(() => {
-            this.isBusy = false;
-          });
+          .catch(e => { this.msghttp(e);})
+          .finally(()=> { this.isBusy = false;});
     },
     onFiltered(filteredItems) {
       this.totalItems = filteredItems.length;
       this.currentPage = 1
     },
-    getBindings(el) {
-      let bindingList = [];
-      if (el.subjects) {
-        for (let i = 0; i < el.subjects.length; i++) {
-          bindingList.push(el.subjects[i].name)
+    onEndpoints(el){
+      let list = [];
+      if (el.subsets !== undefined) {
+        for (let i =0;i<el.subsets[0].addresses.length;i++){
+          list.push(`${el.subsets[0].addresses[i].ip}`)
         }
+        return list
       }
-      return bindingList
+      return "-"
     },
-    beforeDestroy() {
-      this.$nuxt.$off('navbar-context-selected')
-    }
-  }
+  },
+  beforeDestroy(){
+    this.$nuxt.$off('navbar-context-selected')
+  },
 }
 </script>
 <style scoped>label {font-weight: 500;}</style>

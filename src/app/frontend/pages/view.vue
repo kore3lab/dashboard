@@ -3,7 +3,7 @@
 	<div class="card card-primary m-0">
 		<!-- card-header -->
 		<div class="card-header pt-2 pb-2">
-			<h3 class="card-title">{{ name }}</h3>
+			<h3 class="card-title">{{ crd }} / {{ name }}</h3>
 			<div class="card-tools">
 				<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
 				<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
@@ -39,14 +39,16 @@
 					</div>
 				</div>
 			</div>
-			<div class="row" v-if="crd != 'Storage Class'">
+			<div class="row" v-if="crd !== 'Storage Class'">
 				<div class="col-md-12">
 					<div class="card card-secondary card-outline m-0">
 						<div class="card-header p-2">
-							<h3 class="card-title text-md" v-if="crd=='Config Map' || crd=='Secret'">Data</h3>
-							<h3 class="card-title text-md" v-else-if="crd=='Service Account'">Secrets</h3>
-							<h3 class="card-title text-md" v-else-if="crd=='Role' || crd=='Cluster Role'">Rules</h3>
-							<h3 class="card-title text-md" v-else-if="crd=='Role Binding' || crd=='Cluster Role Binding'">Subjects,RoleRef</h3>
+							<h3 class="card-title text-md" v-if="crd==='Config Map' || crd==='Secret'">Data</h3>
+							<h3 class="card-title text-md" v-else-if="crd==='Service Account'">Secrets</h3>
+							<h3 class="card-title text-md" v-else-if="crd==='Role' || crd==='Cluster Role'">Rules</h3>
+							<h3 class="card-title text-md" v-else-if="crd==='Role Binding' || crd==='Cluster Role Binding'">Subjects,RoleRef</h3>
+							<h3 class="card-title text-md" v-else-if="crd==='Endpoint'">Subsets</h3>
+							<h3 class="card-title text-md" v-else-if="crd==='HPA' || crd==='Node'">Spec,Status</h3>
 							<h3 class="card-title text-md" v-else>Specification</h3>
 						</div>
 						<c-jsontree id="txtSpec" v-model="raw.spec" class="card-body p-2"></c-jsontree>
@@ -113,7 +115,7 @@ export default {
 	},
 	watch: {
 		url(newVal) {
-			if(newVal && (newVal != this.localUrl)) {
+			if(newVal && (newVal !== this.localUrl)) {
 				this.onSync();
 				this.localUrl = newVal;
 			}
@@ -123,23 +125,27 @@ export default {
 	methods: {
 		// 조회
 		onSync() {
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/${this.url}`)
+			axios.get(this.url)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
-
-					if(this.$data.crd == "Config Map" || this.$data.crd == "Secret") this.raw.spec = resp.data.data;
-					else if(this.$data.crd == "Storage Class") this.raw.spec = null; // 무시
-					else if(this.$data.crd == "Role" || this.$data.crd == "Cluster Role") this.raw.spec = resp.data.rules;
-					else if(this.$data.crd == "Role Binding" || this.$data.crd == "Cluster Role Binding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} ;
-					else if(this.$data.crd == "Service Account") this.raw.spec = resp.data.secrets;
-					else this.raw.spec = resp.data.spec;
+					if(this.crd === "Config Map" || this.crd === "Secret") this.raw.spec = resp.data.data || {};
+					else if(this.crd === "Storage Class") this.raw.spec = null; // 무시
+					else if(this.crd === "Role" || this.crd === "Cluster Role") this.raw.spec = resp.data.rules || {};
+					else if(this.crd === "Role Binding" || this.crd === "Cluster Role Binding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} || {} ;
+					else if(this.crd === "Service Account") this.raw.spec = resp.data.secrets || {};
+					else if(this.crd === "Endpoint") this.raw.spec = this.raw.subsets || {};
+					else if(this.crd === "HPA" || this.crd === "Node") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
+					else this.raw.spec = resp.data.spec || {};
 
 				})
-				.catch(e => { this.msghttp(e);});
+				.catch(e => {
+				  this.msghttp(e);
+				  this.raw = { metadata: {}, spec: {} };
+				});
 		},
 		onApply() {
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
+			axios.put(this.backendUrl() + '/raw/clusters/' + this.currentContext(), this.raw)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
@@ -148,16 +154,16 @@ export default {
 		},
 		onDelete() {
 			this.deleteOverlay.processing = true;
-			axios.delete(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			axios.delete(`${this.backendUrl() + '/raw/clusters/' + this.currentContext()}${this.raw.metadata.selfLink}`)
 				.then( resp => {
 					this.watch();
 				})
 				.catch(e => { this.msghttp(e);});
 		},
 		watch() {
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			axios.get(`${this.backendUrl() + '/raw/clusters/' + this.currentContext()}${this.raw.metadata.selfLink}`)
 				.then( resp => {
-					if (resp.status == "404") {
+					if (resp.status === 404) {
 						this.deleteOverlay.visible = false;
 						this.deleteOverlay.processing = false;
 						this.$emit("delete");
@@ -166,7 +172,7 @@ export default {
 						setTimeout(() => { this.watch(); }, 2000);
 					}
 				}).catch( error => {
-					if(error.response && error.response.status == "404") {
+					if(error.response && error.response.status === 404) {
 						this.deleteOverlay.visible = false;
 						this.deleteOverlay.processing = false;
 						this.$emit("delete");

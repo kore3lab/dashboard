@@ -3,6 +3,7 @@
     "kind": "ReplicaSet",
     "metadata": {
         "name": "frontend",
+        "namespace": "default",
         "labels": {
             "app": "guestbook",
             "tier": "frontend"

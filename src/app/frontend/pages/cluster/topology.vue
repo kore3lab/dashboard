@@ -8,7 +8,7 @@
 			<c-navigator group="Cluster"></c-navigator>
 			<div class="row mb-2">
 				<div class="col-sm-2">
-					<h1 class="m-0 text-dark">Topology</h1>
+					<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">T</span>Topology</h1>
 				</div>
 				<div class="col-sm-2">
 					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select>
@@ -49,7 +49,7 @@ export default {
 	data() {
 		let ns = this.$route.query.namespace;
 		return {
-			selectedNamespace: ns ? ns: " ",
+			selectedNamespace: ns ? ns: "",
 			nodeLen: 0
 		}
 	},
@@ -65,7 +65,7 @@ export default {
 		query() {
 			this.$data.start = (new Date()).getTime();
 			let url = `${this.backendUrl()}/api/clusters/${this.currentContext()}/topology`;
-			if (this.$data.selectedNamespace != " ") url += `/namespaces/${this.$data.selectedNamespace}`;
+			if (this.$data.selectedNamespace !== "") url += `/namespaces/${this.$data.selectedNamespace}`;
 			
 			let g = new graph.TopologyGraph("#wrapGraph");
 			axios.get(url)

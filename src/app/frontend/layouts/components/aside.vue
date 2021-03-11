@@ -17,16 +17,14 @@
 					<ul class="nav nav-treeview">
 						<li class="nav-item small"><nuxt-link to="/cluster/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/cluster/topology"  class="nav-link"><i class="nav-icon text-sm mr-0">T</i><p>opology</p></nuxt-link></li>
-						<!-- <li class="nav-item small"><nuxt-link to="/cluster/servicemesh"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>erviceMesh</p></nuxt-link></li> -->
 						<li class="nav-item small"><nuxt-link to="/cluster/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
+						<li class="nav-item small"><nuxt-link to="/cluster/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
 					</ul>
 				</li>
 				<li class="nav-item  menu-open">
 					<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-server"></i><p>Workload</p></a>
 					<ul class="nav nav-treeview">
-						<!-- <li class="nav-item small"><nuxt-link to="/list"  class="nav-link"><i class="nav-icon text-sm mr-0">A</i><p>pplocations</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/list"  class="nav-link"><i class="nav-icon text-sm mr-0">W</i><p>orkloads</p></nuxt-link></li> -->
-						<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>Pods</p></nuxt-link></li>
+						<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/workload/deployment.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>eployments</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/workload/statefulset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>tateful Sets</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/workload/cornjob.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ron Jobs</p></nuxt-link></li>
@@ -34,25 +32,22 @@
 						<li class="nav-item small"><nuxt-link to="/workload/daemonset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>aemon Sets</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/workload/replicaset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplica Sets</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/workload/replicationcontroller.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplication Controllers</p></nuxt-link></li>
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li> -->
 					</ul>
 				</li>
 				<li class="nav-item  menu-open">
 					<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-network-wired"></i><p>Networking</p></a>
 					<ul class="nav nav-treeview">
 						<li class="nav-item small"><nuxt-link to="/networking/service.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervices</p></nuxt-link></li>
-						<li class="nav-item small"><nuxt-link to="/networking/ingress.list"  class="nav-link"><i class="nav-icon text-sm mr-0">I</i><p>ngres</p></nuxt-link></li>
-						<!-- <li class="nav-item small"><nuxt-link to="/networking/networkpolicy.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>etwork Plicies</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>etwork Policies</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">G</i><p>ateways</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">V</i><p>irtual Services</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>estination Rules</p></nuxt-link></li> -->
+						<li class="nav-item small"><nuxt-link to="/networking/ingress.list"  class="nav-link"><i class="nav-icon text-sm mr-0">I</i><p>ngresses</p></nuxt-link></li>
+            <li class="nav-item small"><nuxt-link to="/networking/endpoint.list"  class="nav-link"><i class="nav-icon text-sm mr-0">E</i><p>ndpoints</p></nuxt-link></li>
+            <li class="nav-item small"><nuxt-link to="/networking/networkpolicy.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>etwork Policies</p></nuxt-link></li>
 					</ul>
 				</li>
 				<li class="nav-item menu-open">
 					<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-hdd"></i><p>Storage</p></a>
 					<ul class="nav nav-treeview">
 						<li class="nav-item small"><nuxt-link to="/storage/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Valumn Claims</p></nuxt-link></li>
+            <li class="nav-item small"><nuxt-link to="/storage/pv.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Volumes</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/storage/storageclass.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>troage Classes</p></nuxt-link></li>
 					</ul>
 				</li>
@@ -66,8 +61,10 @@
 						<li class="nav-item small"><nuxt-link to="/administrator/rolebinding.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>ole Bindings</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/administrator/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
 						<li class="nav-item small"><nuxt-link to="/administrator/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li> -->
-						<!-- <li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imite Ranges</p></nuxt-link></li> -->
+						 <li class="nav-item small"><nuxt-link to="/administrator/resourcequota.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li>
+						 <li class="nav-item small"><nuxt-link to="/administrator/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imite Ranges</p></nuxt-link></li>
+						 <li class="nav-item small"><nuxt-link to="/administrator/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
+						 <li class="nav-item small"><nuxt-link to="/administrator/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
 					</ul>
 				</li>
 			</ul>

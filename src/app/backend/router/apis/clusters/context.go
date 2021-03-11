@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 
 	resty "github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -62,16 +63,35 @@ func ListContexts(c *gin.Context) {
 		return
 	}
 
+	// make a "groups > group > resources > resource" data structure
+	var nm string
 	resources := make(map[string]interface{})
 	for _, grpList := range resourcesList {
+		if strings.Contains(grpList.GroupVersion, "/") {
+			nm = strings.Split(grpList.GroupVersion, "/")[0]
+		} else {
+			nm = ""
+		}
+
+		if resources[nm] == nil {
+			resources[nm] = make(map[string]interface{})
+		}
+		var group map[string]interface{}
+		if resources[nm] == nil {
+			group = make(map[string]interface{})
+		} else {
+			group = resources[nm].(map[string]interface{})
+		}
+
 		for _, r := range grpList.APIResources {
-			resources[r.Name] = map[string]interface{}{
+			group[r.Name] = map[string]interface{}{
 				"name":         r.Name,
 				"groupVersion": grpList.GroupVersion,
 				"kind":         r.Kind,
 				"namespaced":   r.Namespaced,
 			}
 		}
+
 	}
 
 	g.Send(http.StatusOK, map[string]interface{}{

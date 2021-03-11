@@ -34,9 +34,8 @@ export default {
 			let ctx = this.$route.query.context;
 			if (!ctx) ctx = localStorage.getItem("currentContext");
 			if(ctx) {
-				if( !this.contexts().find(el => el==ctx)) ctx = "";
+				if( !this.contexts().find(el => el===ctx)) ctx = "";
 			}
-
 			// context 선택
 			this.onContextSelected(ctx)
 		}
@@ -50,8 +49,8 @@ export default {
 				if (!a) return false;
 				if (!b) return false;
 				if (a.length !== b.length) return false;
-				for (var i=0; i < a.length; ++i) {
-					let exist = b.find(v=> v==a[i])
+				for (let i=0; i < a.length; ++i) {
+					let exist = b.find(v => v===a[i])
 					if(!exist) return false;
 				}
 				return true;
@@ -62,7 +61,7 @@ export default {
 				.then((resp)=>{
 					if(resp.data.contexts) {
 						let local;
-						try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {};
+						try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {}
 						if (equals(local,resp.data.contexts)) {
 							this.contexts(local);
 						} else {
@@ -120,7 +119,7 @@ export default {
 			list.splice(index + 1, 0, list.splice(index, 1)[0]);
 			this.contexts(list);
 			localStorage.setItem("contexts", JSON.stringify(list));
-		}
+		},
 	}
 }
 </script>

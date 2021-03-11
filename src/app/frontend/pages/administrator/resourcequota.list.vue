@@ -4,9 +4,9 @@
 
 	<div class="content-header">
 		<div class="container-fluid">
-			<c-navigator group="Workload"></c-navigator>
+			<c-navigator group="Administrator"></c-navigator>
 			<div class="row mb-2">
-				<div class="col-sm-2"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Cron Jobs</h1></div>
+				<div class="col-sm-2"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Resource Quotas</h1></div>
 				<!-- 검색 (namespace) -->
 				<div class="col-sm-2">
 					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select>
@@ -22,7 +22,7 @@
 				</div><!--//END -->
 				<!-- 버튼 -->
 				<div class="col-sm-6 text-right">
-					<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Workload&crd=CronJob`)">Create</b-button>
+					<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=ResourceQuota`)">Create</b-button>
 				</div><!--//END -->
 			</div>
 		</div>
@@ -47,13 +47,11 @@
 								</div>
 							</template>
 							<template v-slot:cell(name)="data">
-                <a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('batch','cronjobs',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+                <a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','resourcequotas',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
 							</template>
-							<template v-slot:cell(labels)="data">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
-								</ul>
-							</template>
+              <template v-slot:cell(value)="data">
+                <span>{{ data.item.value[0].values[0]}}</span>
+              </template>
 						</b-table>
 					</div>
 					<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -63,7 +61,7 @@
 	</div>
 	</section>
   <b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-    <c-view crd="Cron Job" group="Workload" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+    <c-view crd="Resource Quota" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
   </b-sidebar>
 </div>
 </template>
@@ -72,10 +70,10 @@ import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 export default {
-  components: {
-    "c-navigator": { extends: VueNavigator },
+	components: {
+		"c-navigator": { extends: VueNavigator },
     "c-view": { extends: VueView }
-  },
+	},
 	data() {
 		return {
 			selectedNamespace: "",
@@ -84,11 +82,11 @@ export default {
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "schedule", label: "Schedule", sortable: true  },
-				{ key: "suspend", label: "Suspend", sortable: true  },
-				{ key: "active", label: "Active", sortable: true  },
-				{ key: "lastSchedule", label: "Last schedule", sortable: true  },
-				{ key: "creationTimestamp", label: "Age", sortable: true }
+        { key: "value", label: "Value", sortable: true },
+        { key: "cpu", label: "Cpu", sortable: true },
+        { key: "memory", label: "Memory", sortable: true },
+        { key: "pods", label: "Pods", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
 			items: [],
@@ -110,18 +108,17 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-      axios.get(this.getApiUrl("batch","cronjobs",this.selectedNamespace))
+      axios.get(this.getApiUrl("","resourcequotas",this.selectedNamespace))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
 						this.items.push({
 							name: el.metadata.name,
 							namespace: el.metadata.namespace,
-							labels: el.metadata.labels,
-							schedule: el.spec.schedule,
-							suspend: el.spec.suspend,
-							active: el.status.active?el.status.active.length:"0",
-							lastSchedule: this.getScheduleTime(el.status.lastScheduleTime),
+              value: el.spec.scopeSelector.matchExpressions,
+              cpu: this.getCpu(el.status),
+              memory: this.getMemory(el.status),
+              pods: this.getPods(el.status),
 							creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
 						});
 					});
@@ -130,18 +127,20 @@ export default {
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
-    getScheduleTime(time) {
-		  let tran = this.$root.getElapsedTime(time)
-      if (tran === 	"NaN seconds"){
-        return '-'
-      }
-      return tran
-    },
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		}
-	},
+		},
+    getCpu(status) {
+		  return status.used.cpu + " / " + status.hard.cpu
+    },
+    getMemory(status) {
+		  return status.used.memory + " / " + status.hard.memory
+    },
+    getPods(status) {
+		  return status.used.pods + " / " + status.hard.pods
+    },
+  },
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
