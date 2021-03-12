@@ -5,7 +5,7 @@
 				<c-navigator group="Administrator"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Role Bindings</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Resource Quotas</h1></div>
 					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -15,7 +15,7 @@
 					</div>
 					<!-- button -->
 					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=RoleBinding`)">Create</b-button>
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=ResourceQuota`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -40,15 +40,10 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('rbac.authorization.k8s.io','rolebindings',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','resourcequotas',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
 									</template>
-									<template v-slot:cell(labels)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
-										</ul>
-									</template>
-									<template v-slot:cell(bindings)="data">
-										<div v-for="(value, idx) in data.item.bindings" v-bind:key="idx">{{ value }}</div>
+									<template v-slot:cell(value)="data">
+										<span>{{ data.item.value[0].values[0]}}</span>
 									</template>
 								</b-table>
 							</div>
@@ -59,7 +54,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Role Binding" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+			<c-view crd="Resource Quota" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -75,14 +70,16 @@ export default {
 	data() {
 		return {
 			selectedNamespace: "",
-			filterOn: ["name"],
 			keyword: "",
+			filterOn: ["name"],
 			fields: [
-				{key: "name", label: "Name", sortable: true},
-				{key: "namespace", label: "Namespace", sortable: true},
-				{key: "bindings", label: "Bindings", sortable: true},
-				{key: "labels", label: "Labels", sortable: true},
-				{key: "creationTimestamp", label: "Age"},
+				{ key: "name", label: "Name", sortable: true },
+				{ key: "namespace", label: "Namespace", sortable: true  },
+				{ key: "value", label: "Value", sortable: true },
+				{ key: "cpu", label: "Cpu", sortable: true },
+				{ key: "memory", label: "Memory", sortable: true },
+				{ key: "pods", label: "Pods", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
 			items: [],
@@ -97,50 +94,48 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All());
-		if (this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("rbac.authorization.k8s.io","rolebindings",this.selectedNamespace))
+			axios.get(this.getApiUrl("","resourcequotas",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								bindings: this.getBindings(el),
-								labels: el.metadata.labels,
+								value: el.spec.scopeSelector.matchExpressions,
+								cpu: this.getCpu(el.status),
+								memory: this.getMemory(el.status),
+								pods: this.getPods(el.status),
 								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
 					})
-					.catch(e => {
-						this.msghttp(e);
-					})
-					.finally(() => {
-						this.isBusy = false;
-					});
+					.catch(e => { this.msghttp(e);})
+					.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getBindings(el) {
-			let bindingList = [];
-			if (el.subjects) {
-				for (let i = 0; i < el.subjects.length; i++) {
-					bindingList.push(el.subjects[i].name)
-				}
-			}
-			return bindingList
+		getCpu(status) {
+			return status.used.cpu + " / " + status.hard.cpu
 		},
-		beforeDestroy() {
-			this.$nuxt.$off('navbar-context-selected')
-		}
+		getMemory(status) {
+			return status.used.memory + " / " + status.hard.memory
+		},
+		getPods(status) {
+			return status.used.pods + " / " + status.hard.pods
+		},
+	},
+	beforeDestroy(){
+		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>

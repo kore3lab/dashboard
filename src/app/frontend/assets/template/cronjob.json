@@ -2,7 +2,8 @@
     "apiVersion": "batch/v1beta1",
     "kind": "CronJob",
     "metadata": {
-        "name": "hello"
+        "name": "hello",
+        "namespace": "default"
     },
     "spec": {
         "schedule": "*/1 * * * *",

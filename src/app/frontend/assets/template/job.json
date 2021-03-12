@@ -2,16 +2,34 @@
     "apiVersion": "batch/v1",
     "kind": "Job",
     "metadata": {
-        "name": "pi"
+        "name": "pi",
+        "namespace": "default"
     },
     "spec": {
         "template": {
+            "metadata": {
+                "name": "pi",
+                "namespace": "default"
+            },
             "spec": {
                 "containers": [
                     {
                         "name": "pi",
                         "image": "perl",
-                        "command": "[\"perl\",  \"-Mbignum=bpi\", \"-wle\", \"print bpi(2000)\"]"
+                        "env": [
+                            {
+                                "name": "OLTP_TABLE_SIZE",
+                                "value": "10000"
+                            },
+                            {
+                                "name": "DB_NAME",
+                                "value": "test"
+                            },
+                            {
+                                "name": "DB_USER",
+                                "value": "test_user"
+                            }
+                        ]
                     }
                 ],
                 "restartPolicy": "Never"

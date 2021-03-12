@@ -1,143 +1,181 @@
 <template>
-<!-- content-wrapper -->
-<div class="content-wrapper">
-
-	<div class="content-header">
-		<div class="container-fluid">
-			<c-navigator group="Cluster"></c-navigator>
-			<div class="row mb-2">
-				<div class="col-sm-2"><h1 class="m-0 text-dark">Nodes</h1></div>
-				<!-- 검색 (검색어) -->
-				<div class="col-sm-2 float-left">
-					<div class="input-group input-group-sm" >
-						<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-						<div class="input-group-append">
-							<button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button>
+	<div class="content-wrapper">
+		<div class="content-header">
+			<div class="container-fluid">
+				<c-navigator group="Cluster"></c-navigator>
+				<div class="row mb-2">
+					<!-- title & search -->
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">N</span>Nodes</h1></div>
+					<div class="col-sm-2 float-left">
+						<div class="input-group input-group-sm" >
+							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
+							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
-					</div>
-				</div><!--//END -->
-				<div class="col-sm-8 float-left"></div>
-			</div>
-		</div>
-	</div>
-
-	<section class="content">
-	<div class="container-fluid">
-		<!-- 검색 -->
-		<div class="row mb-2">
-			<div class="col-12 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
-		</div><!--//END -->
-		<!-- GRID-->
-		<div class="row">
-			<div class="col-12">
-				<div class="card">
-					<div class="card-body table-responsive p-0">
-						<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" class="text-sm">
-							<template #table-busy>
-								<div class="text-center text-success" style="margin:150px 0">
-									<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-									<span class="align-middle text-lg">Loading...</span>
-								</div>
-							</template>
-							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Cluster', crd: 'Node', name: data.item.name, url: `api/v1/nodes/${data.item.name}`}}">{{ data.value }}</nuxt-link>
-							</template>
-						</b-table>
 					</div>
 				</div>
 			</div>
-		</div><!-- //GRID-->
+		</div>
+
+		<section class="content">
+			<div class="container-fluid">
+				<!-- count -->
+				<div class="row mb-2">
+					<div class="col-12 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+				</div>
+				<!-- GRID-->
+				<div class="row">
+					<div class="col-12">
+						<div class="card">
+							<div class="card-body table-responsive p-0">
+								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+									<template #table-busy>
+										<div class="text-center text-success" style="margin:150px 0">
+											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
+											<span class="align-middle text-lg">Loading...</span>
+										</div>
+									</template>
+									<template v-slot:cell(name)="data">
+										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','nodes')}/${data.item.name}`}">{{ data.value }}</a>
+									</template>
+									<template v-slot:cell(ready)="data">
+										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" >{{ value.value }}  </span>
+									</template>
+									<template v-slot:cell(usageCpu)="data">
+										<b-progress :value="data.item.usageCpu" :max="100" variant="info" show-value class="mb-3"></b-progress>
+									</template>
+									<template v-slot:cell(usageMemory)="data">
+										<b-progress :value="data.item.usageMemory" :max="100" variant="info" show-value class="mb-3"></b-progress>
+									</template>
+									<template v-slot:cell(usageDisk)="data">
+										<b-progress :value="data.item.usageDisk" :max="100" variant="info" show-value class="mb-3"></b-progress>
+									</template>
+								</b-table>
+							</div>
+						</div>
+					</div>
+				</div><!-- //GRID-->
+			</div>
+		</section>
+		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
+			<c-view crd="Node" group="Cluster" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		</b-sidebar>
 	</div>
-	</section>
-</div>
 </template>
 <script>
-import axios	from "axios"
+import axios		from "axios"
 import VueNavigator from "@/components/navigator"
+import VueView from "@/pages/view";
 export default {
 	components: {
-		"c-navigator": { extends: VueNavigator }
+		"c-navigator": { extends: VueNavigator },
+		"c-view": { extends: VueView }
 	},
 	data() {
 		return {
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
-				{ key: "name", label: "이름", sortable: true },
-				{ key: "ready", label: "상태", sortable: true  },
-				{ key: "creationTimestamp", label: "생성시간" },
-				{ key: "k8sVersion", label: "VERSION" },
-				{ key: "interaalIp", label: "INTERNAL-IP", sortable: true  },
-				{ key: "externalIp", label: "EXTERNAL-IP", sortable: true  },
-				{ key: "usageCpu", label: "CPU 사용량", sortable: true  },
-				{ key: "usageMemory", label: "MEMORY 사용량", sortable: true  },
+				{ key: "name", label: "Name", sortable: true, class:"text-truncate" },
+				{ key: "usageCpu", label: "CPU", sortable: true, class:"text-truncate"  },
+				{ key: "usageMemory", label: "Memory", sortable: true, class:"text-truncate"  },
+				{ key: "usageDisk", label: "Disk", sortable: true, class:"text-truncate" },
+				{ key: "taints", label: "Taints", sortable: true, class:"text-truncate" },
+				{ key: "roles", label: "Roles", sortable: true, class:"text-truncate" },
+				{ key: "k8sVersion", label: "Version", sortable: true, class:"text-truncate" },
+				{ key: "creationTimestamp", label: "Age", sortable: true, class:"text-truncate" },
+				{ key: "ready", label: "Status", sortable: true, class:"text-truncate"  },
 			],
 			isBusy: false,
-			metricsItems: [],
 			items: [],
-			totalItems: 0
+			totalItems: 0,
+			metrics: [],
+			sidebar: {
+				visible: false,
+				name: "",
+				src: "",
+			},
 		}
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) =>this.onUsage() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/nodes`)
-				.then((resp) => {
-					this.items = [];
-					resp.data.items.forEach(el => {
-						const addresses = el.status.addresses
-						this.items.push({
-							name: el.metadata.name,
-							ready: this.toConditions(el.status.conditions),
-							creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
-							k8sVersion: el.status.nodeInfo.kubeletVersion,
-							interaalIp: addresses.find(x => x.type === "InternalIP") ? addresses.find(x => x.type === "InternalIP").address : "<none>",
-							externalIp: addresses.find(x => x.type === "ExternalIP") ? addresses.find(x => x.type === "ExternalIP").address : "<none>",
-							// cpuRequests: this.toCpuWord(el.allocatedResources.cpuRequests, el.allocatedResources.cpuRequestsFraction),
-							// cpuLimits: this.toCpuWord(el.allocatedResources.cpuLimits, el.allocatedResources.cpuLimitsFraction) ,
-							// memoryRequests: this.toMemoryWord( el.allocatedResources.memoryRequests, el.allocatedResources.memoryRequestsFraction),
-							// memoryLimits: this.toMemoryWord( el.allocatedResources.memoryLimits, el.allocatedResources.memoryLimitsFraction),
+			axios.get(this.getApiUrl("","nodes"))
+					.then((resp) => {
+						this.items = [];
+						resp.data.items.forEach(el => {
+							const addresses = el.status.addresses
+							this.items.push({
+								name: el.metadata.name,
+								ready: this.getConditions(el),
+								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								k8sVersion: el.status.nodeInfo.kubeletVersion,
+								taints: this.getTaints(el.spec),
+								roles: this.getRoles(el.metadata.labels),
+								usageCpu: this.getCpu(el.metadata.name),
+								usageMemory: this.getMemory(el.metadata.name),
+								usageDisk: this.getDisk(el.metadata.name),
+							});
 						});
-					});
-					this.onFiltered(this.items);
-				})
-				.catch(e => { this.msghttp(e);})
-				.finally(()=> { this.isBusy = false;});
-		},
-		async getMetrics() {
-			this.metricsItems = [];
-			let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/metrics.k8s.io/v1beta1/nodes`)
-			resp.data.items.forEach(el => {
-				this.metricsItems.push(el)
-			});
+						this.onFiltered(this.items);
+					})
+					.catch(e => { this.msghttp(e);})
+					.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 		},
-		toCpuWord(cpu, percent) {
-			return cpu<1000 ? `${cpu.toFixed(2)}m (${percent.toFixed(2)}%)`: `${(cpu/1000).toFixed(2)} (${percent.toFixed(2)}%)`;
-		},
-		toMemoryWord(memory, percent) {
-			let mi  = 1024*1024
-			let gi  = mi*1024
 
-			if(memory > gi) {
-				return `${(memory/gi).toFixed(2)}Gi (${percent.toFixed(2)}%)`
-			} else if(memory > mi) {
-				return `${(memory/mi).toFixed(2)}Mi (${percent.toFixed(2)}%)`
-			} else {
-				return `${(memory/1024).toFixed(2)} (${percent.toFixed(2)}%)`
+		// node condition 체크
+		getConditions(el) {
+			let condition = [];
+			if (el.spec.unschedulable) {
+				condition.push({
+							"value": "SchedulingDisabled",
+							"style": "text-warning"
+						}
+				)
+			}
+			condition.push(el.status.conditions.filter(con => con.type === "Ready")[0].status === "True" ? { "value" : "Ready", "style" : "text-success" } : { "value" : "NotReady", "style" : "text-secondary" })
+			return condition
+		},
+		getTaints(spec) {
+			if (spec.taints) {
+				return spec.taints.length
+			} else return 0
+		},
+		getRoles(labels) {
+			let roleLabels = Object.keys(labels).filter(key =>
+					key.includes("node-role.kubernetes.io")
+			).map(key => key.match(/([^/]+$)/)[0]);
+
+			if (labels["kubernetes.io/role"] !== undefined) {
+				roleLabels.push(labels["kubernetes.io/role"]);
 			}
 
+			return roleLabels.join(", ");
 		},
-		toConditions(conditions){
-			return conditions.filter(el => el.type === "Ready")[0].status === "True" ? "Ready" : "None"
+		// node cpu,memory,disk 사용량 먼저 읽은 후 전체리스트 조회
+		onUsage() {
+			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/dashboard`)
+					.then((resp) => {
+						this.metrics = resp.data.nodes
+					}).finally(()=> { this.query_All()} )
+		},
+		getCpu(name) {
+			return this.metrics[name].usage.cpu.percent
+
+		},
+		getMemory(name) {
+			return this.metrics[name].usage.memory.percent
+		},
+		getDisk(name) {
+			return this.metrics[name].usage.storage.percent
 		}
 	},
 	beforeDestroy(){
@@ -145,4 +183,4 @@ export default {
 	}
 }
 </script>
-<style>label {font-weight: 500;}</style>
+<style scoped>label {font-weight: 500;}</style>

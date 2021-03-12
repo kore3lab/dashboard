@@ -1,83 +1,93 @@
 <template>
-<!-- content-wrapper -->
-<div class="content-wrapper">
-
-	<div class="content-header">
-		<div class="container-fluid">
-			<c-navigator group="Workload"></c-navigator>
-			<div class="row mb-2">
-				<div class="col-sm-2"><h1 class="m-0 text-dark">Pods</h1></div>
-				<!-- 검색 (namespace) -->
-				<div class="col-sm-2">
-					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select>
-				</div><!--//END -->
-				<!-- 검색 (검색어) -->
-				<div class="col-sm-2 float-left">
-					<div class="input-group input-group-sm" >
-						<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-						<div class="input-group-append">
-							<button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button>
+	<div class="content-wrapper">
+		<div class="content-header">
+			<div class="container-fluid">
+				<c-navigator group="Workload"></c-navigator>
+				<div class="row mb-2">
+					<!-- title & search -->
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Pods</h1></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
+					<div class="col-sm-2 float-left">
+						<div class="input-group input-group-sm" >
+							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
+							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
 					</div>
-				</div><!--//END -->
-				<!-- 버튼 -->
-				<div class="col-sm-6 text-right">
-					<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Workload&crd=Pod`)">Create</b-button>
-				</div><!--//END -->
-			</div>
-		</div>
-	</div>
-
-	<section class="content">
-	<div class="container-fluid">
-		<!-- 검색 (상태) -->
-		<div class="row mb-2">
-			<div class="col-11">
-				<b-form-group class="mb-0 font-weight-light">
-					<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
-					<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
-				</b-form-group>
-			</div>
-			<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
-		</div><!--//END -->
-		<!-- GRID-->
-		<div class="row">
-			<div class="col-12">
-				<div class="card">
-					<div class="card-body table-responsive p-0">
-						<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
-							<template #table-busy>
-								<div class="text-center text-success" style="margin:150px 0">
-									<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-									<span class="align-middle text-lg">Loading...</span>
-								</div>
-							</template>
-							<template v-slot:cell(name)="data">
-								<nuxt-link :to="{ path:'/view', query:{ context: currentContext(), group: 'Workload', crd: 'Pod', name: data.item.name, url: `api/v1/namespaces/${data.item.namespace}/pods/${data.item.name}`}}">{{ data.value }}</nuxt-link>
-							</template>
-							<template v-slot:cell(labels)="data">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
-								</ul>
-							</template>
-						</b-table>
+					<!-- button -->
+					<div class="col-sm-1 text-right">
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Workload&crd=Pod`)">Create</b-button>
 					</div>
-					<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 				</div>
 			</div>
-		</div><!-- //GRID-->
-	</div>
-	</section>
+		</div>
 
-</div>
+		<section class="content">
+			<div class="container-fluid">
+				<!-- search & filter -->
+				<div class="row mb-2">
+					<div class="col-11">
+						<b-form-group class="mb-0 font-weight-light">
+							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
+							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
+						</b-form-group>
+					</div>
+					<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+				</div>
+				<!-- GRID-->
+				<div class="row">
+					<div class="col-12">
+						<div class="card">
+							<div class="card-body table-responsive p-0">
+								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+									<template #table-busy>
+										<div class="text-center text-success" style="margin:150px 0">
+											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
+											<span class="align-middle text-lg">Loading...</span>
+										</div>
+									</template>
+									<template v-slot:cell(name)="data">
+										<a href="#" @click="sidebar={visible:true, name:data.item.name, crd:'Pod', src:`${getApiUrl('','pods',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+									</template>
+									<template v-slot:cell(status)="data">
+										<div class="list-unstyled mb-0" v-if="data.item.status.value">
+											<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
+										</div>
+									</template>
+									<template v-slot:cell(containers)="data">
+										<div class="list-unstyled mb-0 float-left" v-if="data.item.containers.containerStatuses.length > 0">
+											<span v-for="(containerStatuses, idx) in data.item.containers.containerStatuses" v-bind:key="idx" v-bind:class="containerStatuses.style" class="badge font-weight-light text-sm ml-1"> {{" "}}</span>
+										</div>
+										<div class="list-unstyled mb-0 ml-0 float-left" v-if="data.item.containers.initContainerStatuses.length > 0">
+											<span v-for="(initContainerStatuses, idx) in data.item.containers.initContainerStatuses" v-bind:key="idx" v-bind:class="initContainerStatuses.style" class="badge font-weight-light text-sm ml-1">{{" "}}</span>
+										</div>
+									</template>
+									<template v-slot:cell(controller)="data">
+										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:data.value.spaceKind, group:data.value.gr, src:`${getApiUrl(data.value.group,data.value.rs,data.item.namespace)}/${data.value.name}`}">{{ data.value.kind }}</a>
+									</template>
+									<template v-slot:cell(node)="data">
+										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Node', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
+									</template>
+								</b-table>
+							</div>
+							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
+						</div>
+					</div>
+				</div><!-- //GRID-->
+			</div>
+		</section>
+		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
+			<c-view :crd="sidebar.crd" :group="sidebar.crd" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		</b-sidebar>
+	</div>
 </template>
 <script>
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
-
+import VueView from "@/pages/view";
 export default {
 	components: {
-		"c-navigator": { extends: VueNavigator }
+		"c-navigator": { extends: VueNavigator },
+		"c-view": { extends: VueView }
 	},
 	data() {
 		return {
@@ -88,22 +98,24 @@ export default {
 				{ text: "Pending", value: "Pending" },
 				{ text: "Terminating", value: "Terminating" },
 				{ text: "CrashLoopBackOff", value: "CrashLoopBackOff" },
+				{ text: "ImagePullBackOff", value: "ImagePullBackOff" },
 				{ text: "Completed", value: "Completed" },
 				{ text: "Failed", value: "Failed" },
-				{ text: "Unknowen", value: "Unknowen" }
+				{ text: "Unknown", value: "Unknown" }
 			],
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
-				{ key: "name", label: "이름", sortable: true },
-				{ key: "namespace", label: "네임스페이스", sortable: true  },
+				{ key: "name", label: "Name", sortable: true },
+				{ key: "namespace", label: "Namespace", sortable: true  },
 				{ key: "ready", label: "Ready", sortable: true  },
-				{ key: "status", label: "상태", sortable: true  },
-				{ key: "restartCount", label: "재시작", sortable: true  },
-				{ key: "creationTimestamp", label: "생성시간", sortable: true },
-				{ key: "nodeName", label: "노드", sortable: true  },
-				{ key: "usageCpu", label: "CPU 사용량", sortable: true  },
-				{ key: "usageMemory", label: "MEMORY 사용량", sortable: true  },
+				{ key: "containers", label: "Containers", sortable: true  },
+				{ key: "restartCount", label: "Restart", sortable: true  },
+				{ key: "controller", label: "Controlled By", sortable: true  },
+				{ key: "node", label: "Node", sortable: true  },
+				{ key: "qos", label: "QoS", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "status", label: "Status", sortable: true  },
 			],
 			isBusy: false,
 			metricsItems: [],
@@ -111,7 +123,12 @@ export default {
 			items: [],
 			containerStatuses: [],
 			currentPage: 1,
-			totalItems: 0
+			totalItems: 0,
+			sidebar: {
+				visible: false,
+				name: "",
+				src: "",
+			},
 		}
 	},
 	layout: "default",
@@ -122,9 +139,9 @@ export default {
 	methods: {
 		//  status 필터링
 		onChangeStatus() {
-			let selectedStatus = this.selectedStatus;
+			var selectedStatus = this.selectedStatus;
 			this.items = this.origin.filter(el => {
-				return (selectedStatus.length == 0) || selectedStatus.includes(el.status);
+				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
 			});
 			this.totalItems = this.items.length;
 			this.currentPage = 1
@@ -133,148 +150,185 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.loadMetrics();
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/v1/namespaces/${this.$data.selectedNamespace}/pods`)
-				.then((resp) => {
-					this.items = [];
-					resp.data.items.forEach(el => {
-						this.items.push({
-							name: el.metadata.name,
-							namespace: el.metadata.namespace,
-							ready: this.toReady(el.status, el.spec.containers.length),
-							status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-							restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(el => el.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue) : 0,
-							creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
-							nodeName: el.spec.nodeName ? el.spec.nodeName : "<none>",
-							usageCpu: this.toUsageHandler('cpu', el.metadata.name),
-							usageMemory: this.toUsageHandler('memory', el.metadata.name),
+			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+					.then((resp) => {
+						this.items = [];
+						resp.data.items.forEach(el => {
+							this.items.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status, el.spec),
+								containers: this.toContainers(el.status),
+								restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
+								controller: this.getController(el),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								node: this.getNode(el),
+								qos: el.status.qosClass,
+							});
 						});
-					});
-					this.origin = this.items;
-					this.onFiltered(this.items);
-				})
-				.catch(e => { this.msghttp(e);})
-				.finally(()=> { this.isBusy = false;});
+						this.origin = this.items;
+						this.onFiltered(this.items);
+					})
+					.catch(e => { this.msghttp(e);})
+					.finally(()=> { this.isBusy = false;});
 		},
-		/**
-		 * 메트릭 값을 리소스별로 단위 계산 후 반환 한다.
-		 * 
-		 * @param {string} resource 구분자 cpu/memory
-		 * @param {string} podName 구분자 pod 이름으로 구분 한다.
-		 * @return {string} 리소스 합산 값의 단위를 추가 해서 반환 한다.
-		 */
-		toUsageHandler(resource, podName) {
-			if (!this.metricsItems.find(x => x.metadata.name === podName)) return "<none>"
-			else {
-				const cpuSize = ["n", "m"]
-				const memorySize = ["Ki", "Mi", "Gi", "Ti", "Pi", "Ei"]
-				const decimals = 2
-
-				const calculator = this.metricsItems.find(x => x.metadata.name === podName)
-					.containers.map(x => x.usage[resource])
-						.map(el => {
-							let calculate = 0
-
-							if (resource == "cpu") {
-								cpuSize.forEach((size, index) => {
-									if (el.indexOf(size) > -1) {
-										calculate= Number(el.split(size)[0]) * (index > 0 ? Math.pow(1000, index + 1) : 1)
-									}
-								}) 
-							}
-							if (resource == "memory") {
-								memorySize.forEach((size, index) => {
-									if (el.indexOf(size) > -1) {
-										calculate= Number(el.split(size)[0]) * Math.pow(1024, index + 1)
-									}
-								})
-							}
-							return calculate
-						})
-						.reduce((accumulator, currentValue) => {
-							return accumulator + currentValue
-						})
-
-				return this.$root.getFormatMetrics(resource, calculator, decimals)
+		getNode(el) {
+			return {
+				"name" : el.spec.nodeName ? el.spec.nodeName : "",
+				"group" : "",
+				"rs" : "nodes"
 			}
 		},
-		/**
-		 * 컨테이너의 ready 수를 반환 한다.
-		 * 
-		 * @param {object} status 파드의 status 값.
-		 * @param {number} containersLength 파드의 컨테이너 수.
-		 * @return {string} 컨테이서 총 개수 대비 ready 수 를 반환 한다.
-		 */
-		toReady(status, containersLength) {
-			let ready = ""
-			if ( status.containerStatuses ) {
-				ready = `${status.containerStatuses.filter(el => el.ready).length}/${containersLength}`
+		getController(el) {
+			let version
+			let group
+			let gr = ""
+			if ( el.metadata.ownerReferences ) {
+				version = el.metadata.ownerReferences[0].apiVersion.split('/')
+				if (version.length>1) {
+					group = version[0]
+				}
+				if (el.metadata.ownerReferences[0].kind === "Node") {
+					gr = "Cluster"
+				} else {
+					gr = "Workload"
+				}
+				return {
+					"name" : el.metadata.ownerReferences[0].name,
+					"group" : group ||"",
+					"kind" : el.metadata.ownerReferences[0].kind,
+					"rs" : (el.metadata.ownerReferences[0].kind).toLowerCase()+'s',
+					"spaceKind" : this.onKind(el.metadata.ownerReferences[0].kind),
+					"gr" : gr,
+				}
 			} else {
-				ready = `0/${containersLength}`
+				return ""
 			}
-			return ready
 		},
-		/**
-		 * 파드의 상태를 반환 한다.
-		 * 
-		 * @param {date} deletionTimestamp 파드의 삭제 시간 값.
-		 * @param {object} statusItems 파드의 status 값.
-		 * @return {string} 파드의 상태 값을 반환 한다.
-		 */
-		toStatus(deletionTimestamp, statusItems) {
+		onKind(kind) {
+			if (kind === "StatefulSet") {
+				return "Stateful Set"
+			} else if (kind === "CronJob") {
+				return "Cron Job"
+			} else if (kind === "DaemonSet") {
+				return "Daemon Set"
+			} else if (kind === "ReplicaSet") {
+				return "Replica Set"
+			} else if (kind === "ReplicationController") {
+				return "Replication Controller"
+			} else {
+				return kind
+			}
+		},
+		// check Ready pod
+		toReady(status, spec) {
+			let containersReady = 0
+			let containersLength = 0
+			if ( spec.containers ) containersLength = spec.containers.length
+			if ( status.containerStatuses ) containersReady = status.containerStatuses.filter(el => el.ready).length
+			return `${containersReady}/${containersLength}`
+		},
+		// check pod's containers
+		toContainers(status) {
+			let initContainerStatuses = []
+			let containerStatuses = []
+			let style = ""
+			if ( status.initContainerStatuses ) {
+				initContainerStatuses = status.initContainerStatuses.map(x => {
+					if ( !x.ready ) style = "badge-warning"
+					else style = "badge-secondary"
+					return Object.assign(x, {"style": style})
+				})
+
+			}
+			if ( status.containerStatuses ) {
+				containerStatuses = status.containerStatuses.map(x => {
+					if ( !x.ready ) {
+						style = "badge-warning"
+						if ( x.state[Object.keys(x.state)].reason === "Completed") style = "badge-secondary"
+					}
+					else style = "badge-success"
+					return Object.assign(x, {"style": style})
+				})
+			}
+			return {
+				"initContainerStatuses": initContainerStatuses,
+				"containerStatuses": containerStatuses,
+			}
+		},
+		// pod status check
+		toStatus(deletionTimestamp, status) {
 			// 삭제
 			if (deletionTimestamp) {
-				return "Terminating"
+				return {
+					"value": "Terminating",
+					"style": "text-secondary",
+				}
 			}
 
 			// Pending
-			if (!statusItems.containerStatuses) {
-				return statusItems.phase
+			if (!status.containerStatuses) {
+				if(status.phase === "Failed") {
+					return {
+						"value": status.phase,
+						"style": "text-danger",
+					}
+				} else {
+					return {
+						"value": status.phase,
+						"style": "text-warning",
+					}
+				}
 			}
 
 			// [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
-			if(statusItems.containerStatuses.filter(el => el.ready).length === statusItems.containerStatuses.length) {
-				const state = Object.keys(statusItems.containerStatuses.find(el => el.ready).state)[0]
-				return state.charAt(0).toUpperCase() + state.slice(1)
+			if(status.containerStatuses.filter(el => el.ready).length === status.containerStatuses.length) {
+				const state = Object.keys(status.containerStatuses.find(el => el.ready).state)[0]
+				return {
+					"value": state.charAt(0).toUpperCase() + state.slice(1),
+					"style": "text-success",
+				}
 			}
 			else {
-				const state = statusItems.containerStatuses.find(el => !el.ready).state
-				return state[Object.keys(state)].reason
+				const state = status.containerStatuses.find(el => !el.ready).state
+				let style = "text-secondary"
+				if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
+				return {
+					"value": state[Object.keys(state)].reason,
+					"style": style,
+				}
 			}
 		},
-		/**
-		 * 리소스 메트릭 값을 반환 한다.
-		 * 
-		 * @async
-		 * @function loadMetrics
-		 * @returns {Promise<object>} 리소스(cpu/memory) 메트릭 값을 반환 한다.
-		 */
+		// load pod's Metrics
 		async loadMetrics() {
 			this.metricsItems = [];
-			let resp = await axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/metrics.k8s.io/v1beta1/namespaces/${this.$data.selectedNamespace}/pods`)
-			resp.data.items.forEach(el => {
-				this.metricsItems.push(el)
-			});
+			let resp = await axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
+			if (!resp) return
+			this.metricsItems = resp.data.items
 		},
 		onFiltered(filteredItems) {
-			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, crashLoopBackOff:0, completed:0, failed:0, unknowen:0 }
+			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, unknown:0 }
 
 			filteredItems.forEach(el=> {
-				if(el.status == "Running") status.running++;
-				if(el.status == "Pending") status.pending++;
-				if(el.status == "Terminating") status.terminating++;
-				if(el.status == "CrashLoopBackOff") status.crashLoopBackOff++;
-				if(el.status == "Completed") status.completed++;
-				if(el.status == "Failed") status.failed++;
-				if(el.status == "Unknowen") status.unknowen++;
+				if(el.status.value === "Running") status.running++;
+				if(el.status.value === "Pending") status.pending++;
+				if(el.status.value === "Terminating") status.terminating++;
+				if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
+				if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
+				if(el.status.value === "Completed") status.completed++;
+				if(el.status.value === "Failed") status.failed++;
+				if(el.status.value === "Unknown") status.unknown++;
 			});
 
 			this.optionsStatus[0].text = status.running >0 ? `Running (${status.running})`: "Running";
 			this.optionsStatus[1].text = status.pending >0 ? `Pending (${status.pending})`: "Pending";
 			this.optionsStatus[2].text = status.terminating >0 ? `Terminating (${status.terminating})`: "Terminating";
 			this.optionsStatus[3].text = status.crashLoopBackOff >0 ? `CrashLoopBackOff (${status.crashLoopBackOff})`: "CrashLoopBackOff";
-			this.optionsStatus[4].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
-			this.optionsStatus[5].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
-			this.optionsStatus[6].text = status.unknowen >0 ? `Unknowen (${status.unknowen})`: "Unknowen";
+			this.optionsStatus[4].text = status.imagePullBackOff >0 ? `ImagePullBackOff (${status.imagePullBackOff})`: "ImagePullBackOff";
+			this.optionsStatus[5].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
+			this.optionsStatus[6].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
+			this.optionsStatus[7].text = status.unknown >0 ? `Unknown (${status.unknown})`: "Unknown";
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
@@ -285,4 +339,4 @@ export default {
 	}
 }
 </script>
-<style>label {font-weight: 500;}</style>
+<style scoped></style>

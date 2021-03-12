@@ -1,41 +1,32 @@
 <template>
-<!-- content-wrapper -->
-<div class="content-wrapper">
-
-	<!-- Content Header (Page header) -->
-	<div class="content-header">
-		<div class="container-fluid">
-			<c-navigator group="Cluster"></c-navigator>
-			<div class="row mb-2">
-				<div class="col-sm-2">
-					<h1 class="m-0 text-dark">Topology</h1>
-				</div>
-				<div class="col-sm-2">
-					<b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select>
-				</div>
-				<div class="col-sm-8 text-right">
-					<b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button>
+	<div class="content-wrapper">
+		<div class="content-header">
+			<div class="container-fluid">
+				<c-navigator group="Cluster"></c-navigator>
+				<div class="row mb-2">
+					<!-- title & search -->
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">T</span>Topology</h1></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query"></b-form-select></div>
+					<div class="col-sm-1 text-right"><b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button></div>
 				</div>
 			</div>
 		</div>
-	</div>
-	<!-- Main content -->
-	<section class="content">
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-12">
-					<div class="card">
-						<div class="card-body m-0 p-2">
-							<div id="wrapGraph" class="p-0" style="min-height: calc(100vh - 210px - 60px)"></div>
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-12">
+						<div class="card">
+							<div class="card-body m-0 p-2">
+								<div id="wrapGraph" class="p-0" style="min-height: calc(100vh - 210px - 60px)"></div>
+							</div>
 						</div>
 					</div>
 				</div>
+
 			</div>
-			
-		</div>
-	</section>
-</div>
-<!-- /.content-wrapper -->
+		</section>
+	</div>
 </template>
 <script>
 import * as graph	from "../../static/acorn-graph/acorn.graph.topology"
@@ -49,7 +40,7 @@ export default {
 	data() {
 		let ns = this.$route.query.namespace;
 		return {
-			selectedNamespace: ns ? ns: " ",
+			selectedNamespace: ns ? ns: "",
 			nodeLen: 0
 		}
 	},
@@ -65,21 +56,21 @@ export default {
 		query() {
 			this.$data.start = (new Date()).getTime();
 			let url = `${this.backendUrl()}/api/clusters/${this.currentContext()}/topology`;
-			if (this.$data.selectedNamespace != " ") url += `/namespaces/${this.$data.selectedNamespace}`;
-			
+			if (this.$data.selectedNamespace !== "") url += `/namespaces/${this.$data.selectedNamespace}`;
+
 			let g = new graph.TopologyGraph("#wrapGraph");
 			axios.get(url)
-				.then( resp => {
-					this.$data.nodeLen = resp.data.nodes.length;
-					g.config({
-						topology:{
-							simulation: {
-								alphaDecay:0.3
+					.then( resp => {
+						this.$data.nodeLen = resp.data.nodes.length;
+						g.config({
+							topology:{
+								simulation: {
+									alphaDecay:0.3
+								}
 							}
-						}
-					}).data(resp.data).render();
-				})
-				.catch(e => { this.msghttp(e);})
+						}).data(resp.data).render();
+					})
+					.catch(e => { this.msghttp(e);})
 		}
 	}
 }

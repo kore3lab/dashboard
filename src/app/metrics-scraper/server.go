@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/gorilla/handlers"
 	"net/http"
 	"os"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclient "k8s.io/metrics/pkg/client/clientset/versioned"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"

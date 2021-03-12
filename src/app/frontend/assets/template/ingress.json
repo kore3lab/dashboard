@@ -1,8 +1,9 @@
 {
-    "apiVersion": "networking.k8s.io/v1",
+    "apiVersion": "networking.k8s.io/v1beta1",
     "kind": "Ingress",
     "metadata": {
-        "name": "minimal-ingress",
+        "name": "test-ingress",
+        "namespace": "default",
         "annotations": {
             "nginx.ingress.kubernetes.io/rewrite-target": "/"
         }
@@ -16,12 +17,8 @@
                             "path": "/testpath",
                             "pathType": "Prefix",
                             "backend": {
-                                "service": {
-                                    "name": "test",
-                                    "port": {
-                                        "number": 80
-                                    }
-                                }
+                                "serviceName": "test",
+                                "servicePort": 80
                             }
                         }
                     ]

@@ -1,0 +1,26 @@
+{
+  "apiVersion": "v1",
+  "kind": "ResourceQuota",
+  "metadata": {
+    "name": "pods-high",
+    "namespace": "default"
+  },
+  "spec": {
+    "hard": {
+      "cpu": "1000",
+      "memory": "200Gi",
+      "pods": "10"
+    },
+    "scopeSelector": {
+      "matchExpressions": [
+        {
+          "operator": "In",
+          "scopeName": "PriorityClass",
+          "values": [
+            "high"
+          ]
+        }
+      ]
+    }
+  }
+}

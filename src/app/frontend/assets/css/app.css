@@ -13,7 +13,6 @@
 #aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
 #aside-contexts p { font-size:x-small; margin: 0;}
 
-
 @media (min-width: 992px) {
 	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-header {
 		margin-left: 17rem;

@@ -21,20 +21,20 @@ Vue.mixin({
     },
     confirm(msg, callback) {
       this.$bvModal
-        .msgBoxConfirm(msg, {
-          title: "",
-          variant: "info",
-          buttonSize: "sm",
-          footerClass: "p-1",
-        })
-        .then(callback)
-        .catch((err) => {});
+          .msgBoxConfirm(msg, {
+            title: "",
+            variant: "info",
+            buttonSize: "sm",
+            footerClass: "p-1",
+          })
+          .then(callback)
+          .catch((err) => {});
     },
     msghttp(error) {
       if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
+          error.response &&
+          error.response.data &&
+          error.response.data.message
       ) {
         this.toast(error.response.data.message, "warning");
       } else {
@@ -63,7 +63,7 @@ Vue.mixin({
       const second = Math.floor((elapsedTime % (1000 * 60)) / 1000);
       const minute = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
       const hour = Math.floor(
-        (elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          (elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
       );
       // const day = Math.floor((elapsedTime % (1000*60*60*24*30)) / (1000*60*60*24))
       const days = Math.floor(elapsedTime / (1000 * 60 * 60 * 24));
@@ -113,7 +113,7 @@ Vue.mixin({
 
       const i = Math.floor(Math.log(metrics) / Math.log(k));
 
-      if (resource == "cpu") {
+      if (resource === "cpu") {
         if (metrics / 1000000000 > 1)
           return `${parseFloat((metrics / 1000000000).toFixed(dm))}core`;
         if (metrics / 1000000 > 1)
@@ -122,7 +122,7 @@ Vue.mixin({
       }
 
       return `${parseFloat((metrics / Math.pow(k, i)).toFixed(dm))}${
-        memorySize[i]
+          memorySize[i]
       }`;
     },
     getTimestampString(timestamp) {
@@ -144,6 +144,14 @@ Vue.mixin({
       if (interval > 1) return Math.floor(interval) + " minutes";
 
       return Math.floor(seconds) + " seconds";
+    },
+    getApiUrl(group,rs,ns) {
+      let list = this.resources()[group][rs]
+      if(group){
+        return (`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/${list.groupVersion}/${list.namespaced? 'namespaces/' + ns + '/' : ''}${list.name}`);
+      } else {
+        return (`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/${list.groupVersion}/${list.namespaced? 'namespaces/' + ns + '/' : ''}${list.name}`);
+      }
     },
     // Get currentContext's namespaces
     namespaces(_) {
