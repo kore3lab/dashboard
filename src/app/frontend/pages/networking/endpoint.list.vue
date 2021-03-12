@@ -120,6 +120,9 @@ export default {
 		onEndpoints(el){
 			let list = [];
 			if (el.subsets !== undefined) {
+				if (el.subsets[0].notReadyAddresses) {
+					return "-"
+				}
 				for (let i =0;i<el.subsets[0].addresses.length;i++){
 					list.push(`${el.subsets[0].addresses[i].ip}`)
 				}
