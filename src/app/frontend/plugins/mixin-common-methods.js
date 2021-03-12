@@ -21,20 +21,20 @@ Vue.mixin({
     },
     confirm(msg, callback) {
       this.$bvModal
-        .msgBoxConfirm(msg, {
-          title: "",
-          variant: "info",
-          buttonSize: "sm",
-          footerClass: "p-1",
-        })
-        .then(callback)
-        .catch((err) => {});
+          .msgBoxConfirm(msg, {
+            title: "",
+            variant: "info",
+            buttonSize: "sm",
+            footerClass: "p-1",
+          })
+          .then(callback)
+          .catch((err) => {});
     },
     msghttp(error) {
       if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
+          error.response &&
+          error.response.data &&
+          error.response.data.message
       ) {
         this.toast(error.response.data.message, "warning");
       } else {
@@ -63,7 +63,7 @@ Vue.mixin({
       const second = Math.floor((elapsedTime % (1000 * 60)) / 1000);
       const minute = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
       const hour = Math.floor(
-        (elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          (elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
       );
       // const day = Math.floor((elapsedTime % (1000*60*60*24*30)) / (1000*60*60*24))
       const days = Math.floor(elapsedTime / (1000 * 60 * 60 * 24));
@@ -122,7 +122,7 @@ Vue.mixin({
       }
 
       return `${parseFloat((metrics / Math.pow(k, i)).toFixed(dm))}${
-        memorySize[i]
+          memorySize[i]
       }`;
     },
     getTimestampString(timestamp) {

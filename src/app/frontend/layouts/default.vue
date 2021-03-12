@@ -1,10 +1,10 @@
 <template>
-<div class="wrapper">
-	<c-navbar />
-	<c-aside />
-	<nuxt />
-	<c-footer />
-</div>
+	<div class="wrapper">
+		<c-navbar />
+		<c-aside />
+		<nuxt />
+		<c-footer />
+	</div>
 </template>
 <script>
 import Aside	from "./components/aside.vue"
