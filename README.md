@@ -137,19 +137,19 @@ $ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
 $ docker run --rm -d\
     --name metrics-scraper -p 8000:8000\
     -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.3.0\
     --kubeconfig=/app/.kube/config --db-file=metrics.db
 
 $ docker run --rm -d\
     --name backend -p 3001:3001\
     -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2\
+    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.3.0\
     --kubeconfig=/app/.kube/config
 
 $ docker run --rm -d\
     --name frontend -p 3000:3000\
     -e BACKEND_PORT="3001"\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.1.2
+    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.3.0
 
 $ docker ps
 ```

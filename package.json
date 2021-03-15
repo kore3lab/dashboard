@@ -1,6 +1,6 @@
 {
     "name": "acornsoft-dashboard",
-    "version": "0.1.1",
+    "version": "0.3.0",
     "description": "acornsoft kubernetes dashboard",
     "repository": {
         "type": "git",
