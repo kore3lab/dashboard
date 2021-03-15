@@ -2,7 +2,7 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Administrator"></c-navigator>
+				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">H</span>Horizontal Pod Autoscalers</h1></div>
@@ -15,7 +15,7 @@
 					</div>
 					<!-- button -->
 					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=HPA`)">Create</b-button>
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=HPA`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -53,6 +53,9 @@
 									<template v-slot:cell(status)="data">
 										<span v-for="(status, idx) in data.item.status" v-bind:key="idx" v-bind:class="status.style" class=" text-sm ml-1">{{ status.type }}</span>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -62,7 +65,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view :crd="sidebar.crd" group="Administrator" :name="sidebar.name" :url="sidebar.src" :kind="sidebar.kind" @delete="query_All()" @close="sidebar.visible=false"/>
+			<c-view :crd="sidebar.crd" group="Configuration" :name="sidebar.name" :url="sidebar.src" :kind="sidebar.kind" @delete="query_All()" @close="sidebar.visible=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -124,7 +127,7 @@ export default {
 								replicas: el.status.currentReplicas,
 								target: this.getTarget(el.spec.scaleTargetRef),
 								// status: this.getStatus(el.status.conditions),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

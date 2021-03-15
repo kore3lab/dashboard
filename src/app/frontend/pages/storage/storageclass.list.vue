@@ -41,6 +41,9 @@
 									<template v-slot:cell(name)="data">
 										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('storage.k8s.io','storageclasses')}/${data.item.name}`}">{{ data.value }}</a>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -103,7 +106,7 @@ export default {
 								provisioner: el.provisioner,
 								reclaimPolicy: el.reclaimPolicy,
 								onDefault: this.isDefault(el),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

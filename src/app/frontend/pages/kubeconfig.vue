@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper">
+	<div class="content-wrapper overflow-hidden">
 		<div class="row"  style="padding-top:10%">
 			<div class="col-md-3"></div>
 			<div class="col-md-6 m-3">
@@ -87,8 +87,8 @@ export default {
 					return
 				}
 
-				let cluster = this.kubeconfig.clusters.find(el=> el.name == this.selected.context["cluster"]);
-				let user = this.kubeconfig.users.find(el=> el.name == this.selected.context["user"]);
+				let cluster = this.kubeconfig.clusters.find(el=> el.name === this.selected.context["cluster"]);
+				let user = this.kubeconfig.users.find(el=> el.name === this.selected.context["user"]);
 
 				axios.post(`${this.backendUrl()}/api/clusters/${this.selected.name}`,
 						{

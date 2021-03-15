@@ -57,6 +57,9 @@
 											<li v-for="(d, idx) in data.item.endpoints" v-bind:key="idx">{{ d }}</li>
 										</ul>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -89,7 +92,7 @@ export default {
 				{key: "namespace", label: "Namespace", sortable: true},
 				{key: "loadBalancers", label: "LoadBalancers"},
 				{key: "rules", label: "Rules"},
-				{key: "creationTimestamp", label: "Age"},
+				{key: "creationTimestamp", label: "Age", sortable: true},
 			],
 			isBusy: false,
 			items: [],
@@ -122,7 +125,7 @@ export default {
 								namespace: el.metadata.namespace,
 								loadBalancers:el.status.loadBalancer ,
 								rules: this.getRules(el.spec.rules),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 							});
 						});
 						this.onFiltered(this.items);

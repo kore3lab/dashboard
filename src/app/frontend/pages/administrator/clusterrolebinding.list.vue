@@ -49,6 +49,9 @@
 									<template v-slot:cell(bindings)="data">
 										<span v-for="(value, idx) in data.item.bindings" v-bind:key="idx">{{ value.name }}</span>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -109,7 +112,7 @@ export default {
 								name: el.metadata.name,
 								bindings: this.getBindings(el),
 								labels: el.metadata.labels,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

@@ -47,6 +47,9 @@
 											<li v-for="value in data.item.policyTypes" v-bind:key="value" class="mr-1text-md">{{ value }}</li>
 										</ul>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -78,7 +81,7 @@ export default {
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
 				{ key: "policyTypes", label: "Policy Types"},
-				{ key: "creationTimestamp", label: "Age" }
+				{ key: "creationTimestamp", label: "Age", sortable: true }
 			],
 			isBusy: false,
 			items: [],
@@ -108,7 +111,7 @@ export default {
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
 								policyTypes:el.spec.policyTypes,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

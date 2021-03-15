@@ -1,15 +1,15 @@
 <template>
 	<div id="aside-contexts" class="sidebar-contexts d-flex flex-column sidebar-dark-primary border-right border-secondary">
 		<div v-for="(option, index) in contexts()" :key="option" :value="option">
-			<b-overlay :show="showOverlay==option" rounded="sm">
-				<b-button v-bind:id="'btn_aside_cluster_' + option" @click="onContextSelected(option)" v-bind:class="{active: option==currentContext()}" :value="option" class="w-100 text-uppercase">{{ option.substring(0,1) }}</b-button>
+			<b-overlay :show="showOverlay===option" rounded="sm">
+				<b-button v-bind:id="'btn_aside_cluster_' + option" @click="onContextSelected(option)" v-bind:class="{active: option===currentContext()}" :value="option" class="w-100 text-uppercase">{{ option.substring(0,1) }}</b-button>
 			</b-overlay>
 			<p class="text-center text-white text-truncate">{{option}}</p>
 			<b-popover v-bind:target="'btn_aside_cluster_' + option" v-bind:title="option" triggers="hover" boundary="window" boundary-padding="0">
 				<ul class="list-unstyled m-0">
-					<li v-if="option!=currentContext()"><b-link href="#" @click="onContextDelete(option, index)"><b-icon icon="x-circle" class="mr-1 text-danger"></b-icon>Remove</b-link></li>
-					<li v-if="index!=0"><b-link href="#" @click="onMoveTop(index)"><b-icon icon="chevron-double-up" class="mr-1 "></b-icon>Top</b-link></li>
-					<li v-if="index!=0"><b-link href="#" @click="onMoveUp(index)"><b-icon icon="caret-up-fill" class="mr-1 "></b-icon>Up</b-link></li>
+					<li v-if="option!==currentContext()"><b-link href="#" @click="onContextDelete(option, index)"><b-icon icon="x-circle" class="mr-1 text-danger"></b-icon>Remove</b-link></li>
+					<li v-if="index!==0"><b-link href="#" @click="onMoveTop(index)"><b-icon icon="chevron-double-up" class="mr-1 "></b-icon>Top</b-link></li>
+					<li v-if="index!==0"><b-link href="#" @click="onMoveUp(index)"><b-icon icon="caret-up-fill" class="mr-1 "></b-icon>Up</b-link></li>
 					<li v-if="index<(contexts().length-1)"><b-link href="#" @click="onMoveDown(index)"><b-icon icon="caret-down-fill" class="mr-1"></b-icon>Down</b-link></li>
 				</ul>
 			</b-popover>

@@ -50,6 +50,9 @@
 									<template v-slot:cell(bindings)="data">
 										<div v-for="(value, idx) in data.item.bindings" v-bind:key="idx">{{ value }}</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -82,7 +85,7 @@ export default {
 				{key: "namespace", label: "Namespace", sortable: true},
 				{key: "bindings", label: "Bindings", sortable: true},
 				{key: "labels", label: "Labels", sortable: true},
-				{key: "creationTimestamp", label: "Age"},
+				{key: "creationTimestamp", label: "Age", sortable: true},
 			],
 			isBusy: false,
 			items: [],
@@ -104,7 +107,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("rbac.authorization.k8s.io","rolebindings",this.selectedNamespace))
+			axios.get(this.getApiUrl("rbac.authorization.k8s.io", "rolebindings", this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -113,7 +116,7 @@ export default {
 								namespace: el.metadata.namespace,
 								bindings: this.getBindings(el),
 								labels: el.metadata.labels,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
@@ -138,9 +141,9 @@ export default {
 			}
 			return bindingList
 		},
-		beforeDestroy() {
-			this.$nuxt.$off('navbar-context-selected')
-		}
+	},
+	beforeDestroy(){
+		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>

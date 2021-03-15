@@ -56,6 +56,9 @@
 									<template v-slot:cell(status)="data">
 										<div v-bind:class="data.item.status.style" class="text-sm">{{ data.item.status.value }}</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -128,7 +131,7 @@ export default {
 								pods: this.getPvc(el.metadata.name),
 								accessModes: el.spec.accessModes,
 								storageClass: this.getStorageClass(el.spec.storageClassName),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

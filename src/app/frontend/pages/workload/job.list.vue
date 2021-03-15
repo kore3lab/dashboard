@@ -45,6 +45,9 @@
 									<template v-slot:cell(jobStatus)="data">
 										<div v-bind:key="data.value" v-bind:class="[ data.value === 'Complete'? 'text-success' : 'text-warning' ]">{{ data.value }}</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -108,7 +111,7 @@ export default {
 								namespace: el.metadata.namespace,
 								completions: this.getCompletions(el),
 								jobStatus: el.status.conditions? el.status.conditions[0].type : "Failed",
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
