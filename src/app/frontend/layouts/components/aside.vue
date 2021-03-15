@@ -3,8 +3,8 @@
 
 		<c-context />
 
-		<nuxt-link to="/" class="brand-link">
-			<i class="fab fa-mixcloud mr-0 text-info font-weight-bold"> K</i><span class="brand-text font-weight-bolder">ore<sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup></span>
+		<nuxt-link to="/" class="brand-link align-bottom">
+			<i class="fab fa-mixcloud mr-0 text-info font-weight-bold"> K</i><span class="brand-text font-weight-bolder">ore<sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup></span><sub>dashboard</sub>
 		</nuxt-link>
 
 		<!-- Sidebar -->
@@ -18,7 +18,6 @@
 							<li class="nav-item small"><nuxt-link to="/cluster/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/cluster/topology"  class="nav-link"><i class="nav-icon text-sm mr-0">T</i><p>opology</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/cluster/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/cluster/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
 						</ul>
 					</li>
 					<li class="nav-item  menu-open">
@@ -52,6 +51,18 @@
 						</ul>
 					</li>
 					<li class="nav-item menu-open">
+						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-cog"></i><p>Configuration</p></a>
+						<ul class="nav nav-treeview">
+							<li class="nav-item small"><nuxt-link to="/administrator/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/administrator/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/administrator/resourcequota.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/administrator/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imite Ranges</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/administrator/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/administrator/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/cluster/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
+						</ul>
+					</li>
+					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-users-cog"></i><p>Adminstrator</p></a>
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/administrator/serviceaccount.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervice Accounts</p></nuxt-link></li>
@@ -59,12 +70,6 @@
 							<li class="nav-item small"><nuxt-link to="/administrator/clusterrolebinding.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>luster Role Bindings</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/administrator/role.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>oles</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/administrator/rolebinding.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>ole Bindings</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/resourcequota.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imite Ranges</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
 						</ul>
 					</li>
 				</ul>
