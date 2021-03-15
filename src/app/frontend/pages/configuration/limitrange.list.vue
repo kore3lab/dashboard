@@ -2,10 +2,10 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Administrator"></c-navigator>
+				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Resource Quotas</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">L</span>Limit Ranges</h1></div>
 					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -15,7 +15,7 @@
 					</div>
 					<!-- button -->
 					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=ResourceQuota`)">Create</b-button>
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=LimitRange`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -40,10 +40,18 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','resourcequotas',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','limitranges',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
 									</template>
-									<template v-slot:cell(value)="data">
-										<span>{{ data.item.value[0].values[0]}}</span>
+									<template v-slot:cell(cpu)="data">
+										<ul class="list-unstyled mb-0" v-for="(value, name) in data.item.cpu" v-bind:key="name">
+											<li v-if="value"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										</ul>
+									</template>
+									<template v-slot:cell(type)="data">
+										<span v-for="(value, idx) in data.item.type" v-bind:key="idx">{{ value }} </span>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -54,7 +62,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Resource Quota" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+			<c-view crd="Limit Range" group="Configuration" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -75,10 +83,7 @@ export default {
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "value", label: "Value", sortable: true },
-				{ key: "cpu", label: "Cpu", sortable: true },
-				{ key: "memory", label: "Memory", sortable: true },
-				{ key: "pods", label: "Pods", sortable: true },
+				{ key: "type", label: "Limit Types", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
@@ -101,18 +106,15 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","resourcequotas",this.selectedNamespace))
+			axios.get(this.getApiUrl("","limitranges",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								value: el.spec.scopeSelector.matchExpressions,
-								cpu: this.getCpu(el.status),
-								memory: this.getMemory(el.status),
-								pods: this.getPods(el.status),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								type: this.getTypes(el.spec.limits),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
@@ -124,15 +126,13 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getCpu(status) {
-			return status.used.cpu + " / " + status.hard.cpu
-		},
-		getMemory(status) {
-			return status.used.memory + " / " + status.hard.memory
-		},
-		getPods(status) {
-			return status.used.pods + " / " + status.hard.pods
-		},
+		getTypes(limit) {
+			let list = [];
+			for (let i =0;i<limit.length;i++) {
+				list.push(limit[i].type)
+			}
+			return list
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

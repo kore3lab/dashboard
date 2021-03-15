@@ -26,7 +26,7 @@
 				<!-- search & filter -->
 				<div class="row mb-2">
 					<div class="col-11">
-						<b-form-group class="mb-0 font-weight-light">
+						<b-form-group class="mb-0 font-weight-light overflow-auto">
 							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
 							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
 						</b-form-group>
@@ -67,6 +67,9 @@
 									<template v-slot:cell(node)="data">
 										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Node', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -93,6 +96,7 @@ export default {
 		return {
 			selectedNamespace: "",
 			selectedStatus: [],
+			allStatus: ["Running", "Pending", "Terminating", "CrashLoopBackOff", "ImagePullBackOff", "Completed", "ContainerCreating", "Failed", "etc"],
 			optionsStatus: [
 				{ text: "Running", value: "Running" },
 				{ text: "Pending", value: "Pending" },
@@ -100,8 +104,9 @@ export default {
 				{ text: "CrashLoopBackOff", value: "CrashLoopBackOff" },
 				{ text: "ImagePullBackOff", value: "ImagePullBackOff" },
 				{ text: "Completed", value: "Completed" },
+				{ text: "ContainerCreating", value: "ContainerCreating" },
 				{ text: "Failed", value: "Failed" },
-				{ text: "Unknown", value: "Unknown" }
+				{ text: "etc", value: "etc" }
 			],
 			keyword: "",
 			filterOn: ["name"],
@@ -113,8 +118,8 @@ export default {
 				{ key: "restartCount", label: "Restart", sortable: true  },
 				{ key: "controller", label: "Controlled By", sortable: true  },
 				{ key: "node", label: "Node", sortable: true  },
-				{ key: "qos", label: "QoS", sortable: true },
-				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "qos", label: "QoS", sortable: true  },
+				{ key: "creationTimestamp", label: "Age", sortable: true  },
 				{ key: "status", label: "Status", sortable: true  },
 			],
 			isBusy: false,
@@ -139,8 +144,11 @@ export default {
 	methods: {
 		//  status 필터링
 		onChangeStatus() {
-			var selectedStatus = this.selectedStatus;
+			let selectedStatus = this.selectedStatus;
 			this.items = this.origin.filter(el => {
+				if(selectedStatus.includes("etc")) {
+					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
+				}
 				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
 			});
 			this.totalItems = this.items.length;
@@ -150,6 +158,7 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.loadMetrics();
+			this.selectedStatus = [];
 			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
@@ -162,7 +171,7 @@ export default {
 								restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
 								controller: this.getController(el),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								node: this.getNode(el),
 								qos: el.status.qosClass,
 							});
@@ -294,6 +303,7 @@ export default {
 				const state = status.containerStatuses.find(el => !el.ready).state
 				let style = "text-secondary"
 				if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
+				if ( state[Object.keys(state)].reason === "Error") style = "text-danger"
 				return {
 					"value": state[Object.keys(state)].reason,
 					"style": style,
@@ -308,17 +318,18 @@ export default {
 			this.metricsItems = resp.data.items
 		},
 		onFiltered(filteredItems) {
-			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, unknown:0 }
+			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
 
 			filteredItems.forEach(el=> {
 				if(el.status.value === "Running") status.running++;
-				if(el.status.value === "Pending") status.pending++;
-				if(el.status.value === "Terminating") status.terminating++;
-				if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
-				if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
-				if(el.status.value === "Completed") status.completed++;
-				if(el.status.value === "Failed") status.failed++;
-				if(el.status.value === "Unknown") status.unknown++;
+				else if(el.status.value === "Pending") status.pending++;
+				else if(el.status.value === "Terminating") status.terminating++;
+				else if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
+				else if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
+				else if(el.status.value === "Completed") status.completed++;
+				else if(el.status.value === "Failed") status.failed++;
+				else if(el.status.value === "ContainerCreating") status.containerCreating++;
+				else status.etc++;
 			});
 
 			this.optionsStatus[0].text = status.running >0 ? `Running (${status.running})`: "Running";
@@ -327,8 +338,9 @@ export default {
 			this.optionsStatus[3].text = status.crashLoopBackOff >0 ? `CrashLoopBackOff (${status.crashLoopBackOff})`: "CrashLoopBackOff";
 			this.optionsStatus[4].text = status.imagePullBackOff >0 ? `ImagePullBackOff (${status.imagePullBackOff})`: "ImagePullBackOff";
 			this.optionsStatus[5].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
-			this.optionsStatus[6].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
-			this.optionsStatus[7].text = status.unknown >0 ? `Unknown (${status.unknown})`: "Unknown";
+			this.optionsStatus[6].text = status.containerCreating >0 ? `ContainerCreating (${status.containerCreating})`: "ContainerCreating";
+			this.optionsStatus[7].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
+			this.optionsStatus[8].text = status.etc >0 ? `etc (${status.etc})`: "etc";
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1

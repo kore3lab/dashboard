@@ -47,6 +47,9 @@
 											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
 										</ul>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -115,7 +118,7 @@ export default {
 								suspend: el.spec.suspend,
 								active: el.status.active?el.status.active.length:"0",
 								lastSchedule: this.getScheduleTime(el.status.lastScheduleTime),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
@@ -124,11 +127,12 @@ export default {
 					.finally(()=> { this.isBusy = false;});
 		},
 		getScheduleTime(time) {
-			let tran = this.$root.getElapsedTime(time)
-			if (tran === 	"NaN seconds"){
+			let tran = this.getElapsedTime(time)
+			console.log(tran)
+			if (tran.str === ""){
 				return '-'
 			}
-			return tran
+			return tran.str
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

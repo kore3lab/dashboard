@@ -62,6 +62,9 @@
 											<li v-bind:key="data.value" v-bind:class="[ data.value === 'Active'? 'text-success' : 'text-warning' ]">{{ data.value }}</li>
 										</ul>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -135,7 +138,7 @@ export default {
 								internalEndpoints: this.toEndpointList(el.spec.ports,el.spec.type),
 								externalEndpoints: this.externalEndpoint(el),
 								selector: el.spec.selector,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								status: this.checkStatus(el.spec.type,el.status)
 							});
 						});

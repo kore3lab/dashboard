@@ -52,6 +52,9 @@
 											<li v-for="image in data.item.images" v-bind:key="image">{{ image }}</li>
 										</ul>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -116,7 +119,7 @@ export default {
 								// images: el.containerImages,
 								pods: this.getPods(el.status),
 								replicas: el.spec.replicas,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

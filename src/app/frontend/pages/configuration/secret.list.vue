@@ -2,10 +2,10 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Administrator"></c-navigator>
+				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Pod Disruption Budgets</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">S</span>Secrets</h1></div>
 					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -15,7 +15,7 @@
 					</div>
 					<!-- button -->
 					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=PodDisruptionBudget`)">Create</b-button>
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=Secret`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -40,7 +40,20 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('policy','poddisruptionbudgets',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','secrets',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+									</template>
+									<template v-slot:cell(labels)="data">
+										<ul class="list-unstyled mb-0">
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										</ul>
+									</template>
+									<template v-slot:cell(keys)="data">
+										<ul class="list-unstyled mb-0">
+											<li v-for="(value, name) in data.item.keys" v-bind:key="name">{{ name }}  </li>
+										</ul>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -51,7 +64,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Pod Disruption Budget" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+			<c-view crd="Secret" group="Configuration" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -72,10 +85,9 @@ export default {
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "minAvailable", label: "Min Available", sortable: true  },
-				{ key: "maxUnavailable", label: "Max Unavailable", sortable: true  },
-				{ key: "currentHealthy", label: "Current Healthy", sortable: true  },
-				{ key: "desiredHealthy", label: "Desired Healthy", sortable: true  },
+				{ key: "labels", label: "Labels", sortable: true  },
+				{ key: "keys", label: "Keys", sortable: true },
+				{ key: "type", label: "Type", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
@@ -98,18 +110,17 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("policy","poddisruptionbudgets",this.selectedNamespace))
+			axios.get(this.getApiUrl("","secrets",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								minAvailable: el.spec.minAvailable || "N/A",
-								maxUnavailable: el.spec.maxUnavailable || "N/A",
-								currentHealthy: el.status.currentHealthy,
-								desiredHealthy: el.status.desiredHealthy,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								labels: el.metadata.labels,
+								keys: this.getKeys(el),
+								type: el.type,
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
@@ -120,7 +131,10 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		}
+		},
+		getKeys(el) {
+			if (el.data) return el.data
+		},
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

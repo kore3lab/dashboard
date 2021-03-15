@@ -2,20 +2,16 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Administrator"></c-navigator>
+				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Config Maps</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedGroup" :options="groupList" size="sm" @input="onChangeGroup"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
 							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
-					</div>
-					<!-- button -->
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=ConfigMap`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -40,17 +36,15 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','configmaps',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="sidebar={visible:true, name:data.value.origin, src:`${getApiUrl('apiextensions.k8s.io','customresourcedefinitions')}/${data.value.origin}`}">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
 											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
 										</ul>
 									</template>
-									<template v-slot:cell(keys)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.keys" v-bind:key="name">{{ name }}</li>
-										</ul>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -61,7 +55,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Config Map" group="Administrator" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+			<c-view crd="Custom Resource Definition" group="Configuration" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -76,19 +70,23 @@ export default {
 	},
 	data() {
 		return {
-			selectedNamespace: "",
+			selectedGroup: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
-				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "keys", label: "Keys", sortable: true  },
+				{ key: "group", label: "Group", sortable: true  },
+				{ key: "version", label: "Version", sortable: true },
+				{ key: "scope", label: "Scope", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
+			origin: [],
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
+			groupList: [{value: "", text: "All Groups"}],
+			checkList : [],
 			sidebar: {
 				visible: false,
 				name: "",
@@ -102,20 +100,32 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onChangeGroup() {
+			let selectedGroup = this.selectedGroup;
+			this.items = this.origin.filter(el => {
+				return (selectedGroup.length === 0) || selectedGroup.includes(el.group);
+			});
+			this.totalItems = this.items.length;
+			this.currentPage = 1
+
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","configmaps",this.selectedNamespace))
+			axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								keys: this.getKeys(el),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								name: this.getName(el.spec.names.kind,el.metadata.name),
+								group: el.spec.group,
+								version: this.getVersion(el.spec.versions),
+								scope: el.spec.scope,
+								groups: this.setGroup(el.spec.group),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
+						this.origin = this.items;
 						this.onFiltered(this.items);
 					})
 					.catch(e => { this.msghttp(e);})
@@ -125,11 +135,30 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getKeys(el) {
-			if (el.data) {
-				return el.data
+		getName(name, origin) {
+			return {
+				name : name,
+				origin : origin
 			}
-		}
+		},
+		getVersion(v) {
+			for(let i=0;i<v.length;i++) {
+				if(v[i].storage === true){
+					return v[i].name
+				}
+			}
+		},
+		setGroup(gr) {
+			if(this.checkList.find(element => element === gr)) {
+				return
+			}else {
+				this.checkList.push(gr)
+			}
+			this.groupList.push({
+				value: gr,
+				text: gr
+			})
+		},
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

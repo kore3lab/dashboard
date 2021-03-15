@@ -49,6 +49,9 @@
 									<template v-slot:cell(usageDisk)="data">
 										<b-progress :value="data.item.usageDisk" :max="100" variant="info" show-value class="mb-3"></b-progress>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 						</div>
@@ -113,7 +116,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								ready: this.getConditions(el),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								k8sVersion: el.status.nodeInfo.kubeletVersion,
 								taints: this.getTaints(el.spec),
 								roles: this.getRoles(el.metadata.labels),

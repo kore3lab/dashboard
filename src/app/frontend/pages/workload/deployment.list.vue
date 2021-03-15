@@ -47,6 +47,9 @@
 											<span v-for="(val, idx) in data.item.status" v-bind:key="idx" v-bind:class="val.style" class=" text-sm ml-1">{{ val.type }}</span>
 										</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -111,7 +114,7 @@ export default {
 								namespace: el.metadata.namespace,
 								pods: this.toPods(el.status),
 								replicas: el.status.replicas ? el.status.replicas : 0,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								status: this.toStatus(el.status),
 							});
 						});

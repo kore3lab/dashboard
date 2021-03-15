@@ -47,6 +47,9 @@
 									<template v-slot:cell(claim)="data">
 										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Persistent Volume Claim', src:`${getApiUrl(data.value.group,data.value.rs,data.value.ns)}/${data.value.name}`}">{{ data.value.name }}</a>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -111,7 +114,7 @@ export default {
 								capacity: el.spec.capacity ? el.spec.capacity.storage: "",
 								claim: this.getClaim(el.spec),
 								status: el.status.phase,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
