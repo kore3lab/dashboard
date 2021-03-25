@@ -36,7 +36,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.origin, src:`${getApiUrl('apiextensions.k8s.io','customresourcedefinitions')}/${data.value.origin}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink('apiextensions.k8s.io','customresourcedefinitions',data.item.namespace, data.item.name.origin); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -54,8 +54,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Custom Resource Definition" group="Configuration" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -87,11 +87,8 @@ export default {
 			totalItems: 0,
 			groupList: [{value: "", text: "All Groups"}],
 			checkList : [],
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",

@@ -63,7 +63,7 @@ export default {
 			this.template = require(`~/assets/template/${filename}.json`);
 			this.raw = Object.assign({}, this.template);
 		} catch (ex) {
-			console.log(`can't find "${this.crd}" template o n ~/assets/template`);
+			console.log(`can't find "${this.crd}" template on ~/assets/template`);
 		}
 	},
 	beforeDestroy(){

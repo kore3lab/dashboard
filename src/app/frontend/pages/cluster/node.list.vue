@@ -35,7 +35,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','nodes')}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="viewModel=getViewLink('','nodes',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(ready)="data">
 										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" >{{ value.value }}  </span>
@@ -59,8 +59,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Node" group="Cluster" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -68,6 +68,7 @@
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -92,11 +93,8 @@ export default {
 			items: [],
 			totalItems: 0,
 			metrics: [],
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",

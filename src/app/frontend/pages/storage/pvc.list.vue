@@ -40,13 +40,13 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, crd:'Persistent Volume Claim', src:`${getApiUrl('','persistentvolumeclaims',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="viewModel=getViewLink('','persistentvolumeclaims',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(storageClass)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Storage Class', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(pods)="data">
-										<a href="#" v-for="(d, idx) in data.item.pods" v-bind:key="idx" @click="sidebar={visible:true, name:d[1], crd:'Pod', src:`${getApiUrl('','pods',d[2])}/${d[1]}`}">{{ d[1] }}</a>
+										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d[2], d[1]); isShowSidebar=true;">{{ d[1] }} </a>
 									</template>
 									<template v-slot:cell(accessModes)="data">
 										<ul class="list-unstyled mb-0">
@@ -67,8 +67,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view :crd="sidebar.crd" group="Storage" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -76,6 +76,7 @@
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -102,11 +103,8 @@ export default {
 			totalItems: 0,
 			pvcPod: [],
 			podVersion: [],
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",

@@ -48,4 +48,8 @@ func GetPodMetrics(c *gin.Context) {
 		g.C.Data(http.StatusOK, "application/json", resp.Body())
 	}
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d4dd582 (feat: pod view detail)

@@ -54,7 +54,7 @@ Vue.mixin({
      * timestamp를 day,hour,minute,second로 구분 봔환함
      *
      * @param {date} timestamp 변환할 date 값
-     * @return {string} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
+     * @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
      */
     getElapsedTime(timestamp) {
       const dt = Date.parse(timestamp);
@@ -145,13 +145,13 @@ Vue.mixin({
 
       return Math.floor(seconds) + " seconds";
     },
-    getApiUrl(group,rs,ns) {
-      if (ns === undefined) ns = "";
-      let list = this.resources()[group][rs]
-      if(group){
-        return (`${this.backendUrl()}/raw/clusters/${this.currentContext()}/apis/${list.groupVersion}/${list.namespaced? 'namespaces/' + ns + '/' : ''}${list.name}`);
+    getApiUrl(group, rscName, namespace, name) {
+      let resource = this.resources()[group][rscName];
+      if (resource) {
+        let url = `${this.backendUrl()}/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.namespaced ? "namespaces/" + namespace + "/" : ""}${resource.name}`;
+        return name ? `${url}/${name}` : url;
       } else {
-        return (`${this.backendUrl()}/raw/clusters/${this.currentContext()}/api/${list.groupVersion}/${list.namespaced? 'namespaces/' + ns + '/' : ''}${list.name}`);
+        return "#";
       }
     },
     // Get currentContext's namespaces
