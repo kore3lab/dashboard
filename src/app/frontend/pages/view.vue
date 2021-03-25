@@ -3,10 +3,12 @@
 		<div class="card card-primary m-0 layer" v-bind:class="{ 'h-100' : errorcheck}">
 			<!-- card-header -->
 			<div class="card-header pt-2 pb-2 sticky-top" style="position:sticky">
-				<h3 class="card-title text-truncate">{{ title }}</h3>
+				<h3 class="card-title text-truncate">{{ title }} / {{ name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
 						<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
+						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
+						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
 					</span>
@@ -19,14 +21,16 @@
 			</div>
 
 			<b-overlay :show="deleteOverlay.visible" rounded="sm" no-center>
-				<!-- summary -->
+				<!--1. not Yaml(editor) -->
 				<div v-show="!isYaml && !errorcheck" class="card-body p-2">
-					<div class="row">
+					<!-- 1.1 meta data -->
+					<div class="row" v-show="isJSON">
 						<div class="col-md-12">
 							<div class="card card-secondary card-outline">
-								<div class="card-header p-2"><h3 class="card-title text-md">Meta data</h3></div>
 								<div class="card-body p-2">
 									<dl class="row mb-0">
+										<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(raw.metadata.creationTimestamp)}} ago ({{ raw.metadata.creationTimestamp }})</dd>
+										<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ raw.metadata.name }}</dd>
 										<dt class="col-sm-2 text-truncate">Annotations</dt>
 										<dd class="col-sm-10 text-truncate">
 											<ul class="list-unstyled mb-0">
@@ -39,48 +43,34 @@
 												<li v-for="(value, name) in raw.metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
 											</ul>
 										</dd>
-										<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(raw.metadata.creationTimestamp)}} ago ({{ raw.metadata.creationTimestamp }})</dd>
 										<dt class="col-sm-2 text-truncate">UID</dt><dd class="col-sm-10">{{ raw.metadata.uid }}</dd>
 									</dl>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="row" v-if="crd !== 'Storage Class'">
+					<!-- 1.2  custom view -->
+					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="navigate"/>
+					<!-- 1.3 json-tree -->
+					<div class="row" v-show="isJSON && title !== 'StorageClass'">
 						<div class="col-md-12">
 							<div class="card card-secondary card-outline m-0">
 								<div class="card-header p-2">
-									<h3 class="card-title text-md" v-if="crd==='Config Map' || crd==='Secret'">Data</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='Service Account'">Secrets</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='Role' || crd==='Cluster Role'">Rules</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='Role Binding' || crd==='Cluster Role Binding'">Subjects,RoleRef</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='Endpoint'">Subsets</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='HPA'">Spec,Status</h3>
-									<h3 class="card-title text-md" v-else-if="crd==='Node'">NodeInfo</h3>
+									<h3 class="card-title text-md" v-if="title==='ConfigMap' || title==='Secret'">Data</h3>
+									<h3 class="card-title text-md" v-else-if="title==='ServiceAccount'">Secrets</h3>
+									<h3 class="card-title text-md" v-else-if="title==='Role' || title==='ClusterRole'">Rules</h3>
+									<h3 class="card-title text-md" v-else-if="title==='RoleBinding' || title==='ClusterRoleBinding'">Subjects,RoleRef</h3>
+									<h3 class="card-title text-md" v-else-if="title==='Endpoints'">Subsets</h3>
+									<h3 class="card-title text-md" v-else-if="title==='HorizontalPodAutoscaler'">Spec,Status</h3>
+									<h3 class="card-title text-md" v-else-if="title==='Node'">NodeInfo</h3>
 									<h3 class="card-title text-md" v-else>Specification</h3>
 								</div>
 								<c-jsontree id="txtSpec" v-model="raw.spec" class="card-body p-2"></c-jsontree>
 							</div>
 						</div>
 					</div>
-					<div class="row" v-if="showEvent">
-						<div class="col-md-12">
-							<div class="card card-secondary card-outline">
-								<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-								<div class="card-body p-2">
-									<dl v-for="(val,idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-top">
-										<dt class="col-sm-12 mb-1 text-truncate">{{ val.name }}</dt>
-										<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-										<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-										<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-										<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-									</dl>
-								</div>
-							</div>
-						</div>
-					</div>
 				</div>
-				<!-- yaml tab -->
+				<!-- 2. if Yaml(editor) then  -->
 				<div v-show="isYaml && !errorcheck" class="card-body p-1">
 					<div class="row">
 						<div class="col-sm-12 text-right">
@@ -95,7 +85,7 @@
 						</div>
 					</div>
 				</div>
-				<!-- delete overlay -->
+				<!-- 3. delete overlay -->
 				<template #overlay>
 					<div v-if="deleteOverlay.processing" class="text-center">
 						<b-spinner small class="mr-2" label="please wait"></b-spinner><span>Watching DELETE status...</span>
@@ -119,64 +109,106 @@ import VueAceEditor 	from "@/components/aceeditor"
 import VueJsonTree 		from "@/components/jsontree"
 
 export default {
-	props:["crd", "badge", "group", "name", "url","visible"],
+	props:["value"],
+
 	components: {
 		"c-aceeditor": { extends: VueAceEditor },
 		"c-jsontree": { extends: VueJsonTree },
 	},
 	data() {
 		return {
+			component: null,
+			src: "",
+			url: "",
 			origin: { metadata: {}, spec: {} },
 			raw: { metadata: {}, spec: {} },
-			event: [],
-			showEvent: false,
 			isYaml: false,
+			isJSON: false,
 			deleteOverlay: {
 				visible : false,
 				processing : false,
 				timer: null
 			},
 			localUrl: "",
-			title: "",
+			localSrc: "",
 			errorcheck: false,
 			errorMessage: "",
+		}
+	},
+	computed: {
+		loader() {
+			if (!this.src) return null;
+			return () => import(`@/pages/${this.src}`)
+		},
+		title() {
+			return this.value.title;
+		},
+		name() {
+			return this.value.name;
 		}
 	},
 	created: function() {
 		window.addEventListener('click',this.clickCheck)
 	},
 	watch: {
-		url(newVal) {
-			if(newVal && (newVal !== this.localUrl)) {
-				this.onSync();
-				document.getElementsByClassName(`b-sidebar-body`)[0].scrollTop = 0
-				this.localUrl = newVal;
+		value(newVal) {
+			this.src = newVal.src;
+			this.url = newVal.url;
+			document.getElementsByClassName(`b-sidebar-body`)[0].scrollTop = 0
+		},
+		src(newVal) {
+			if(newVal !== this.localSrc) {
+				this.component = null;
+				this.isJSON = true;
+				if(this.loader) {
+					this.loader()
+							.then(() => {
+								this.component = () => this.loader();
+								this.isJSON = false;
+							})
+							.catch((ex) => {
+								console.error(ex)
+							})
+				}
+				this.localSrc = newVal;
 			}
-		}
+		},
+		url(newVal) {
+			if(!newVal) return;
+			if(newVal !== this.localUrl) {
+				this.localUrl =  newVal;
+				this.onSync();
+			} else {
+				this.onSync();
+			}
+		},
 	},
 	methods: {
+		navigate(loc) {
+			this.value.name = loc.name;
+			this.value.title = loc.title;
+			this.src = loc.src;
+			this.url = loc.url;
+		},
 		// 조회
 		onSync() {
-			axios.get(this.url)
+			axios.get(this.localUrl)
 					.then( resp => {
 						this.errorcheck = false;
-						this.showEvent = false;
 						this.origin = Object.assign({}, resp.data);
 						this.raw = resp.data;
-						this.event = this.getEvents(resp.data.metadata.uid)
-						this.title = this.crd +' / '+this.name;
-						if(this.crd === "Config Map" || this.crd === "Secret") this.raw.spec = resp.data.data || {};
-						else if(this.crd === "Storage Class") this.raw.spec = null; // 무시
-						else if(this.crd === "Role" || this.crd === "Cluster Role") this.raw.spec = resp.data.rules || {};
-						else if(this.crd === "Role Binding" || this.crd === "Cluster Role Binding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} || {} ;
-						else if(this.crd === "Service Account") this.raw.spec = resp.data.secrets || {};
-						else if(this.crd === "Endpoint") this.raw.spec = resp.data.subsets || {};
-						else if(this.crd === "HPA") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
-						else if(this.crd === "Node") this.raw.spec = resp.data.status.nodeInfo
+						if(this.title === "ConfigMap" || this.title === "Secret") this.raw.spec = resp.data.data || {};
+						else if(this.title === "StorageClass") this.raw.spec = null; // 무시
+						else if(this.title === "Role" || this.title === "ClusterRole") this.raw.spec = resp.data.rules || {};
+						else if(this.title === "RoleBinding" || this.title === "ClusterRoleBinding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} || {} ;
+						else if(this.title === "ServiceAccount") this.raw.spec = resp.data.secrets || {};
+						else if(this.title === "Endpoints") this.raw.spec = resp.data.subsets || {};
+						else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
+						else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
 						else this.raw.spec = resp.data.spec || {};
+						this.$nuxt.$emit("onReadCompleted", this.origin);
 					})
 					.catch(e => {
-						// this.msghttp(e);
 						this.isError(e);
 					});
 		},
@@ -187,7 +219,7 @@ export default {
 			this.errorMessage = e.response.data.message ;
 		},
 		onApply() {
-			axios.put(this.backendUrl() + '/raw/clusters/' + this.currentContext(), this.raw)
+			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
 					.then( resp => {
 						this.origin = Object.assign({}, resp.data);
 						this.raw = resp.data;
@@ -196,14 +228,14 @@ export default {
 		},
 		onDelete() {
 			this.deleteOverlay.processing = true;
-			axios.delete(`${this.backendUrl() + '/raw/clusters/' + this.currentContext()}${this.raw.metadata.selfLink}`)
+			axios.delete(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( _ => {
 						this.watch();
 					})
 					.catch(e => { this.msghttp(e);});
 		},
 		watch() {
-			axios.get(`${this.backendUrl() + '/raw/clusters/' + this.currentContext()}${this.raw.metadata.selfLink}`)
+			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( resp => {
 						if (resp.status === 404) {
 							this.deleteOverlay.visible = false;
@@ -235,25 +267,6 @@ export default {
 				this.$emit('close')
 			}
 		},
-		getEvents(uid) {
-			let events = [];
-			axios.get(this.getApiUrl('events.k8s.io','events'))
-					.then( resp => {
-						for(let i=0; i<resp.data.items.length; i++) {
-							if(resp.data.items[i].regarding.uid === uid) {
-								this.showEvent = true;
-								events.push({
-									name: resp.data.items[i].note || "",
-									source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "",
-									count: resp.data.items[i].deprecatedCount || "0",
-									subObject: resp.data.items[i].regarding.fieldPath || "",
-									lastSeen: resp.data.items[i].deprecatedLastTimestamp || ""
-								})
-							}
-						}
-					})
-			return events
-		}
 	}
 }
 

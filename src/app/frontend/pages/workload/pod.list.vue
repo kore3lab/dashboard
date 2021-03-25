@@ -25,13 +25,13 @@
 			<div class="container-fluid">
 				<!-- search & filter -->
 				<div class="row mb-2">
-					<div class="col-11">
+					<div class="col-10">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
 							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
 							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
-					<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+					<div class="col-2 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
 				</div>
 				<!-- GRID-->
 				<div class="row">
@@ -46,7 +46,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, crd:'Pod', src:`${getApiUrl('','pods',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="viewModel=getViewLink('','pods',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(status)="data">
 										<div class="list-unstyled mb-0" v-if="data.item.status.value">
@@ -62,10 +62,10 @@
 										</div>
 									</template>
 									<template v-slot:cell(controller)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:data.value.spaceKind, group:data.value.gr, src:`${getApiUrl(data.value.group,data.value.rs,data.item.namespace)}/${data.value.name}`}">{{ data.value.kind }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}</a>
 									</template>
 									<template v-slot:cell(node)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Node', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs, '',  data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
@@ -78,8 +78,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view :crd="sidebar.crd" :group="sidebar.crd" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -87,6 +87,7 @@
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -129,11 +130,8 @@ export default {
 			containerStatuses: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
