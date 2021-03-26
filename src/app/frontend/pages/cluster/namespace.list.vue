@@ -26,7 +26,7 @@
 				<div class="row mb-2">
 					<div class="col-11">
 						<b-form-group class="mb-0 font-weight-light">
-							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
+							<button type="submit" class="btn btn-default btn-sm" @click="onChangePhase('All')">All</button>
 							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light"  font="light" buttons size="sm" @input="onChangePhase"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
@@ -45,7 +45,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','namespaces')}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="viewModel=getViewLink('','namespaces',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -55,6 +55,9 @@
 									<template v-slot:cell(phase)="data">
 										<div v-bind:class="data.item.phase.style">{{ data.item.phase.status }}</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -63,8 +66,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Namespace" group="Cluster" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -72,6 +75,7 @@
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -93,14 +97,12 @@ export default {
 				{ key: "phase", label: "Status", sortable: true },
 			],
 			isBusy: false,
+			origin: [],
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
@@ -110,10 +112,11 @@ export default {
 	},
 	methods: {
 		//  Phase 필터링
-		onChangePhase() {
+		onChangePhase(a) {
+			if(a === "All") this.selectedPhase = [];
 			let selectedPhase = this.selectedPhase;
 			this.items = this.origin.filter(el => {
-				return (this.selectedPhase.length === 0) || this.selectedPhase.includes(el.phase);
+				return (selectedPhase.length === 0) || selectedPhase.includes(el.phase.status);
 			});
 			this.totalItems = this.items.length;
 			this.currentPage = 1
@@ -129,7 +132,7 @@ export default {
 								name: el.metadata.name,
 								labels: el.metadata.labels,
 								phase: this.onPhase(el.status.phase),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.origin = this.items;
@@ -143,8 +146,8 @@ export default {
 			let status = { active:0, terminating:0 }
 
 			filteredItems.forEach(el=> {
-				if(el.phase === "Active") status.active++;
-				if(el.phase === "Terminating") status.terminating++;
+				if(el.phase.status === "Active") status.active++;
+				if(el.phase.status === "Terminating") status.terminating++;
 			});
 
 			this.optionsPhase[0].text = status.active >0 ? `Active (${status.active})`: "Active";

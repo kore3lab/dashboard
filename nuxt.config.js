@@ -32,6 +32,7 @@ export default {
   ],
   plugins: [
     { src: "~/plugins/mixin-common-methods", mode: "client" },
+    { src: "~/plugins/mixin-viewpage", mode: "client" },
     { src: "~/plugins/admin-lte", mode: "client" },
   ],
   buildModules: ["@nuxt/typescript-build"],

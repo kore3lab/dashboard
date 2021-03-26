@@ -86,7 +86,7 @@
 								<ul class="hexGrid">
 									<li class="hex" v-for="(nd, key) in nodes" :key="key">
 										<div class="hexIn">
-											<a v-bind:class="{ 'bg-success': (nd.status=='Ready'), 'bg-warning': (nd.status=='NotReady'), 'hexLink':true }" href="#"><h1>{{ key }}</h1><p class="text-truncate">{{ nd.address }}</p></a>
+											<a v-bind:class="{ 'bg-success': (nd.status==='Ready'), 'bg-warning': (nd.status==='NotReady'), 'hexLink':true }" href="#"><h1>{{ key }}</h1><p class="text-truncate">{{ nd.address }}</p></a>
 										</div>
 									</li>
 								</ul>

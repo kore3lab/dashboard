@@ -39,7 +39,10 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('storage.k8s.io','storageclasses')}/${data.item.name}`}">{{ data.value }}</a>
+										<a href="#" @click="viewModel=getViewLink('storage.k8s.io','storageclasses',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -49,8 +52,8 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Storage Class" group="Storage" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -58,6 +61,7 @@
 import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -78,11 +82,9 @@ export default {
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
+
 		}
 	},
 	layout: "default",
@@ -103,7 +105,7 @@ export default {
 								provisioner: el.provisioner,
 								reclaimPolicy: el.reclaimPolicy,
 								onDefault: this.isDefault(el),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);
