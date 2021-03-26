@@ -1,22 +1,24 @@
 <template>
 	<div class="card-body p-2">
-		<div class="row">
+		<div class="row mb-0">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
-					<b-tabs content-class="mt-3" align="center">
-						<b-tab title="CPU" active>
-							<div v-if="isCpu" class="chart">
-								<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" style="min-height: 200px; height: 200px;max-height: 200px;max-width: 100%"></c-linechart>
-							</div>
-							<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-						<b-tab title="Memory">
-							<div v-if="isMemory" class="chart">
-								<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" style="min-height: 200px; height: 200px;max-height: 200px;max-width: 100%"></c-linechart>
-							</div>
-							<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-					</b-tabs>
+					<div class="card-body p-2">
+						<b-tabs content-class="mt-3" >
+							<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
+								<div v-if="isCpu" class="chart">
+									<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100" style="height: 14em;"></c-linechart>
+								</div>
+								<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
+							</b-tab>
+							<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
+								<div v-if="isMemory" class="chart">
+									<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100" style="height: 14em;"></c-linechart>
+								</div>
+								<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
+							</b-tab>
+						</b-tabs>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -51,7 +53,7 @@
 							<dt class="col-sm-2 text-truncate">Pod IP</dt>
 							<dd class="col-sm-10">
 								<ul class="list-unstyled mb-0">
-									<li v-if="podInfo.podIP" v-for="(d, idx) in podInfo.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
+									<li v-for="(d, idx) in podInfo.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2 text-truncate">Priority Class</dt><dd class="col-sm-10">{{ podInfo.priorityClass}}</dd>
@@ -59,11 +61,11 @@
 							<dt v-if="podInfo.conditions" class="col-sm-2 text-truncate">Conditions</dt><dd v-if="podInfo.conditions" class="col-sm-10"><span v-for="(d, idx) in podInfo.conditions" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d }}</span></dd>
 							<dt v-if="podInfo.isNodeSelector" class="col-sm-2 text-truncate">Node Selector</dt><dd v-if="podInfo.isNodeSelector" class="col-sm-10"><span v-for="(d, idx) in podInfo.nodeSelector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d.name }}: {{ d.value }}</span></dd>
 							<dt class="col-sm-2 text-truncate">Tolerations</dt>
-							<dd class="col-sm-10">{{ podInfo.tolerations? podInfo.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent>Show/Hide</a></dd>
+							<dd class="col-sm-10">{{ podInfo.tolerations? podInfo.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
 							<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="podInfo.tolerations"></b-table></b-collapse>
 
 							<dt v-show="podInfo.isAffinity" class="col-sm-2 text-truncate">Affinities</dt>
-							<dd v-show="podInfo.isAffinity" class="col-sm-10">{{ podInfo.affinities? Object.keys(podInfo.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent>Show/Hide</a>
+							<dd v-show="podInfo.isAffinity" class="col-sm-10">{{ podInfo.affinities? Object.keys(podInfo.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
 								<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="podInfo.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
 							</dd>
 							<dt v-if="podInfo.secret" class="col-sm-2 text-truncate">Secrets</dt>
@@ -128,7 +130,9 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Containers</h3></div>
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in containers" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><span class="badge font-weight-light text-sm ml-1" v-bind:class="val.status.badge">{{" "}}</span><span class="card-title mb-2">{{ val.name }}</span></dt>
+							<dt class="col-sm-12">
+
+								<span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
 							<dt v-if="val.status.value" class="col-sm-2 text-truncate">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
 							<dt v-if="val.lastState" class="col-sm-2 text-truncate">Last Status</dt>
 							<dd v-if="val.lastState" class="col-sm-10">
@@ -174,7 +178,7 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">volumes</h3></div>
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in volumes" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p class="mb-1"><i class="nav-icon fas fa-hdd"></i> {{ val.name }}</p></dt>
+							<dt class="col-sm-12"><p class="mb-1"><i class="fas fa-hdd mr-1 "></i> {{ val.name }}</p></dt>
 							<dt class="col-sm-2 text-truncate">Type</dt><dd class="col-sm-10">{{ val.type }}</dd>
 							<dt v-if="val.subName !== ''" class="col-sm-2 text-truncate">{{ val.subName }}</dt><dd v-if="val.subName !== ''" class="col-sm-10">{{ val.subValue }}</dd>
 						</dl>
@@ -235,6 +239,8 @@ export default {
 			isCpu: false,
 			isMemory: false,
 			isInit: false,
+			onTols: false,
+			onAffis: false,
 			chart: {
 				options: {
 					cpu: {
@@ -680,7 +686,7 @@ export default {
 					"style": "text-danger",
 					"ready": rd,
 					"reason": reason,
-					'badge': "badge-danger",
+					'badge': "danger",
 				}
 			} else if(status === "pending" || status === 'waiting') {
 				return {
@@ -688,7 +694,7 @@ export default {
 					"style": "text-warning",
 					"ready": rd,
 					"reason": reason,
-					'badge': "badge-warning",
+					'badge': "warning",
 				}
 			} else if(status === "running" || status === "completed" || status ==="ready") {
 				return {
@@ -696,7 +702,7 @@ export default {
 					"style": "text-success",
 					"ready": rd,
 					"reason": reason,
-					'badge': "badge-success",
+					'badge': "success",
 				}
 			}else {
 				return {
@@ -704,7 +710,7 @@ export default {
 					"style": "text-secondary",
 					"ready": rd,
 					"reason": reason,
-					'badge': "badge-secondary",
+					'badge': "secondary",
 				}
 			}
 		},
@@ -779,6 +785,12 @@ export default {
 					`#failure=${failureThreshold || "0"}`,
 			);
 			return probe;
+		},
+		onTol() {
+			this.onTols = !this.onTols
+		},
+		onAffi() {
+			this.onAffis = !this.onAffis
 		},
 	},
 	beforeDestroy(){
