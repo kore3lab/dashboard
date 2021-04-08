@@ -1,7 +1,8 @@
 #-------------------------------------------
 # STEP 1 : build executable binary
 #-------------------------------------------
-FROM golang:1.15.3-alpine3.12 as builder
+#FROM golang:1.15.3-alpine3.12 as builder
+FROM golang:1.16-alpine as builder
 
 # gcc
 RUN apk add --no-cache build-base
@@ -10,7 +11,10 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags acornsoft-dashboard.backend -o acornsoft-dashboard.backend -v backend.go
+RUN GOOS=linux CGO_ENABLED=0 go build -gcflags "all=-N -l" -tags acornsoft-dashboard.backend -o acornsoft-dashboard.backend -v backend.go
+
+# delve 다운로드(debugger for container)
+RUN CGO_ENABLED=0 go get -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv
 
 #-------------------------------------------
 # STEP 2 : build a image
@@ -27,6 +31,7 @@ RUN rm -f /bin/sh && ln -s /bin/bash /bin/sh
 ENV KUBECTL_VERSION v1.20.2
 
 COPY --from=builder /usr/src/app/acornsoft-dashboard.backend /app/
+COPY --from=builder /go/bin/dlv /usr/bin/
 
 ## start install WebTerminal addon
 RUN apt-get update && \
@@ -51,9 +56,12 @@ ENV SESSION_STORAGE_SIZE=10M
 ENV KUBECTL_INSECURE_SKIP_TLS_VERIFY=true
 ## end install WebTerminal addon
 
+# delve port
+EXPOSE 5555
+
+
 ENV KUBECONFIG  ""
 ENV GIN_MODE=release
 
-ENTRYPOINT [ "/app/acornsoft-dashboard.backend" ]
-
 EXPOSE 3001
+

@@ -140,7 +140,7 @@ $ docker run --rm -d\
     ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.1.2\
     --kubeconfig=/app/.kube/config --db-file=metrics.db
 
-$ docker run --rm -d\
+$ docker run --rm --privileged -d\
     --name backend -p 3001:3001\
     -v ${HOME}/.kube/config:/app/.kube/config\
     ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.1.2\
@@ -205,6 +205,11 @@ $ npm run start:frontend
   * https://github.com/kubernetes/api/blob/master/core/v1/types.go
   * https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/meta.go
   * 리스트 조회: https://github.com/kubernetes/client-go/blob/master/listers/core/v1 
+* Web Terminal 주요 참고 소스
+  * https://github.com/fanux/fist/tree/master/terminal
+  * https://github.com/rancher: 소스 코드는 없는 듯. 
+  * https://github.com/du2016/web-terminal-in-go
+  * https://github.com/lf1029698952/kube-webshell 
 
 ### Run
 
@@ -228,10 +233,25 @@ $ npm run start:backend
 |KUBECONFIG |       |kubeconfig 파일 위치 |
 
 
+* 제약사항
+  * Web Terminal (context/pod/container 터미널접속) 기능은 linux OS의 unshare기능을 이용하기 때문에 backend가 container 환경일때 동작한다
+    아래 링크를 참조하여 container deploy 후 사용가능
+    [Deploy on Docker](#deploy-on-docker)
+
+
+
 ### API
 
 [Acornsoft Dashbard Backend](https://github.com/acornsoftlab/dashboard/blob/master/src/app/backend/README.md) 참조 
 
+
+### Debugging for Docker Container Enviroment
+* Dockerfile Build 
+  * 디버깅용 backend 이미지 빌드 
+    /src/app/backend/docker-compose -f dc-debug.yaml up --build
+  * vscode/goland 등 에디터 원격 디버깅 설정(remote port 5555)
+  * 참고링크 [컨테이너 내부 Go 애플리케이션 디버깅하기][https://mingrammer.com/debugging-containerized-go-app/]
+  
 
 ## Metrics-Scraper
 > Wrapping Kubernetes-sig dashbaord-metrics-scraper
