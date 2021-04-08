@@ -33,7 +33,9 @@
         "@nuxtjs/axios": "^5.12.2",
         "bootstrap-vue": "^2.0.0",
         "d3": "^6.5.0",
-        "nuxt": "^2.14.11"
+        "libapps": "github:yudai/libapps#release-hterm-1.70",
+        "nuxt": "^2.14.11",
+        "xterm": "^3.8.1"
     },
     "devDependencies": {
         "@fortawesome/fontawesome-free": "5.13.0",
@@ -41,6 +43,7 @@
         "@types/d3": "^6.3.0",
         "@types/d3-zoom": "^2.0.0",
         "ace-builds": "^1.4.11",
+        "admin-lte": "3.1.0-rc",
         "babel-cli": "^6.26.0",
         "babel-preset-env": "1.7.0",
         "babel-register": "^6.26.0",
@@ -49,7 +52,6 @@
         "expose-loader": "^0.7.5",
         "gulp": "4.0.2",
         "jquery": "3.4.1",
-        "admin-lte": "3.1.0-rc",
         "q": "^1.5.1",
         "vue-chartjs": "^3.5.0"
     },
