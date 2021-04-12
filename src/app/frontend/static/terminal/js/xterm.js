@@ -88,5 +88,8 @@ export class Xterm {
         window.removeEventListener("resize", this.resizeListener);
         this.term.dispose();
     }
+    focus() {
+        this.term.focus();
+    }
 }
 //# sourceMappingURL=xterm.js.map

@@ -55,6 +55,7 @@ export default {
           .then( resp => {
 						this.token = resp.data.Token;
             this.connWs();
+            this.instterm.focus();
 					})
 					.catch(e => { this.msghttp(e);});
       },
