@@ -6,7 +6,8 @@ FROM node:14.14.0-alpine3.12 as builder
 ADD . /usr/src/app
 
 WORKDIR /usr/src/app
-
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
 RUN npm install --no-optional
 RUN npm run build:frontend
 
@@ -20,6 +21,8 @@ COPY --from=builder /usr/src/app/nuxt.config.js /app/nuxt.config.js
 COPY --from=builder /usr/src/app/package.json /app/package.json
 
 WORKDIR /app
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
 RUN npm install --only=production  --no-optional
 
 ENV HOST 0.0.0.0
