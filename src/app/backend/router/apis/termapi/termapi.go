@@ -104,7 +104,7 @@ func MakeAuthToken(c *gin.Context) {
 	//API요청 파라미터 파싱
 
 	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	//namespace := c.Param("NAMESPACE")
+	namespace := lang.NVL(g.C.Param("NAMESPACE"), "")
 	pod := g.C.Param("POD")
 	container := lang.NVL(g.C.Param("CONTAINER"), "")
 	termtype := ""
@@ -124,6 +124,7 @@ func MakeAuthToken(c *gin.Context) {
 	ttyParameter := cache.TtyParameter{}
 	ttyParameter.Arg = append(ttyParameter.Arg, termtype)
 	ttyParameter.Arg = append(ttyParameter.Arg, kubeConfig)
+	ttyParameter.Arg = append(ttyParameter.Arg, namespace)
 	ttyParameter.Arg = append(ttyParameter.Arg, pod)
 	ttyParameter.Arg = append(ttyParameter.Arg, container)
 	//ttyParameter.Arg = append(ttyParameter.Arg, namespace)

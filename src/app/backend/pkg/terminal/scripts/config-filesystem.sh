@@ -9,11 +9,13 @@ arg1=$1
 arg2=$2
 arg3=$3
 arg4=$4
+arg5=$5
 
 # echo $arg1
 # echo $arg2
 # echo $arg3
 # echo $arg4
+# echo $arg5
 
 #####################################
 # 네임스페이스에 마운트할 정보 구성
@@ -63,12 +65,12 @@ export TMPDIR=/nonexistent
 if [ "${arg1}" != "cluster" ];then
 {
     #컨테이너 정보가 있으면 넘겨준다
-    if [ -n "${arg4}" ] && [ "${arg4}" != "undefined" ];then
-      container="--container ${arg4}"
+    if [ -n "${arg5}" ] && [ "${arg5}" != "undefined" ];then
+      container="--container ${arg5}"
     fi
     
     # exec su -s /bin/bash nobody -c "kubectl exec --stdin --tty ${arg3} ${container} -- /bin/bash" 
-    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty ${arg3} ${container} -- /bin/sh
+    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${arg3} ${arg4} ${container} -- /bin/sh
 }
 else
     exec su -s /bin/bash nobody

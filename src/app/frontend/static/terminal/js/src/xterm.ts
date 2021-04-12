@@ -107,4 +107,7 @@ export class Xterm {
         window.removeEventListener("resize", this.resizeListener);
         this.term.dispose();
     }
+    focus(): void {
+        this.term.focus();
+    }
 }
