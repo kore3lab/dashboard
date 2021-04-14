@@ -32,7 +32,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -40,10 +40,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('','resourcequotas',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
-									</template>
-									<template v-slot:cell(value)="data">
-										<span>{{ data.item.value[0].values[0]}}</span>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
@@ -57,7 +54,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -79,10 +76,6 @@ export default {
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "value", label: "Value", sortable: true },
-				{ key: "cpu", label: "Cpu", sortable: true },
-				{ key: "memory", label: "Memory", sortable: true },
-				{ key: "pods", label: "Pods", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
@@ -99,6 +92,20 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'resourcequotas', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
@@ -109,10 +116,6 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								value: el.spec.scopeSelector.matchExpressions,
-								cpu: this.getCpu(el.status),
-								memory: this.getMemory(el.status),
-								pods: this.getPods(el.status),
 								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
@@ -124,15 +127,6 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getCpu(status) {
-			return status.used.cpu + " / " + status.hard.cpu
-		},
-		getMemory(status) {
-			return status.used.memory + " / " + status.hard.memory
-		},
-		getPods(status) {
-			return status.used.pods + " / " + status.hard.pods
 		},
 	},
 	beforeDestroy(){

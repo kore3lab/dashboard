@@ -11,6 +11,7 @@
 					<li v-if="index!==0"><b-link href="#" @click="onMoveTop(index)"><b-icon icon="chevron-double-up" class="mr-1 "></b-icon>Top</b-link></li>
 					<li v-if="index!==0"><b-link href="#" @click="onMoveUp(index)"><b-icon icon="caret-up-fill" class="mr-1 "></b-icon>Up</b-link></li>
 					<li v-if="index<(contexts().length-1)"><b-link href="#" @click="onMoveDown(index)"><b-icon icon="caret-down-fill" class="mr-1"></b-icon>Down</b-link></li>
+					<li><b-link href="#" @click="onTerminal(option)"><i class="fas fa-terminal mr-1"></i>Terminal</b-link></li>
 				</ul>
 			</b-popover>
 		</div>
@@ -119,6 +120,10 @@ export default {
 			list.splice(index + 1, 0, list.splice(index, 1)[0]);
 			this.contexts(list);
 			localStorage.setItem("contexts", JSON.stringify(list));
+		},
+		onTerminal(option) {
+			let routeData = this.$router.resolve({path: '/terminal', query: {termtype: "cluster",pod: '', namespace: '', cluster: option,}});
+			window.open(routeData.href, "", 'width=500, height=500, toolbar=no, titlebar=no, status=no, location=no, resizable=yes,menubar=no,status=no');
 		},
 	}
 }

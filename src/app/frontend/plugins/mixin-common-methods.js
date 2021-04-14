@@ -1,4 +1,5 @@
 import Vue from "vue";
+import axios from "axios";
 
 Vue.mixin({
   methods: {
@@ -93,37 +94,44 @@ Vue.mixin({
       }
       return {elapsedTime,str};
     },
-    /**
-     * 리소스 메트릭 수집 값을 Formatting 한다.
-     * CPU / milliCPU 또는 CPU의 1/1000 단위로 처리 할 때 "표현"됩니다. 나노 코어 / 나노 CPU는 CPU의 1/1000000000 (10 억분의 1)입니다.
-     * Memory 단위는 이진접두어를 사용 한다.
-     *
-     * @param {string} resource 구분자 cpu/memory
-     * @param {number} metrics 리소스 사용량 합계 값
-     * @param {number} decimals 소수점 아래 자릿수. 기본값은 2 이다
-     * @return {string} 리소스 합산 값의 단위를 변환한다.
-     */
-    getFormatMetrics(resource, metrics, decimals = 2) {
-      if (metrics === 0) return 0;
+    unitsToBytes(value) {
+      const base = 1024;
+      const suffixes = ["K", "M", "G", "T", "P", "E"];
 
-      const k = 1024;
-      const dm = decimals < 0 ? 0 : decimals;
-      const memorySize = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei"];
-      // const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-      const i = Math.floor(Math.log(metrics) / Math.log(k));
-
-      if (resource === "cpu") {
-        if (metrics / 1000000000 > 1)
-          return `${parseFloat((metrics / 1000000000).toFixed(dm))}core`;
-        if (metrics / 1000000 > 1)
-          return `${parseFloat((metrics / 1000000).toFixed(dm))}m`;
-        return `${parseFloat(metrics)}n`;
+      if (!suffixes.some(suffix => value.includes(suffix))) {
+        return parseFloat(value);
       }
 
-      return `${parseFloat((metrics / Math.pow(k, i)).toFixed(dm))}${
-          memorySize[i]
-      }`;
+      const suffix = value.replace(/[0-9]|i|\./g, "");
+      const index = suffixes.indexOf(suffix);
+
+      return parseInt(
+          (parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
+      );
+    },
+    cpuUnitsToNumber(cpu) {
+      const thousand = 1000;
+      const million = thousand * thousand;
+      const shortBillion = thousand * million;
+
+      const cpuNum = parseInt(cpu);
+      if (cpu.includes("k")) return cpuNum * thousand;
+      if (cpu.includes("m")) return cpuNum / thousand;
+      if (cpu.includes("u")) return cpuNum / million;
+      if (cpu.includes("n")) return cpuNum / shortBillion;
+
+      return parseFloat(cpu);
+    },
+    metricUnitsToNumber(value) {
+      const base = 1000;
+      const suffixes = ["k", "m", "g", "t", "q"];
+
+      const suffix = value.toLowerCase().slice(-1);
+      const index = suffixes.indexOf(suffix);
+
+      return parseInt(
+          (parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
+      );
     },
     getTimestampString(timestamp) {
       let dt = Date.parse(timestamp);
@@ -145,10 +153,125 @@ Vue.mixin({
 
       return Math.floor(seconds) + " seconds";
     },
+    getEvents(uid) {
+      let events = [];
+      axios.get(this.getApiUrl('events.k8s.io','events',''))
+          .then( resp => {
+            for(let i=0; i<resp.data.items.length; i++) {
+              if(resp.data.items[i].regarding.uid === uid) {
+                events.unshift({
+                  name: resp.data.items[i].note || "-",
+                  source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
+                  count: resp.data.items[i].deprecatedCount || "-",
+                  subObject: resp.data.items[i].regarding.fieldPath || "-",
+                  lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
+                  type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
+                })
+              }
+            }
+          })
+      return events
+    },
+    toStatus(deletionTimestamp, status) {
+      // 삭제
+      if (deletionTimestamp) {
+        return {
+          "value": "Terminating",
+          "style": "text-secondary",
+        }
+      }
+
+      // Pending
+      if (!status.containerStatuses) {
+        if(status.phase === "Failed") {
+          return {
+            "value": status.phase,
+            "style": "text-danger",
+          }
+        } else {
+          return {
+            "value": status.phase,
+            "style": "text-warning",
+          }
+        }
+      }
+
+      // [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
+      if(status.containerStatuses.filter(el => el.ready).length === status.containerStatuses.length) {
+        const state = Object.keys(status.containerStatuses.find(el => el.ready).state)[0]
+        return {
+          "value": state.charAt(0).toUpperCase() + state.slice(1),
+          "style": "text-success",
+        }
+      }
+      else {
+        const state = status.containerStatuses.find(el => !el.ready).state
+        let style = "text-secondary"
+        if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
+        if ( state[Object.keys(state)].reason === "Error") style = "text-danger"
+        return {
+          "value": state[Object.keys(state)].reason,
+          "style": style,
+        }
+      }
+    },
+    toReady(status, spec) {
+      let containersReady = 0
+      let containersLength = 0
+      if ( spec.containers ) containersLength = spec.containers.length
+      if ( status.containerStatuses ) containersReady = status.containerStatuses.filter(el => el.ready).length
+      return `${containersReady}/${containersLength}`
+    },
+    sorted(val) {
+      if(val) {
+        let temp = [];
+        for (let i = 0; i < val.length; i++) {
+          for (let j = 0; j < val.length; j++) {
+            if (val[i].idx < val[j].idx) {
+              temp = val[i]
+              val[i] = val[j]
+              val[j] = temp
+            }
+          }
+        }
+      }
+      return val
+    },
+    stringifyLabels(label) {
+      if(!label) return [];
+
+      return Object.entries(label).map(([name, value]) => `${name}=${value}`);
+    },
+    getController(ref) {
+      if (!ref) return
+      let or = ref[0] ? ref[0] : ref
+      let len = or.kind.length
+      let k;
+      if(or.kind[len-1] === 's') k = (or.kind).toLowerCase() + 'es'
+      else k = (or.kind).toLowerCase() + 's'
+      let g = (or.apiVersion).split('/')
+      if (g.length === 2) {
+        return {
+          g: g[0],
+          k: k
+        }
+      } else {
+        return {
+          g: '',
+          k: k
+        }
+      }
+    },
     getApiUrl(group, rscName, namespace, name) {
+      if(!namespace) namespace = ''
       let resource = this.resources()[group][rscName];
       if (resource) {
-        let url = `${this.backendUrl()}/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.namespaced ? "namespaces/" + namespace + "/" : ""}${resource.name}`;
+        let url
+        if(namespace) {
+          url = `${this.backendUrl()}/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.namespaced ? "namespaces/" + namespace + "/" : ""}${resource.name}`;
+        }else {
+          url = `${this.backendUrl()}/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.name}`;
+        }
         return name ? `${url}/${name}` : url;
       } else {
         return "#";

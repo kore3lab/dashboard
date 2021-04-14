@@ -45,7 +45,7 @@
 					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-hdd"></i><p>Storage</p></a>
 						<ul class="nav nav-treeview">
-							<li class="nav-item small"><nuxt-link to="/storage/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Valumn Claims</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/storage/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Volume Claims</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/storage/pv.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Volumes</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/storage/storageclass.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>troage Classes</p></nuxt-link></li>
 						</ul>

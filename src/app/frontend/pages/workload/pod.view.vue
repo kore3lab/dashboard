@@ -23,6 +23,7 @@
 			</div>
 		</div>
 
+
 		<div class="row">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
@@ -53,25 +54,25 @@
 							<dt class="col-sm-2 text-truncate">Pod IP</dt>
 							<dd class="col-sm-10">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(d, idx) in podInfo.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
+									<li v-for="(d, idx) in info.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
 								</ul>
 							</dd>
-							<dt class="col-sm-2 text-truncate">Priority Class</dt><dd class="col-sm-10">{{ podInfo.priorityClass}}</dd>
-							<dt class="col-sm-2 text-truncate">QoS Class</dt><dd class="col-sm-10">{{ podInfo.qosClass }}</dd>
-							<dt v-if="podInfo.conditions" class="col-sm-2 text-truncate">Conditions</dt><dd v-if="podInfo.conditions" class="col-sm-10"><span v-for="(d, idx) in podInfo.conditions" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d }}</span></dd>
-							<dt v-if="podInfo.isNodeSelector" class="col-sm-2 text-truncate">Node Selector</dt><dd v-if="podInfo.isNodeSelector" class="col-sm-10"><span v-for="(d, idx) in podInfo.nodeSelector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d.name }}: {{ d.value }}</span></dd>
+							<dt class="col-sm-2 text-truncate">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
+							<dt class="col-sm-2 text-truncate">QoS Class</dt><dd class="col-sm-10">{{ info.qosClass }}</dd>
+							<dt v-if="info.conditions" class="col-sm-2 text-truncate">Conditions</dt><dd v-if="info.conditions" class="col-sm-10"><span v-for="(d, idx) in info.conditions" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d }}</span></dd>
+							<dt v-if="info.isNodeSelector" class="col-sm-2 text-truncate">Node Selector</dt><dd v-if="info.isNodeSelector" class="col-sm-10"><span v-for="(d, idx) in info.nodeSelector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d.name }}: {{ d.value }}</span></dd>
 							<dt class="col-sm-2 text-truncate">Tolerations</dt>
-							<dd class="col-sm-10">{{ podInfo.tolerations? podInfo.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
-							<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="podInfo.tolerations"></b-table></b-collapse>
+							<dd class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
+							<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="info.tolerations"></b-table></b-collapse>
 
-							<dt v-show="podInfo.isAffinity" class="col-sm-2 text-truncate">Affinities</dt>
-							<dd v-show="podInfo.isAffinity" class="col-sm-10">{{ podInfo.affinities? Object.keys(podInfo.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
-								<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="podInfo.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
+							<dt v-show="info.isAffinity" class="col-sm-2 text-truncate">Affinities</dt>
+							<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
+								<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
 							</dd>
-							<dt v-if="podInfo.secret" class="col-sm-2 text-truncate">Secrets</dt>
-							<dd v-if="podInfo.secret" class="col-sm-10" >
+							<dt v-if="info.secret" class="col-sm-2 text-truncate">Secrets</dt>
+							<dd v-if="info.secret" class="col-sm-10" >
 								<ul class="list-unstyled">
-									<li v-for="(d, idx) in podInfo.secret" v-bind:key="idx" >
+									<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
 										<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d))">{{ d }}</a>
 									</li>
 								</ul>
@@ -88,7 +89,7 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Init Containers</h3></div>
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in initContainers" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><span class="badge font-weight-light text-sm ml-1" v-bind:class="val.status.badge">{{" "}}</span><span class="card-title mb-2">{{ val.name }}</span></dt>
+							<dt class="col-sm-12"><span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
 							<dt v-if="val.status.value" class="col-sm-2 text-truncate">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
 							<dt v-if="val.lastState" class="col-sm-2 text-truncate">Last Status</dt>
 							<dd v-if="val.lastState" class="col-sm-10">
@@ -130,9 +131,7 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Containers</h3></div>
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in containers" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12">
-
-								<span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
+							<dt class="col-sm-12"><span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
 							<dt v-if="val.status.value" class="col-sm-2 text-truncate">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
 							<dt v-if="val.lastState" class="col-sm-2 text-truncate">Last Status</dt>
 							<dd v-if="val.lastState" class="col-sm-10">
@@ -157,7 +156,7 @@
 							<dt class="col-sm-2 text-truncate">Mounts</dt>
 							<dd class="col-sm-10">
 								<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
-									<li ><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ m.path }}</span></li>
+									<li><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ m.path }}</span></li>
 									<li>from {{ m.name }}({{m.ro}})</li>
 								</ul>
 							</dd>
@@ -180,7 +179,7 @@
 						<dl v-for="(val, idx) in volumes" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
 							<dt class="col-sm-12"><p class="mb-1"><i class="fas fa-hdd mr-1 "></i> {{ val.name }}</p></dt>
 							<dt class="col-sm-2 text-truncate">Type</dt><dd class="col-sm-10">{{ val.type }}</dd>
-							<dt v-if="val.subName !== ''" class="col-sm-2 text-truncate">{{ val.subName }}</dt><dd v-if="val.subName !== ''" class="col-sm-10">{{ val.subValue }}</dd>
+							<dt v-if="val.subName !== ''" class="col-sm-2 text-truncate">{{ val.subName }}</dt><dd v-if="val.subName !== ''" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', val.type.toLowerCase()+'s', metadata.namespace, val.subValue))">{{ val.subValue }}</a></dd>
 						</dl>
 					</div>
 				</div>
@@ -220,8 +219,22 @@ export default {
 			mounted () {
 				if(this.chartData) {
 					this.renderChart(this.chartData, this.options)
+					this.update()
 				}
-			}
+			},
+			watch: {
+				chartData: function () {
+					this.update();
+				},
+				options: function() {
+					this.update();
+				},
+			},
+			methods: {
+				update: function() {
+					this.renderChart(this.chartData, this.options);
+				},
+			},
 		}
 	},
 	data() {
@@ -235,7 +248,7 @@ export default {
 			status: [],
 			metrics: [],
 			controller: [],
-			podInfo: [],
+			info: [],
 			isCpu: false,
 			isMemory: false,
 			isInit: false,
@@ -264,12 +277,13 @@ export default {
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
-			if(!data) return
+			if (!data) return
 			this.metadata = data.metadata;
 			this.onCpu(data.spec)
 			this.onMemory(data.spec)
 			this.onSync(data)
 		});
+		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		onSync(data) {
@@ -278,8 +292,8 @@ export default {
 			this.volumes = this.getVolumes(data.spec.volumes) || {};
 			this.containers = this.getContainers(data) || {};
 			this.status = this.toStatus(data.metadata.deletionTimestamp, data.status);
-			this.controller = this.getController(data.metadata);
-			this.podInfo = this.getPodInfo(data);
+			this.controller = this.getController(data.metadata.ownerReferences);
+			this.info = this.getInfo(data);
 			this.initContainers = this.getInitContainers(data);
 		},
 		onCpu(spec) {
@@ -336,7 +350,7 @@ export default {
 								if (d.value>top) top = d.value;
 								let dt = new Date(d.timestamp);
 								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(Math.round(d.value/(1024)));
+								da.push(Math.round(d.value/1024));
 							});
 							let topData = [];
 							if (spec.containers) {
@@ -362,7 +376,7 @@ export default {
 							if (sum) top = sum
 							else top = top*1.2
 							if( top === 0) top = 1;
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = (top/1024);
+							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top/1024;
 							this.$data.chart.data.memory = {
 								labels: labels,
 								datasets: [
@@ -374,13 +388,7 @@ export default {
 						}
 					})
 		},
-		isError(e) {
-			this.errorcheck = true;
-			this.raw = { metadata: {}, spec: {} };
-			this.title = ""
-			this.errorMessage = e.response? e.response.data.message: e;
-		},
-		getPodInfo(d) {
+		getInfo(d) {
 			let podIP = [];
 			let conditions = [];
 			let tolerations = [];
@@ -409,7 +417,7 @@ export default {
 					})
 				})
 			}
-			if(d.spec.affinity) {
+			if(d.spec.affinity && Object.keys(d.spec.affinity).length !== 0) {
 				affinity = d.spec.affinity;
 				isAffinity = true;
 			}
@@ -483,25 +491,6 @@ export default {
 				return statusCon
 			} else return false
 		},
-		getEvents(uid) {
-			let events = [];
-			axios.get(this.getApiUrl('events.k8s.io','events',''))
-					.then( resp => {
-						for(let i=0; i<resp.data.items.length; i++) {
-							if(resp.data.items[i].regarding.uid === uid) {
-								events.unshift({
-									name: resp.data.items[i].note || "-",
-									source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
-									count: resp.data.items[i].deprecatedCount || "-",
-									subObject: resp.data.items[i].regarding.fieldPath || "-",
-									lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
-									type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
-								})
-							}
-						}
-					})
-			return events
-		},
 		getVolumes(vol) {
 			let vols = []
 			if(vol) {
@@ -570,6 +559,7 @@ export default {
 				for (let i = 0; i < specCon.length; i++) {
 					Object.assign(specCons[i], statusCons[i])
 				}
+				this.$nuxt.$emit('Containers',specCons)
 				return specCons
 			} else if(statusCon) {
 				return statusCon
@@ -630,49 +620,6 @@ export default {
 			}
 			return false
 		},
-		toStatus(deletionTimestamp, status) {
-			// 삭제
-			if (deletionTimestamp) {
-				return {
-					"value": "Terminating",
-					"style": "text-secondary",
-				}
-			}
-
-			// Pending
-			if (!status.containerStatuses) {
-				if(status.phase === "Failed") {
-					return {
-						"value": status.phase,
-						"style": "text-danger",
-					}
-				} else {
-					return {
-						"value": status.phase,
-						"style": "text-warning",
-					}
-				}
-			}
-
-			// [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
-			if(status.containerStatuses.filter(el => el.ready).length === status.containerStatuses.length) {
-				const state = Object.keys(status.containerStatuses.find(el => el.ready).state)[0]
-				return {
-					"value": state.charAt(0).toUpperCase() + state.slice(1),
-					"style": "text-success",
-				}
-			}
-			else {
-				const state = status.containerStatuses.find(el => !el.ready).state
-				let style = "text-secondary"
-				if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
-				if ( state[Object.keys(state)].reason === "Error") style = "text-danger"
-				return {
-					"value": state[Object.keys(state)].reason,
-					"style": style,
-				}
-			}
-		},
 		checkStatus(status,el) {
 			status = status[0]
 			let reason = this.checkReason(el.state)
@@ -726,28 +673,9 @@ export default {
 				return {
 					Status: Object.keys(s)[0],
 					Reason: s[Object.keys(s)].reason,
-					ErrorCode: s[Object.keys(s)].exitCode,
+					ExitCode: s[Object.keys(s)].exitCode,
 					StartedAt: s[Object.keys(s)].startedAt,
 					FinishedAt: s[Object.keys(s)].finishedAt,
-				}
-			}
-			return false
-		},
-		getController(meta) {
-			if (meta.ownerReferences) {
-				let or = meta.ownerReferences[0]
-				let k = (or.kind).toLowerCase() + 's'
-				let g = (or.apiVersion).split('/')
-				if (g.length === 2) {
-					return {
-						g: g[0],
-						k: k
-					}
-				} else {
-					return {
-						g: '',
-						k: k
-					}
 				}
 			}
 			return false

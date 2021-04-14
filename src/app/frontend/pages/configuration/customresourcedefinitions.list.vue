@@ -28,7 +28,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -36,7 +36,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('apiextensions.k8s.io','customresourcedefinitions',data.item.namespace, data.item.name.origin); isShowSidebar=true;">{{ data.value.name }}</a>
+										{{ data.value.name }}
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -55,7 +55,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -97,6 +97,20 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('apiextensions.k8s.io', 'customresourcedefinitions', items[0].namespace, items[0].name.origin)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		onChangeGroup() {
 			let selectedGroup = this.selectedGroup;
 			this.items = this.origin.filter(el => {
