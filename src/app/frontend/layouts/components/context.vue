@@ -5,13 +5,12 @@
 				<b-button v-bind:id="'btn_aside_cluster_' + option" @click="onContextSelected(option)" v-bind:class="{active: option===currentContext()}" :value="option" class="w-100 text-uppercase">{{ option.substring(0,1) }}</b-button>
 			</b-overlay>
 			<p class="text-center text-white text-truncate">{{option}}</p>
-			<b-popover v-bind:target="'btn_aside_cluster_' + option" v-bind:title="option" triggers="hover" boundary="window" boundary-padding="0">
-				<ul class="list-unstyled m-0">
+			<b-popover v-bind:target="'btn_aside_cluster_' + option" :title="option" triggers="hover" boundary="window" boundary-padding="0">
+				<ul class="list-unstyled m-0 p-0">
 					<li v-if="option!==currentContext()"><b-link href="#" @click="onContextDelete(option, index)"><b-icon icon="x-circle" class="mr-1 text-danger"></b-icon>Remove</b-link></li>
 					<li v-if="index!==0"><b-link href="#" @click="onMoveTop(index)"><b-icon icon="chevron-double-up" class="mr-1 "></b-icon>Top</b-link></li>
 					<li v-if="index!==0"><b-link href="#" @click="onMoveUp(index)"><b-icon icon="caret-up-fill" class="mr-1 "></b-icon>Up</b-link></li>
 					<li v-if="index<(contexts().length-1)"><b-link href="#" @click="onMoveDown(index)"><b-icon icon="caret-down-fill" class="mr-1"></b-icon>Down</b-link></li>
-					<li><b-link href="#" @click="onTerminal(option)"><i class="fas fa-terminal mr-1"></i>Terminal</b-link></li>
 				</ul>
 			</b-popover>
 		</div>
@@ -120,11 +119,7 @@ export default {
 			list.splice(index + 1, 0, list.splice(index, 1)[0]);
 			this.contexts(list);
 			localStorage.setItem("contexts", JSON.stringify(list));
-		},
-		onTerminal(option) {
-			let routeData = this.$router.resolve({path: '/terminal', query: {termtype: "cluster",pod: '', namespace: '', cluster: option,}});
-			window.open(routeData.href, "", 'width=500, height=500, toolbar=no, titlebar=no, status=no, location=no, resizable=yes,menubar=no,status=no');
-		},
+		}
 	}
 }
 </script>

@@ -1,64 +1,64 @@
 {
-    "name": "acornsoft-dashboard",
-    "version": "0.1.1",
-    "description": "acornsoft kubernetes dashboard",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/acornsoftlab/dashboard.git"
-    },
-    "license": "UNLICENSED",
-    "scripts": {
-        "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:metrics-scraper\"",
-        "start:frontend": "nuxt",
-        "start:backend": "cd src/app/backend; gulp serve",
-        "start:graph": "cd src/app/graph; npm run start",
-        "start:metrics-scraper": "cd src/app/metrics-scraper; go run server.go",
-        "start:graph:backend": "concurrently \"npm run start:backend\" \"npm run start:graph\"",
-        "build:frontend": "nuxt build",
-        "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/acorn-graph/",
-        "docker:build:frontend": "./scripts/docker-build.sh frontend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build:backend": "./scripts/docker-build.sh backend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build:metrics-scraper": "./scripts/docker-build.sh metrics-scraper build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:push:frontend": "./scripts/docker-build.sh frontend push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:push:backend": "./scripts/docker-build.sh backend push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:push:metrics-scraper": "./scripts/docker-build.sh metrics-scraper push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build:push:frontend": "./scripts/docker-build.sh frontend build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build:push:backend": "./scripts/docker-build.sh backend build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build:push:metrics-scraper": "./scripts/docker-build.sh metrics-scraper build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
-        "docker:build": "concurrently \"npm run docker:build:frontend\" \"npm run docker:build:backend\" \"npm run docker:build:metrics-scraper\"",
-        "docker:build:push": "concurrently \"npm run docker:build:push:frontend\" \"npm run docker:build:push:backend\" \"npm run docker:build:push:metrics-scraper\"",
-        "run": "nuxt start"
-    },
-    "dependencies": {
-        "@nuxtjs/axios": "^5.12.2",
-        "bootstrap-vue": "^2.0.0",
-        "d3": "^6.5.0",
-        "js-yaml": "^3.14.1",
-        "libapps": "github:yudai/libapps#release-hterm-1.70",
-        "nuxt": "^2.14.11",
-        "v-click-outside": "^3.1.2",
-        "xterm": "^3.8.1"
-    },
-    "devDependencies": {
-        "@fortawesome/fontawesome-free": "5.13.0",
-        "@nuxt/typescript-build": "^0.6.0",
-        "@types/d3": "^6.3.0",
-        "@types/d3-zoom": "^2.0.0",
-        "ace-builds": "^1.4.11",
-        "admin-lte": "3.1.0-rc",
-        "babel-cli": "^6.26.0",
-        "babel-preset-env": "1.7.0",
-        "babel-register": "^6.26.0",
-        "chart.js": "^2.9.3",
-        "concurrently": "5.1.0",
-        "expose-loader": "^0.7.5",
-        "gulp": "4.0.2",
-        "jquery": "3.4.1",
-        "q": "^1.5.1",
-        "vue-chartjs": "^3.5.0"
-    },
-    "engines": {
-        "node": ">=10.13.0",
-        "npm": ">=6.0.0"
-    }
+  "name": "acornsoft-dashboard",
+  "version": "0.3.1",
+  "description": "acornsoft kubernetes dashboard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acornsoftlab/dashboard.git"
+  },
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:metrics-scraper\"",
+    "start:frontend": "nuxt",
+    "start:backend": "cd src/app/backend; gulp serve",
+    "start:graph": "cd src/app/graph; npm run start",
+    "start:metrics-scraper": "cd src/app/metrics-scraper; go run server.go",
+    "start:graph:backend": "concurrently \"npm run start:backend\" \"npm run start:graph\"",
+    "build:frontend": "nuxt build",
+    "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/acorn-graph/",
+    "docker:build:frontend": "./scripts/docker-build.sh frontend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build:backend": "./scripts/docker-build.sh backend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build:metrics-scraper": "./scripts/docker-build.sh metrics-scraper build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:push:frontend": "./scripts/docker-build.sh frontend push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:push:backend": "./scripts/docker-build.sh backend push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:push:metrics-scraper": "./scripts/docker-build.sh metrics-scraper push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build:push:frontend": "./scripts/docker-build.sh frontend build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build:push:backend": "./scripts/docker-build.sh backend build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build:push:metrics-scraper": "./scripts/docker-build.sh metrics-scraper build:push $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
+    "docker:build": "concurrently \"npm run docker:build:frontend\" \"npm run docker:build:backend\" \"npm run docker:build:metrics-scraper\"",
+    "docker:build:push": "concurrently \"npm run docker:build:push:frontend\" \"npm run docker:build:push:backend\" \"npm run docker:build:push:metrics-scraper\"",
+    "run": "nuxt start"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.12.2",
+    "bootstrap-vue": "^2.0.0",
+    "d3": "^6.5.0",
+    "js-yaml": "^3.14.1",
+    "libapps": "github:yudai/libapps#release-hterm-1.70",
+    "nuxt": "^2.14.11",
+    "v-click-outside": "^3.1.2",
+    "xterm": "^3.8.1"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "5.13.0",
+    "@nuxt/typescript-build": "^0.6.0",
+    "@types/d3": "^6.3.0",
+    "@types/d3-zoom": "^2.0.0",
+    "ace-builds": "^1.4.11",
+    "admin-lte": "3.1.0-rc",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "1.7.0",
+    "babel-register": "^6.26.0",
+    "chart.js": "^2.9.3",
+    "concurrently": "5.1.0",
+    "expose-loader": "^0.7.5",
+    "gulp": "4.0.2",
+    "jquery": "3.4.1",
+    "q": "^1.5.1",
+    "vue-chartjs": "^3.5.0"
+  },
+  "engines": {
+    "node": ">=10.13.0",
+    "npm": ">=6.0.0"
+  }
 }

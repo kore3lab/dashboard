@@ -27,8 +27,8 @@
 				<div class="row mb-2">
 					<div class="col-10">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
-							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
-							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="query_All">All</button>
+							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onChangeStatus" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
 					<div class="col-2 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>

@@ -13,6 +13,12 @@
 #aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
 #aside-contexts p { font-size:x-small; margin: 0;}
 
+/* custom -vue-boostrap  */
+.table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}
+.table.b-table tr:focus { outline: none; }
+
+/* custom -boostrap  */
+label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 @media (min-width: 992px) {
 	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-header {
 		margin-left: 17rem;

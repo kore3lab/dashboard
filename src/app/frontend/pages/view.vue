@@ -224,8 +224,7 @@ export default {
 			if(val) {
 				routeData = this.$router.resolve({path: '/terminal', query: {termtype: "container",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),container:val.name}});
 			} else routeData = this.$router.resolve({path: '/terminal', query: {termtype: "pod",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),}});
-
-			window.open(routeData.href, "", 'width=500, height=400');
+			window.open("about:blank").location.href = routeData.href
 		},
 		navigate(loc) {
 			this.value.name = loc.name;
