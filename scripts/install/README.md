@@ -10,15 +10,15 @@ $ kubectl create ns acornsoft-dashboard
 * Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
 
 ```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config -n acornsoft-dashboard
+$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=config=${HOME}/.kube/config -n acornsoft-dashboard
 ```
 
 * If exists a configmap then Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
 ```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
+$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
 ```
 
-* metrics-server 가 설치되어 있지 않다면 metrics-server 설치
+* metrics-server 가 설치되어 있지 않다면 metrics-server 설치 (args --kubelet-insecure-tls 추가)
 ```
 $ kubectl get po  -n kube-system | grep metrics-server
 

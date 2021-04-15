@@ -27,7 +27,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -35,7 +35,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('','nodes',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(ready)="data">
 										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" >{{ value.value }}  </span>
@@ -60,7 +60,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -103,6 +103,20 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'nodes', '', items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
@@ -110,7 +124,6 @@ export default {
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
-							const addresses = el.status.addresses
 							this.items.push({
 								name: el.metadata.name,
 								ready: this.getConditions(el),
@@ -161,7 +174,7 @@ export default {
 
 			return roleLabels.join(", ");
 		},
-		// node cpu,memory,disk 사용량 먼저 읽은 후 전체리스트 조회
+		// node cpu,memory 사용량 먼저 읽은 후 전체리스트 조회
 		onUsage() {
 			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/dashboard`)
 					.then((resp) => {

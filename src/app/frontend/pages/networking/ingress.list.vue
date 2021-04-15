@@ -32,7 +32,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" @row-selected="onRowSelected" class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -40,16 +40,16 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('networking.k8s.io','ingresses',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(loadBalancers)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, idx) in data.item.loadBalancers" v-bind:key="idx">{{ value[0].ip }}</li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }} </li>
 										</ul>
 									</template>
 									<template v-slot:cell(rules)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.rules" v-bind:key="value">{{ value }}</li>
+											<li v-for="(value, idx) in data.item.rules" v-bind:key="idx"><b-link @click="onLink(value.val)">{{ value.val }}</b-link> ⇢ {{ value.target }}</li>
 										</ul>
 									</template>
 									<template v-slot:cell(endpoints)="data">
@@ -69,7 +69,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -108,9 +108,24 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
-	mounted() {
-	},
 	methods: {
+		onLink(val) {
+			window.open(val,'')
+		},
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('networking.k8s.io', 'ingresses', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
@@ -121,8 +136,8 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								loadBalancers:el.status.loadBalancer ,
-								rules: this.getRules(el.spec.rules),
+								loadBalancers: this.getLoadBalancers(el.status.loadBalancer),
+								rules: this.getRules(el.spec),
 								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 							});
 						});
@@ -135,23 +150,44 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getRules(p) {
-			let list = [];
-			for (let i = 0; i<p.length;i++) {
-				for (let j = 0; j < p[i].http.paths.length; j++) {
-					if (p[i].host !== undefined) {
-						list.push(`http://${p[i].host}${p[i].http.paths[j].path} ⇢ ${p[i].http.paths[j].backend["serviceName"]}:${p[i].http.paths[j].backend["servicePort"]}`)
-					} else {
-						list.push(`http://*${p[i].http.paths[j].path} ⇢ ${p[i].http.paths[j].backend["serviceName"]}:${p[i].http.paths[j].backend["servicePort"]}`);
-					}
-				}
+		getRules(data) {
+			let rules = data.rules
+			let tls = data.tls
+			if(!rules) return [];
+
+			let protocol = 'http';
+			const routes = [];
+
+			if (tls && tls.length > 0) {
+				protocol += "s";
 			}
-			return list;
+			rules.map(rule => {
+				const host = rule.host ? rule.host : "*";
+
+				if (rule.http && rule.http.paths) {
+					rule.http.paths.forEach(path => {
+						const { serviceName, servicePort } = this.getBackendServiceNamePort(path.backend);
+
+						routes.push({
+								val: `${protocol}://${host}${path.path || "/"}`,
+								target: `${serviceName}:${servicePort}`
+						})
+					});
+				}
+			});
+			return routes;
 		},
-		onRowSelected(items) {
-			this.selected = items
-			if (this.selected.length !== 0) {
-				this.getEvent(this.selected[0].uid)
+		getBackendServiceNamePort(backend) {
+			const serviceName = "service" in backend ? backend.service.name : backend.serviceName;
+			const servicePort = "service" in backend ? backend.service.port.number ?? backend.service.port.name : backend.servicePort;
+
+			return { serviceName, servicePort };
+		},
+		getLoadBalancers(lb) {
+			if (lb) {
+				return (lb.ingress ?? []).map(address => (
+						address.hostname || address.ip
+				));
 			}
 		},
 	},

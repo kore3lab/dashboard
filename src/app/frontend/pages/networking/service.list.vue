@@ -32,7 +32,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -40,7 +40,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('','services',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(internalEndpoints)="data">
 										<ul class="list-unstyled mb-0">
@@ -54,7 +54,7 @@
 									</template>
 									<template v-slot:cell(selector)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.selector" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm">{{ name }}={{ value }}</span></li>
+											<li v-for="(value, name) in data.item.selector" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(status)="data">
@@ -74,7 +74,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -121,6 +121,20 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'services', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;

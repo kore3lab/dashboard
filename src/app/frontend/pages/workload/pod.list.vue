@@ -28,7 +28,7 @@
 					<div class="col-10">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
 							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
-							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
+							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
 					<div class="col-2 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
@@ -38,7 +38,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -46,7 +46,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="viewModel=getViewLink('','pods',data.item.namespace, data.item.name); isShowSidebar=true;">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(status)="data">
 										<div class="list-unstyled mb-0" v-if="data.item.status.value">
@@ -79,7 +79,7 @@
 			</div>
 		</section>
 		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
@@ -140,6 +140,20 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'pods', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		//  status 필터링
 		onChangeStatus() {
 			let selectedStatus = this.selectedStatus;
@@ -192,21 +206,26 @@ export default {
 			let group
 			let gr = ""
 			if ( el.metadata.ownerReferences ) {
-				version = el.metadata.ownerReferences[0].apiVersion.split('/')
+				let or = el.metadata.ownerReferences[0]
+				version = or.apiVersion.split('/')
 				if (version.length>1) {
 					group = version[0]
 				}
-				if (el.metadata.ownerReferences[0].kind === "Node") {
+				if (or.kind === "Node") {
 					gr = "Cluster"
 				} else {
 					gr = "Workload"
 				}
+				let rs;
+				let len = or.kind.length
+				if(or.kind[len-1] === 's') rs = (or.kind).toLowerCase() + 'es'
+				else rs = (or.kind).toLowerCase() + 's'
 				return {
-					"name" : el.metadata.ownerReferences[0].name,
+					"name" : or.name,
 					"group" : group ||"",
-					"kind" : el.metadata.ownerReferences[0].kind,
-					"rs" : (el.metadata.ownerReferences[0].kind).toLowerCase()+'s',
-					"spaceKind" : this.onKind(el.metadata.ownerReferences[0].kind),
+					"kind" : or.kind,
+					"rs" : rs,
+					"spaceKind" : this.onKind(or.kind),
 					"gr" : gr,
 				}
 			} else {
@@ -227,14 +246,6 @@ export default {
 			} else {
 				return kind
 			}
-		},
-		// check Ready pod
-		toReady(status, spec) {
-			let containersReady = 0
-			let containersLength = 0
-			if ( spec.containers ) containersLength = spec.containers.length
-			if ( status.containerStatuses ) containersReady = status.containerStatuses.filter(el => el.ready).length
-			return `${containersReady}/${containersLength}`
 		},
 		// check pod's containers
 		toContainers(status) {
@@ -262,50 +273,6 @@ export default {
 			return {
 				"initContainerStatuses": initContainerStatuses,
 				"containerStatuses": containerStatuses,
-			}
-		},
-		// pod status check
-		toStatus(deletionTimestamp, status) {
-			// 삭제
-			if (deletionTimestamp) {
-				return {
-					"value": "Terminating",
-					"style": "text-secondary",
-				}
-			}
-
-			// Pending
-			if (!status.containerStatuses) {
-				if(status.phase === "Failed") {
-					return {
-						"value": status.phase,
-						"style": "text-danger",
-					}
-				} else {
-					return {
-						"value": status.phase,
-						"style": "text-warning",
-					}
-				}
-			}
-
-			// [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
-			if(status.containerStatuses.filter(el => el.ready).length === status.containerStatuses.length) {
-				const state = Object.keys(status.containerStatuses.find(el => el.ready).state)[0]
-				return {
-					"value": state.charAt(0).toUpperCase() + state.slice(1),
-					"style": "text-success",
-				}
-			}
-			else {
-				const state = status.containerStatuses.find(el => !el.ready).state
-				let style = "text-secondary"
-				if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
-				if ( state[Object.keys(state)].reason === "Error") style = "text-danger"
-				return {
-					"value": state[Object.keys(state)].reason,
-					"style": style,
-				}
 			}
 		},
 		// load pod's Metrics
