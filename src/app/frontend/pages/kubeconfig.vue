@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper overflow-hidden">
-		<div class="row"  style="padding-top:10%">
+		<div class="row pt-5">
 			<div class="col-md-3"></div>
 			<div class="col-md-6 m-3">
 				<div class="text-right"><a href="#" @click="$router.back(-1)"><b-icon icon="x" class="h2 text-right border" variant="secondary"></b-icon></a></div>

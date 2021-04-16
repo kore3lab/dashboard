@@ -7,13 +7,13 @@
 						<b-tabs content-class="mt-3" >
 							<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
 								<div v-if="isCpu" class="chart">
-									<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100" style="height: 14em;"></c-linechart>
+									<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
 								</div>
 								<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
 							</b-tab>
 							<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
 								<div v-if="isMemory" class="chart">
-									<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100" style="height: 14em;"></c-linechart>
+									<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
 								</div>
 								<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
 							</b-tab>

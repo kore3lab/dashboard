@@ -2,7 +2,7 @@
 	<section class="content border-primary border-left min-vh-100" v-bind:class="{ 'min-vh-100' : errorcheck}">
 		<div class="card card-primary m-0 layer" v-bind:class="{ 'min-vh-100' : errorcheck}">
 			<!-- card-header -->
-			<div class="card-header pt-2 pb-2 sticky-top" style="position:sticky">
+			<div class="card-header pt-2 pb-2 position-sticky fixed-top">
 				<h3 class="card-title text-truncate">{{ title }} / {{ name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
@@ -10,7 +10,7 @@
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
-						<button id="terminal" type="button" class="btn btn-tool" v-show="isTerminal"  @click="openTerminal()"><i class="fas fa-terminal"></i></button>
+						<button id="terminal" class="btn btn-tool" v-show="isTerminal"  @click="openTerminal()"><i class="fas fa-terminal"></i></button>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
 					</span>
 					<button type="button" class="btn btn-tool" @click="$emit('close')"><i class="fas fa-times"></i></button>
@@ -24,9 +24,7 @@
 				</ul>
 			</b-popover>
 			<!-- error message-->
-			<div class="card-body" v-show="errorcheck" style="padding-top: 50%">
-				<div class="col-md-12 m-3 text-sm-center"><p>Resource loading has failed: <b>{{ errorMessage }}</b></p></div>
-			</div>
+			<div class="col-md-12 mt-5 lh-vh-50" v-show="errorcheck"><p class="align-middle text-sm-center">Resource loading has failed: <b>{{ errorMessage }}</b></p></div>
 
 			<b-overlay :show="deleteOverlay.visible" rounded="sm" no-center>
 				<!--1. not Yaml(editor) -->

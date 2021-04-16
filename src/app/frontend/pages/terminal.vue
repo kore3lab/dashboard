@@ -87,5 +87,4 @@ export default {
 <style>
 @import 'xterm/dist/xterm.css';
 @import '../static/terminal/css/xterm_customize.css';
-@import '../static/terminal/css/terminal.css';
 </style>

@@ -30,9 +30,9 @@
 							<div class="card-body table-responsive p-0">
 								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success" style="margin:150px 0">
+										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="align-middle text-lg">Loading...</span>
+											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">

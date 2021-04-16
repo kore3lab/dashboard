@@ -151,7 +151,7 @@
 							</div>
 							<div class="card-body">
 								<div class="chart">
-									<c-linechart id="cpuChart" :chart-data="chart.data.cpu" :options="chart.options.cpu" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></c-linechart>
+									<c-linechart id="cpuChart" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
 								</div>
 							</div>
 						</div>
@@ -163,7 +163,7 @@
 							</div>
 							<div class="card-body">
 								<div class="chart">
-									<c-linechart id="memoryChart" :chart-data="chart.data.memory"  :options="chart.options.memory" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></c-linechart>
+									<c-linechart id="memoryChart" :chart-data="chart.data.memory"  :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
 								</div>
 							</div>
 						</div>
