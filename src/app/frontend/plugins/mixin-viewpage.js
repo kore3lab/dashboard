@@ -36,6 +36,10 @@ const CUSTOM_VIEWS	= {
 	resourcequotas: "configuration/resourcequota.view",
 
 	//Administrator
+	clusterroles: "administrator/clusterrole.view",
+	clusterrolebindings: "administrator/clusterrolebinding.view",
+	roles: "administrator/role.view",
+	rolebindings: "administrator/rolebinding.view",
 	serviceaccounts: "administrator/serviceaccount.view",
 }
 Vue.mixin({
