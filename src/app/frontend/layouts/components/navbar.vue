@@ -7,7 +7,7 @@
 		</ul>
 		<ul class="navbar-nav ml-auto">
 			<li class="nav-item">
-				<nuxt-link :to="{path: '/terminal', query: {termtype: 'cluster', cluster: option}}" target="_blank" class="mr-2"><b-icon icon="terminal-fill" font-scale="1.7"></b-icon></nuxt-link>
+				<nuxt-link :to="{path: '/terminal', query: {termtype: 'cluster', cluster: this.currentContext()}}" target="_blank" class="mr-2"><b-icon icon="terminal-fill" font-scale="1.7"></b-icon></nuxt-link>
 			</li>
 		</ul>
 	</nav>
