@@ -44,17 +44,23 @@ func (factory *Factory) Name() string {
 }
 
 // New -  지정한 파라미터를 기준으로 터미널 Slave 인스턴스 생성
-func (factory *Factory) New(params map[string][]string) (server.Slave, error) {
+func (factory *Factory) New(params map[string]string) (server.Slave, error) {
 	argv := make([]string, len(factory.argv))
 	copy(argv, factory.argv)
-	if params["arg"] != nil && len(params["arg"]) > 0 {
-		argv = append(argv, params["arg"]...)
-		/*
-			for _, arg := range params["arg"] {
-				argv = append(argv, arg)
-			}
-		*/
+
+	for key, val := range params {
+		argv = append(argv, "--"+key)
+		argv = append(argv, val)
 	}
+
+	// if params["arg"] != nil && len(params["arg"]) > 0 {
+	// 	argv = append(argv, params["arg"]...)
+	// 	/*
+	// 		for _, arg := range params["arg"] {
+	// 			argv = append(argv, arg)
+	// 		}
+	// 	*/
+	// }
 
 	return New(factory.command, argv, factory.opts...)
 }

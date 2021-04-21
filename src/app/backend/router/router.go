@@ -48,9 +48,10 @@ func CreateUrlMappings() {
 		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
 		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
 		//terminal API
-		clustersAPI.GET("/terminal", termapi.MakeAuthToken)
-		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/terminal", termapi.MakeAuthToken)
-		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/containers/:CONTAINER/terminal", termapi.MakeAuthToken)
+		//terminal API
+		clustersAPI.GET("/terminal", termapi.ProcCluster)
+		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/terminal", termapi.ProcPod)
+		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/containers/:CONTAINER/terminal", termapi.ProcContainer)
 	}
 	clustersAPI_ := Router.Group("/api")
 	{

@@ -9,7 +9,8 @@ const (
 
 //TtyParameter kubectl tty param
 type TtyParameter struct {
-	Arg []string
+	//	Arg []string
+	Arg map[string]string
 }
 
 //interface that defines token cache behavior
