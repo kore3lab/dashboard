@@ -6,7 +6,7 @@
 				<div class="text-right"><a href="#" @click="$router.back(-1)"><b-icon icon="x" class="h2 text-right border" variant="secondary"></b-icon></a></div>
 				<h2>Add Clusters from Kubeconfig</h2>
 				<p class="text-left">Add clusters by clicking the Add Cluster button. You'll need to obtain a working kubeconfig for the cluster you want to add. You can either browse it from the file system or paste it as a text from the clipboard. </p>
-				<b-tabs content-class="col-md-12" card>
+				<b-tabs v-model="tabIndex" content-class="col-md-12" card>
 					<b-tab title="Select kubeconfig file" active>
 						<b-form-group label="Select a file:" label-cols-sm="2" label-size="sm">
 							<b-form-file v-model="yamlFile" size="sm" placeholder="Choose a file" drop-placeholder="Drop file here..." @input="onFileSelected()"></b-form-file>
@@ -37,13 +37,20 @@ export default {
 	},
 	data() {
 		return {
+			tabIndex: 0,
 			kubeconfig: "aaaa",
 			yamlFile: null,
 			yamlText: "",
 			selected: null,
 			contextList: [
 				{ value: null, text: "Please select a context" }
-			]
+			],
+			fileContextList: [
+				{ value: null, text: "Please select a context" }
+			],
+			textContextList: [
+				{ value: null, text: "Please select a context" }
+			],
 		}
 	},
 	layout: "default",
@@ -53,8 +60,19 @@ export default {
 	},
 	beforeDestroy(){
 	},
+	watch: {
+		tabIndex() {
+			this.selected = null
+			if(this.tabIndex === 0) {
+				this.contextList = this.fileContextList
+			} else {
+				this.contextList = this.textContextList
+			}
+		},
+	},
 	methods: {
 		onFileSelected() {
+			if(this.yamlFile === null) return
 			let configReader = this.doReadConfig;
 			let reader = new FileReader();
 			reader.onload = function(ev) {
@@ -74,6 +92,8 @@ export default {
 					conf["contexts"].forEach(el => {
 						this.contextList.push( {text: el.name, value: el} );
 					});
+					if(this.tabIndex === 0 ) this.fileContextList = this.contextList
+					else this.textContextList = this.contextList
 					this.kubeconfig = conf;
 				} else {
 					this.toast("The selected file is invalid.","danger");

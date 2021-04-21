@@ -173,7 +173,7 @@ export default {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
 						}
 					}
 				},

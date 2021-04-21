@@ -19,7 +19,7 @@ export default {
 	watch: {
 		value(newVal) {
 			try {
-				if(this.localValue != newVal) {
+				if(this.localValue !== newVal) {
 					if(this.object) {
 						this.object.loadData(newVal);
 					} else {

@@ -23,3 +23,7 @@ __pycache__
 *.jtl
 Pipfile
 Thread Group.jmx
+
+build-dev-frontend.sh
+k3lab-config
+Dockerfile.frontend

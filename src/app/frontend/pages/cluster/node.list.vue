@@ -27,12 +27,15 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :sort-desc.sync="sortDesc" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
+									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
@@ -76,6 +79,7 @@ export default {
 	},
 	data() {
 		return {
+			sortDesc: true,
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -102,6 +106,11 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", (ctx) =>this.onUsage() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
+	watch: {
+		sortDesc: function () {
+			this.currentPage = 1
+		},
+	},
 	methods: {
 		onRowSelected(items) {
 			if(items) {
@@ -119,7 +128,6 @@ export default {
 		},
 		// 조회
 		query_All() {
-			this.isBusy = true;
 			axios.get(this.getApiUrl("","nodes"))
 					.then((resp) => {
 						this.items = [];
@@ -176,6 +184,7 @@ export default {
 		},
 		// node cpu,memory 사용량 먼저 읽은 후 전체리스트 조회
 		onUsage() {
+			this.isBusy = true;
 			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/dashboard`)
 					.then((resp) => {
 						this.metrics = resp.data.nodes
