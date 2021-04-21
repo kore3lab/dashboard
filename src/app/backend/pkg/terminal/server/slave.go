@@ -14,5 +14,5 @@ type Slave interface {
 // Factory - 각 요청에 대해 Slave 구성을 처리하는 인터페이스
 type Factory interface {
 	Name() string
-	New(params map[string][]string) (Slave, error)
+	New(params map[string]string) (Slave, error)
 }

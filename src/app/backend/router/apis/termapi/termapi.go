@@ -12,6 +12,8 @@ import (
 
 	"encoding/base64"
 
+	"reflect"
+
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
@@ -28,12 +30,16 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-//터미널 API요청구조
-type TermRequest struct {
-	Termtype  string `form:"termtype" binding:"required"`
-	Cluster   string `form:"cluster"`
-	Pod       string `form:"pod"`
-	Container string `form:"container"`
+//terminal shell request info
+type termRequest struct {
+	inclustermode string
+	kubeconfig    string
+	kubetoken     string
+	cluster       string
+	namespace     string
+	pod           string
+	container     string
+	termtype      string
 }
 
 var instSvr *server.Server
@@ -95,39 +101,49 @@ func makeSvr() (*server.Server, error) {
 	return svr, nil
 }
 
-func MakeAuthToken(c *gin.Context) {
+func ProcCluster(c *gin.Context) {
 	g := app.Gin{C: c}
+	//API요청 파라미터 파싱
+	termreq := &termRequest{}
 
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
+	termreq.termtype = "cluster"
+	getContext(g, termreq)
+	makeAuthToken(g, termreq)
+}
+
+func ProcPod(c *gin.Context) {
+	g := app.Gin{C: c}
+	//API요청 파라미터 파싱
+	termreq := &termRequest{}
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
+	termreq.pod = lang.NVL(c.Param("POD"), "")
+	termreq.termtype = "pod"
+	getContext(g, termreq)
+	makeAuthToken(g, termreq)
+}
+
+func ProcContainer(c *gin.Context) {
+	g := app.Gin{C: c}
+	//API요청 파라미터 파싱
+	termreq := &termRequest{}
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
+	termreq.pod = lang.NVL(c.Param("POD"), "")
+	termreq.container = lang.NVL(c.Param("CONTAINER"), "")
+	termreq.termtype = "container"
+	getContext(g, termreq)
+	makeAuthToken(g, termreq)
+}
+
+func makeAuthToken(g app.Gin, req *termRequest) {
 	// 터미널 연결 식별을 위한 일회성 랜덤 문자열 생성 및 정보 설정
 	token := randomstring.Generate(20)
-
-	//API요청 파라미터 파싱
-
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	namespace := lang.NVL(g.C.Param("NAMESPACE"), "")
-	pod := g.C.Param("POD")
-	container := lang.NVL(g.C.Param("CONTAINER"), "")
-	termtype := ""
-
-	if len(g.C.Param("POD")) == 0 {
-		termtype = "cluster"
-	} else {
-		termtype = "pod"
-	}
-
-	kubeConfig, err := GetContext(cluster)
-	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, "Unable to find request Context")
-		return
-	}
-
 	ttyParameter := cache.TtyParameter{}
-	ttyParameter.Arg = append(ttyParameter.Arg, termtype)
-	ttyParameter.Arg = append(ttyParameter.Arg, kubeConfig)
-	ttyParameter.Arg = append(ttyParameter.Arg, namespace)
-	ttyParameter.Arg = append(ttyParameter.Arg, pod)
-	ttyParameter.Arg = append(ttyParameter.Arg, container)
-	//ttyParameter.Arg = append(ttyParameter.Arg, namespace)
+	ttyParameter.Arg = make(map[string]string)
+	setTtyValue(req, ttyParameter.Arg)
 
 	//캐시 등록
 	if err := instSvr.Cache.Add(token, &ttyParameter, cache.DefaultExpiration); err != nil {
@@ -141,6 +157,19 @@ func MakeAuthToken(c *gin.Context) {
 		"Token":   token,
 	})
 
+}
+
+func setTtyValue(req *termRequest, tty map[string]string) {
+	e := reflect.ValueOf(req).Elem()
+	fieldNum := e.NumField()
+	for i := 0; i < fieldNum; i++ {
+		v := e.Field(i)
+		t := e.Type().Field(i)
+
+		if v.String() != "" {
+			tty[t.Name] = v.String()
+		}
+	}
 }
 
 func GenerateHandleWS(c *gin.Context) {
@@ -215,14 +244,14 @@ func processWSConn(ctx context.Context, conn *websocket.Conn) error {
 		return errors.Wrapf(err, "failed to authenticate websocket connection")
 	}
 
-	params := map[string][]string{}
+	params := map[string]string{}
 
 	if len(init.AuthToken) > 0 {
 		ttyParameter := instSvr.Cache.Get(init.AuthToken)
 		cachedKey := init.AuthToken
 
 		if ttyParameter != nil {
-			params["arg"] = ttyParameter.Arg
+			params = ttyParameter.Arg
 			instSvr.Cache.Delete(cachedKey)
 		} else {
 			return errors.New("ERROR:Invalid Token")
@@ -269,32 +298,39 @@ func processWSConn(ctx context.Context, conn *websocket.Conn) error {
 }
 
 //기존 client-go kubeconfig 정보사용
-func GetContext(pContext string) (string, error) {
+func getContext(g app.Gin, req *termRequest) {
+
 	conf := config.Value.KubeConfig
-
-	var context *clientcmdapi.Context
-	if conf.Contexts[pContext] != nil {
-		context = conf.Contexts[pContext]
+	if req.cluster == "default" && config.Value.KubeConfigs["default"].Host != "" { //In cluster mode
+		req.kubeconfig = config.Value.KubeConfigs["default"].Host
+		req.kubetoken = config.Value.KubeConfigs["default"].BearerToken
+		req.inclustermode = "true"
 	} else {
-		return "", errors.New("context not found")
+		var context *clientcmdapi.Context
+		if conf.Contexts[req.cluster] != nil {
+			context = conf.Contexts[req.cluster]
+		} else {
+			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context")
+			return
+		}
+
+		termKubeConfig := clientcmdapi.NewConfig()
+		termKubeConfig.Kind = conf.Kind
+		termKubeConfig.APIVersion = conf.APIVersion
+
+		termKubeConfig.Clusters[context.Cluster] = conf.Clusters[context.Cluster].DeepCopy()
+		termKubeConfig.Contexts[req.cluster] = context.DeepCopy()
+		termKubeConfig.CurrentContext = req.cluster
+		termKubeConfig.AuthInfos[context.AuthInfo] = conf.AuthInfos[context.AuthInfo].DeepCopy()
+
+		resultb, err := clientcmd.Write(*termKubeConfig)
+		if err != nil {
+			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context")
+			return
+		}
+
+		req.kubeconfig = base64.StdEncoding.EncodeToString(resultb)
+		req.inclustermode = "false"
 	}
-
-	termKubeConfig := clientcmdapi.NewConfig()
-	termKubeConfig.Kind = conf.Kind
-	termKubeConfig.APIVersion = conf.APIVersion
-
-	termKubeConfig.Clusters[context.Cluster] = conf.Clusters[context.Cluster].DeepCopy()
-	termKubeConfig.Contexts[pContext] = context.DeepCopy()
-	termKubeConfig.CurrentContext = pContext
-	termKubeConfig.AuthInfos[context.AuthInfo] = conf.AuthInfos[context.AuthInfo].DeepCopy()
-
-	resultb, err := clientcmd.Write(*termKubeConfig)
-
-	if err != nil {
-		return "", err
-	}
-
-	encKubeConfig := base64.StdEncoding.EncodeToString(resultb)
-
-	return encKubeConfig, nil
+	return
 }
