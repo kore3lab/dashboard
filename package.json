@@ -37,6 +37,7 @@
     "libapps": "github:yudai/libapps#release-hterm-1.70",
     "nuxt": "^2.14.11",
     "v-click-outside": "^3.1.2",
+    "vue-cookies": "^1.7.4",
     "xterm": "^3.8.1"
   },
   "devDependencies": {

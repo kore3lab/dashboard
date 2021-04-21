@@ -65,7 +65,7 @@
 									</p>
 									<p class="d-flex flex-column text-center p-2">
 										<span class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024),2)).toLocaleString() }} Gib</span>
+										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} Gib</span>
 									</p>
 									<p class="d-flex flex-column text-center  p-2">
 										<span class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></span>
@@ -192,14 +192,14 @@ export default {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value}} }]
 						}
 					},
 					memory: {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
 						}
 					}
 				},
@@ -217,8 +217,22 @@ export default {
 			mounted () {
 				if(this.chartData) {
 					this.renderChart(this.chartData, this.options)
+					this.update()
 				}
-			}
+			},
+			watch: {
+				chartData: function () {
+					this.update();
+				},
+				options: function() {
+					this.update();
+				},
+			},
+			methods: {
+				update: function() {
+					this.renderChart(this.chartData, this.options);
+				},
+			},
 		}
 	},
 	created() {
@@ -236,9 +250,9 @@ export default {
 							resp.data.metrics.cpu.dataPoints.forEach(d => {
 								let dt = new Date(d.x*1000);
 								labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
-								data.push(d.y);
+								data.push((d.y/1000).toFixed(3));
 							});
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable;
+							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable/1000;
 							this.$data.chart.data.cpu = {
 								labels: labels,
 								datasets: [

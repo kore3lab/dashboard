@@ -8,7 +8,6 @@ const CUSTOM_VIEWS	= {
 	jobs: "workload/job.view",
 	pods: "workload/pod.view",
 	replicasets: "workload/replicaset.view",
-	replicationcontrollers: "workload/replicationcontroller.view",
 	statefulsets: "workload/statefulset.view",
 
 	//Storage

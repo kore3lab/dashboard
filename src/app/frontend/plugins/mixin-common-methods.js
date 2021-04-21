@@ -7,7 +7,7 @@ Vue.mixin({
       if (!variant) variant = "info";
       this.$bvToast.toast(msg, {
         title: "",
-        noCloseButton: true,
+        noCloseButton: false,
         variant: variant,
         autoHideDelay: 4000,
       });
@@ -124,7 +124,7 @@ Vue.mixin({
     },
     metricUnitsToNumber(value) {
       const base = 1000;
-      const suffixes = ["k", "m", "g", "t", "q"];
+      const suffixes = ["k", "m", "g", "t", "p"];
 
       const suffix = value.toLowerCase().slice(-1);
       const index = suffixes.indexOf(suffix);
@@ -132,6 +132,25 @@ Vue.mixin({
       return parseInt(
           (parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
       );
+    },
+    memoryUnitsToNumber(value) {
+      const base = 1024;
+      const suffixes = ["ki", "mi", "gi","ti","pi"]
+
+      const suffix = value.toLowerCase().slice(-2);
+      const index = suffixes.indexOf(suffix);
+
+      return (parseFloat(value) * Math.pow(base, index + 1))
+    },
+    cpuRL(cpu) {
+      if(!cpu) return 0
+      let val = this.cpuUnitsToNumber(cpu)
+      return val
+    },
+    memoryRL(memory) {
+      if(!memory) return 0
+      let val = this.memoryUnitsToNumber(memory)
+      return val/1024/1024
     },
     getTimestampString(timestamp) {
       let dt = Date.parse(timestamp);

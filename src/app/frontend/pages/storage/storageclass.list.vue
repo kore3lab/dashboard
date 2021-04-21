@@ -31,12 +31,15 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :sort-desc.sync="sortDesc" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
+									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
@@ -69,6 +72,7 @@ export default {
 	},
 	data() {
 		return {
+			sortDesc: true,
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -91,6 +95,11 @@ export default {
 	created() {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+	},
+	watch: {
+		sortDesc: function () {
+			this.currentPage = 1
+		},
 	},
 	methods: {
 		onRowSelected(items) {
@@ -132,7 +141,7 @@ export default {
 			this.currentPage = 1
 		},
 		isDefault(el) {
-			if (el.metadata.annotation && el.metadata.annotations["storageclass.kubernetes.io/is-default-class"] === "true")
+			if (el.metadata.annotations && el.metadata.annotations["storageclass.kubernetes.io/is-default-class"] === "true")
 			{
 				return 'Yes'
 			}
