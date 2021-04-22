@@ -32,7 +32,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :sort-desc.sync="sortDesc" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -73,7 +73,6 @@ export default {
 	},
 	data() {
 		return {
-			sortDesc: true,
 			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
@@ -95,12 +94,10 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
-	watch: {
-		sortDesc: function () {
+	methods: {
+		onSortChanged() {
 			this.currentPage = 1
 		},
-	},
-	methods: {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {

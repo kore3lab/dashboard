@@ -61,11 +61,11 @@
 									</p>
 									<p class="d-flex flex-column text-center p-2">
 										<span class="text-lg">{{ nd.usage.memory.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} Mib</span>
+										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} MiB</span>
 									</p>
 									<p class="d-flex flex-column text-center p-2">
 										<span class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} Gib</span>
+										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} GiB</span>
 									</p>
 									<p class="d-flex flex-column text-center  p-2">
 										<span class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></span>
