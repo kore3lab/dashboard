@@ -6,7 +6,7 @@ Vue.mixin({
     toast(msg, variant) {
       if (!variant) variant = "info";
       this.$bvToast.toast(msg, {
-        title: "",
+        title: variant,
         noCloseButton: false,
         variant: variant,
         autoHideDelay: 4000,
@@ -29,7 +29,7 @@ Vue.mixin({
             footerClass: "p-1",
           })
           .then(callback)
-          .catch((err) => {});
+          .catch((_) => {});
     },
     msghttp(error) {
       if (
@@ -144,13 +144,11 @@ Vue.mixin({
     },
     cpuRL(cpu) {
       if(!cpu) return 0
-      let val = this.cpuUnitsToNumber(cpu)
-      return val
+      return this.cpuUnitsToNumber(cpu)
     },
     memoryRL(memory) {
       if(!memory) return 0
-      let val = this.memoryUnitsToNumber(memory)
-      return val/1024/1024
+      return this.memoryUnitsToNumber(memory)/(1024 * 1024)
     },
     getTimestampString(timestamp) {
       let dt = Date.parse(timestamp);

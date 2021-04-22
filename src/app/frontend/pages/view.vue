@@ -78,7 +78,7 @@
 					</div>
 				</div>
 				<!-- 2. if Yaml(editor) then  -->
-				<div v-show="isYaml && !errorcheck" class="card-body p-1">
+				<div v-show="isYaml && !errorcheck" class="card-body p-1 overflow-hidden">
 					<div class="row">
 						<div class="col-sm-12 text-right mb-1">
 							<b-button variant="primary" size="sm" @click="onApply">Apply</b-button>

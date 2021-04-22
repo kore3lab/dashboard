@@ -27,7 +27,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :sort-desc.sync="sortDesc" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -41,7 +41,7 @@
 										{{ data.value }}
 									</template>
 									<template v-slot:cell(ready)="data">
-										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" >{{ value.value }}  </span>
+										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" class="mr-1" >{{ value.value }}</span>
 									</template>
 									<template v-slot:cell(usageCpu)="data">
 										<b-progress :value="data.item.usageCpu" :max="100" variant="info" show-value class="mb-3"></b-progress>
@@ -79,7 +79,6 @@ export default {
 	},
 	data() {
 		return {
-			sortDesc: true,
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
@@ -106,12 +105,10 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", (ctx) =>this.onUsage() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
-	watch: {
-		sortDesc: function () {
+	methods: {
+		onSortChanged() {
 			this.currentPage = 1
 		},
-	},
-	methods: {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
