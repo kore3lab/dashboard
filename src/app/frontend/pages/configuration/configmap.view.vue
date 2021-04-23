@@ -63,7 +63,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueAceEditor from "@/components/aceeditor";
 
 export default {
@@ -117,7 +116,7 @@ export default {
 				list[el.key] = el.val
 			})
 			this.origin.data = list
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.origin)
+			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.origin)
 					.then( resp => {
 						this.origin = Object.assign({}, resp.data);
 						this.toast(`ConfigMap ${ this.metadata.name } successfully updated.`, "success");

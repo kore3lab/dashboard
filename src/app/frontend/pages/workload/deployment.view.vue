@@ -116,7 +116,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
 
@@ -272,7 +271,7 @@ export default {
 			this.cpuLimits = 0
 			this.memoryRequests = 0
 			this.memoryLimits = 0
-			axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
 					.then( resp => {
 						let childLabel
 						let count = 0, idx = 0;
@@ -315,7 +314,7 @@ export default {
 					}
 				})
 			}
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0];
@@ -394,7 +393,7 @@ export default {
 					}
 				})
 			}
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0];

@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:{{ .Chart.AppVersion }}
+          image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -73,11 +73,11 @@ spec:
       volumes:
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoft-dashboard-kubeconfig
+            name: kore-board-kubeconfig
         - name: data-volume
       {{- if .Values.metricsScraper.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ default "acornsoft-dashboard-metrics-scraper" .Values.metricsScraper.persistence.existingClaim  }}
+            claimName: {{ default "kore-board-metrics-scraper" .Values.metricsScraper.persistence.existingClaim  }}
       {{- else }}
           emptyDir: {}
       {{- end }}

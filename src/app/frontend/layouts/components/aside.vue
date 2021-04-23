@@ -4,7 +4,8 @@
 		<c-context />
 
 		<nuxt-link to="/" class="brand-link align-bottom">
-			<i class="fab fa-mixcloud mr-0 text-info font-weight-bold"> K</i><span class="brand-text font-weight-bolder">ore<sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup></span><sub>dashboard</sub>
+			<img src="/favicon.svg">
+			<span class="text-info font-weight-bold align-bottom"> K</span><span class="align-bottom">ore</span><sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup><sub class="text-sm ml-1">dashboard</sub>
 		</nuxt-link>
 
 		<!-- Sidebar -->

@@ -14,9 +14,9 @@ import (
 
 // Manager provides a handler for all api calls
 func Manager(r *mux.Router, db *sql.DB) {
-	dashboardRouter := r.PathPrefix("/api/v1").Subrouter() // customized by acornsoft-dashboard
+	dashboardRouter := r.PathPrefix("/api/v1").Subrouter() // customized by kore-board
 	dashboardProvider.DashboardRouter(dashboardRouter, db)
-	dashboardProvider.DashboardExpandRouter(dashboardRouter, db) // customized by acornsoft-dashboard
+	dashboardProvider.DashboardExpandRouter(dashboardRouter, db) // customized by kore-board
 	r.HandleFunc("/api/kubeconfig", LoadConfig).Methods("PUT")
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
 }

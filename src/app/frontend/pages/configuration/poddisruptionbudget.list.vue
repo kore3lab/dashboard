@@ -62,7 +62,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -119,7 +118,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("policy","poddisruptionbudgets",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("policy","poddisruptionbudgets",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {

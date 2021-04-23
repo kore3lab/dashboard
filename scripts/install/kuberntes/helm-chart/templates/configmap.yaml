@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   labels:
     app: {{ .Chart.Name }}
-  name: acornsoft-dashboard-kubeconfig
+  name: kore-board-kubeconfig
 data:
   config: |

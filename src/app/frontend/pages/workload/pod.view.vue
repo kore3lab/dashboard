@@ -205,7 +205,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueChartJs from "vue-chartjs"
 import VueJsonTree from "@/components/jsontree";
 
@@ -297,7 +296,7 @@ export default {
 			this.initContainers = this.getInitContainers(data);
 		},
 		onCpu(spec) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/cpu`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/cpu`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0]
@@ -341,7 +340,7 @@ export default {
 					})
 		},
 		onMemory(spec) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/memory`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/memory`)
 					.then(resp => {
 						if (resp.data.items){
 							let data = resp.data.items[0]

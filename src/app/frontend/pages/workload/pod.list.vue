@@ -87,7 +87,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -176,7 +175,7 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.loadMetrics();
-			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -286,7 +285,7 @@ export default {
 		// load pod's Metrics
 		async loadMetrics() {
 			this.metricsItems = [];
-			let resp = await axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
+			let resp = await this.$axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
 			if (!resp) return
 			this.metricsItems = resp.data.items
 		},

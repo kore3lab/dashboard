@@ -63,7 +63,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 export default {
@@ -123,7 +122,7 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			console.log(this.info)
-			axios.get(this.getApiUrl(this.group,this.plural))
+			this.$axios.get(this.getApiUrl(this.group,this.plural))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {

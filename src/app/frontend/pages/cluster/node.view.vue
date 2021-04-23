@@ -106,7 +106,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
 
@@ -221,7 +220,7 @@ export default {
 			}
 		},
 		onCpu(top) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/cpu`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/cpu`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0]
@@ -245,7 +244,7 @@ export default {
 					})
 		},
 		onMemory(top) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/memory`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/memory`)
 					.then(resp => {
 						if (resp.data.items){
 							let data = resp.data.items[0]
@@ -333,7 +332,7 @@ export default {
 			let childPod = [];
 			this.nowCpu = [];
 			this.nowMemory = [];
-			axios.get(this.getApiUrl('','pods'))
+			this.$axios.get(this.getApiUrl('','pods'))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el => {
@@ -354,7 +353,7 @@ export default {
 			return childPod
 		},
 		getPodCpu(el,idx) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
 					.then(resp =>{
 						if(resp.data.items) {
 							let data = resp.data.items[0];
@@ -377,7 +376,7 @@ export default {
 			return this.nowCpu
 		},
 		getPodMemory(el,idx) {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
 					.then(resp =>{
 						if(resp.data.items) {
 							let data = resp.data.items[0];

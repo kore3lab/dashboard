@@ -178,7 +178,6 @@
 <script>
 import "@/assets/css/hexagons.css"
 import VueChartJs	from "vue-chartjs"
-import axios		from "axios"
 
 export default {
 	data() {
@@ -239,7 +238,7 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", () => {
 			let ctx = this.currentContext();
 			if(!ctx) return;
-			axios.get(`${this.backendUrl()}/api/clusters/${ctx}/dashboard`)
+			this.$axios.get(`/api/clusters/${ctx}/dashboard`)
 					.then((resp) => {
 						this.$data.summary = resp.data.summary;
 						this.$data.nodes = resp.data.nodes;

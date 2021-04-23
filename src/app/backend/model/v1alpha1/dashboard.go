@@ -67,7 +67,10 @@ func (self *Dashboard) Get() error {
 	allocateTotal := resource{} // self.Nodes.Address/Status/Roles 외 리소스 allocatable
 	usageTotal := resource{}    // self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
 
-	conf := config.Value.KubeConfigs[self.context]
+	conf, err := config.KubeConfigs(self.context)
+	if err != nil {
+		return err
+	}
 
 	apiClient, err := kubernetes.NewForConfig(conf)
 	if err != nil {
@@ -235,7 +238,7 @@ func (self *Dashboard) Get() error {
 	_, err = client.R().
 		SetHeader("Content-Type", "application/json").
 		SetResult(&self.Metrics).
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s", *config.Value.MetricsScraperUrl, self.context))
 
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)

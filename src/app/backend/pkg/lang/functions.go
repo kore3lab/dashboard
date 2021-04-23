@@ -1,6 +1,9 @@
 package lang
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 // NVL is null value logic
 func NVL(str string, def string) string {
@@ -36,4 +39,14 @@ func ArrayContains(arr []string, str string) bool {
 		}
 	}
 	return false
+}
+
+func RandomString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	s := make([]rune, n)
+	for i := range s {
+		s[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(s)
 }

@@ -111,7 +111,6 @@
 </template>
 <script>
 
-import axios			from "axios"
 import VueAceEditor 	from "@/components/aceeditor"
 import VueJsonTree 		from "@/components/jsontree"
 export default {
@@ -241,7 +240,7 @@ export default {
 			this.isYaml = false;
 			if (this.delay === 1) return;
 			this.delay++;
-			axios.get(this.localUrl)
+			this.$axios.get(this.localUrl)
 					.then(resp => {
 						this.errorcheck = false;
 						this.origin = Object.assign({}, resp.data);
@@ -278,7 +277,7 @@ export default {
 				this.msghttp(this.errorM)
 				return this.disabled = false
 			}
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
+			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.raw)
 					.then( resp => {
 						if(!resp.data) {
 							return this.toast('Invalid modification.','warning')
@@ -291,14 +290,14 @@ export default {
 		},
 		onDelete() {
 			this.deleteOverlay.processing = true;
-			axios.delete(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			this.$axios.delete(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( _ => {
 						this.watch();
 					})
 					.catch(e => {this.msghttp(e);});
 		},
 		watch() {
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			this.$axios.get(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( resp => {
 						if (resp.status === 404) {
 							this.deleteOverlay.visible = false;

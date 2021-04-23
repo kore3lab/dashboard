@@ -95,7 +95,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -176,7 +175,7 @@ export default {
 				})
 			})
 			this.origin.subjects = list
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.origin)
+			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.origin)
 			.then( _ => {
 				this.onSync(this.origin)
 			})

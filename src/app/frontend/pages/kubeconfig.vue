@@ -6,22 +6,25 @@
 				<div class="text-right"><a href="#" @click="$router.back(-1)"><b-icon icon="x" class="h2 text-right border" variant="secondary"></b-icon></a></div>
 				<h2>Add Clusters from Kubeconfig</h2>
 				<p class="text-left">Add clusters by clicking the Add Cluster button. You'll need to obtain a working kubeconfig for the cluster you want to add. You can either browse it from the file system or paste it as a text from the clipboard. </p>
-				<b-tabs v-model="tabIndex" content-class="col-md-12" card>
+				<b-tabs content-class="col-md-12" card  v-on:activate-tab="onActiveTab">
 					<b-tab title="Select kubeconfig file" active>
 						<b-form-group label="Select a file:" label-cols-sm="2" label-size="sm">
-							<b-form-file v-model="yamlFile" size="sm" placeholder="Choose a file" drop-placeholder="Drop file here..." @input="onFileSelected()"></b-form-file>
+							<b-form-file v-model="yamlFile" size="sm" placeholder="Choose a file" drop-placeholder="Drop file here..." @input="onFileSelected"></b-form-file>
 						</b-form-group>
 					</b-tab>
 					<b-tab title="Paste as text">
-						<b-form-textarea v-model="yamlText" rows="5" max-rows="6" @change="onTextChange()"></b-form-textarea>
+						<b-form-textarea v-model="yamlText" rows="5" max-rows="6"  @change="onTextChange"></b-form-textarea>
 					</b-tab>
 				</b-tabs>
 				<div class="row">
-					<div class="col-10">
+					<div class="col-4">
 						<b-form-select size="sm" v-model="selected" :options="contextList"></b-form-select>
 					</div>
+					<div class="col-4">
+						<b-form-input size="sm" v-model="selected.name"></b-form-input>
+					</div>
 					<div class="col-2">
-						<b-button variant="primary" size="sm" @click="onAddContext()">Add a cluster</b-button>
+						<b-button variant="primary" size="sm" @click="addCluster">Add a cluster</b-button>
 					</div>
 				</div>
 			</div>
@@ -30,97 +33,87 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import {load as toJSON} from "js-yaml";
 export default {
 	components: {
 	},
 	data() {
 		return {
-			tabIndex: 0,
-			kubeconfig: "aaaa",
+			kubeconfig: "",
 			yamlFile: null,
 			yamlText: "",
-			selected: null,
+			clusterName: "",
+			selected: {name:""},
 			contextList: [
-				{ value: null, text: "Please select a context" }
-			],
-			fileContextList: [
-				{ value: null, text: "Please select a context" }
-			],
-			textContextList: [
-				{ value: null, text: "Please select a context" }
-			],
+				{ value: {name:""}, text: "Please select a context" }
+			]
 		}
 	},
 	layout: "default",
-	created() {
-	},
-	mounted() {
-	},
-	beforeDestroy(){
-	},
-	watch: {
-		tabIndex() {
-			this.selected = null
-			if(this.tabIndex === 0) {
-				this.contextList = this.fileContextList
-			} else {
-				this.contextList = this.textContextList
-			}
-		},
-	},
 	methods: {
+		onActiveTab(idx) {
+			if (idx==0) this.onFileSelected()
+			else this.onTextChange()
+		},
 		onFileSelected() {
-			if(this.yamlFile === null) return
-			let configReader = this.doReadConfig;
+			if(!this.yamlFile) return
+
+			let r = this.doReadConfig;
 			let reader = new FileReader();
 			reader.onload = function(ev) {
-				configReader(ev.target.result);
+				r(ev.target.result);
 			};
 			reader.readAsText(this.yamlFile);
 		},
 		onTextChange() {
+			if(!this.yamlText) return
+
 			this.doReadConfig(this.yamlText);
 		},
 		doReadConfig(json) {
 			let conf;
 			try {
+				this.contextList.splice(1, 2);
+				this.selected = {name:""};
+
 				conf = toJSON(json);
 				if(conf && typeof conf === "object") {
-					this.contextList.splice(1, this.contextList.length-2);
 					conf["contexts"].forEach(el => {
 						this.contextList.push( {text: el.name, value: el} );
 					});
-					if(this.tabIndex === 0 ) this.fileContextList = this.contextList
-					else this.textContextList = this.contextList
 					this.kubeconfig = conf;
-				} else {
-					this.toast("The selected file is invalid.","danger");
 				}
 			} catch (e) { this.toast("The selected file is invalid.","danger") }
 		},
-		onAddContext() {
+		addCluster() {
 			try {
-				if (!this.selected) {
+				let clusterName = this.selected.name;
+				if (!clusterName) {
 					this.mesbox("Not selected a context");
 					return
 				}
-
 				let cluster = this.kubeconfig.clusters.find(el=> el.name === this.selected.context["cluster"]);
 				let user = this.kubeconfig.users.find(el=> el.name === this.selected.context["user"]);
 
-				axios.post(`${this.backendUrl()}/api/clusters/${this.selected.name}`,
-						{
-							"cluster": Object.assign({}, cluster.cluster),
-							"user": Object.assign({}, user.user)
+				this.$axios.post(`/api/clusters/${clusterName}`,{
+					"cluster": Object.assign({}, cluster.cluster),
+					"user": Object.assign({}, user.user)
+				}).then( resp => {
+					if(resp.data && resp.data.contexts) {
+						this.contexts(resp.data.contexts);
+						// context 목록에서 현재 context 가 존재하지 않는다면
+						// context 선택 이벤트 발생
+						let cur = this.currentContext();
+						if( !resp.data.contexts.find(e=> {return e==cur }) ) {
+							this.$nuxt.$emit("navbar-set-context-selected", clusterName);
 						}
-				).then( resp => {
-					this.contexts(resp.data.contexts);
-					this.toast("Add a cluster.. OK", "success");
-				}).catch(e => { this.msghttp(e);});
-			} catch (e) { this.toast("Add a cluster failed","danger") }
+						this.toast("Add a cluster.. OK", "success");
+					}
 
+				}).catch(e => { this.msghttp(e) } );
+			} catch (ex) {
+				this.toast(`Add a cluster failed ${ex}`,"danger") 
+			}
 		}
 	}
 }

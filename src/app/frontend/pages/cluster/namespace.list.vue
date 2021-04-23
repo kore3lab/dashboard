@@ -75,7 +75,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -142,7 +141,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","namespaces"))
+			this.$axios.get(this.getApiUrl("","namespaces"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {

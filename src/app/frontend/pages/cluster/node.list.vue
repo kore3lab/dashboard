@@ -68,7 +68,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -125,7 +124,7 @@ export default {
 		},
 		// 조회
 		query_All() {
-			axios.get(this.getApiUrl("","nodes"))
+			this.$axios.get(this.getApiUrl("","nodes"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -182,7 +181,7 @@ export default {
 		// node cpu,memory 사용량 먼저 읽은 후 전체리스트 조회
 		onUsage() {
 			this.isBusy = true;
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/dashboard`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/dashboard`)
 					.then((resp) => {
 						this.metrics = resp.data.nodes
 					}).finally(()=> { this.query_All()} )

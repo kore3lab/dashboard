@@ -63,7 +63,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 export default {
@@ -129,7 +128,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
+			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {

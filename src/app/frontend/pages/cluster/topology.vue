@@ -30,7 +30,6 @@
 </template>
 <script>
 import * as graph	from "../../static/acorn-graph/acorn.graph.topology"
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 
 export default {
@@ -55,11 +54,11 @@ export default {
 	methods: {
 		query() {
 			this.$data.start = (new Date()).getTime();
-			let url = `${this.backendUrl()}/api/clusters/${this.currentContext()}/topology`;
+			let url = `/api/clusters/${this.currentContext()}/topology`;
 			if (this.$data.selectedNamespace !== "") url += `/namespaces/${this.$data.selectedNamespace}`;
 
 			let g = new graph.TopologyGraph("#wrapGraph");
-			axios.get(url)
+			this.$axios.get(url)
 					.then( resp => {
 						this.$data.nodeLen = resp.data.nodes.length;
 						g.config({

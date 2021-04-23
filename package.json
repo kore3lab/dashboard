@@ -1,5 +1,5 @@
 {
-  "name": "acornsoft-dashboard",
+  "name": "kore-board",
   "version": "0.3.1",
   "description": "acornsoft kubernetes dashboard",
   "repository": {
@@ -14,7 +14,7 @@
     "start:graph": "cd src/app/graph; npm run start",
     "start:metrics-scraper": "cd src/app/metrics-scraper; go run server.go",
     "start:graph:backend": "concurrently \"npm run start:backend\" \"npm run start:graph\"",
-    "build:frontend": "nuxt build",
+    "build:frontend": "nuxt generate",
     "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/acorn-graph/",
     "docker:build:frontend": "./scripts/docker-build.sh frontend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
     "docker:build:backend": "./scripts/docker-build.sh backend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
@@ -36,8 +36,6 @@
     "js-yaml": "^3.14.1",
     "libapps": "github:yudai/libapps#release-hterm-1.70",
     "nuxt": "^2.14.11",
-    "v-click-outside": "^3.1.2",
-    "vue-cookies": "^1.7.4",
     "xterm": "^3.8.1"
   },
   "devDependencies": {
@@ -56,6 +54,7 @@
     "gulp": "4.0.2",
     "jquery": "3.4.1",
     "q": "^1.5.1",
+    "cookie-universal-nuxt": "^2.1.4",
     "vue-chartjs": "^3.5.0"
   },
   "engines": {

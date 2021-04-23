@@ -4,18 +4,18 @@
 
 * Create a namespace
 ```
-$ kubectl create ns acornsoft-dashboard
+$ kubectl create ns kore
 ```
 
-* Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
+* Careate a configmap `kore-board-kubeconfig`  (in-cluster mode 제외)
 
 ```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=config=${HOME}/.kube/config -n acornsoft-dashboard
+$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config -n kore
 ```
 
-* If exists a configmap then Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
+* If exists a configmap then Careate a configmap `kore-board-kubeconfig`  (in-cluster mode 제외)
 ```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
+$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n kore -f -
 ```
 
 * metrics-server 가 설치되어 있지 않다면 metrics-server 설치 (args --kubelet-insecure-tls 추가)
@@ -44,8 +44,8 @@ $ kubectl delete -f kuberntes/recommended.yaml
 * dry-run
 
 ```
-$ kubectl create ns acornsoft-dashboard
-$ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
+$ kubectl create ns kor
+$ helm install --dry-run --debug -n kore kore-board ./kuberntes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
@@ -55,7 +55,7 @@ $ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./ku
 * Install
 
 ```
-$ helm install -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
+$ helm install -n kore kore-board ./kuberntes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
@@ -66,7 +66,7 @@ $ helm list
 
 * Clean-up
 ```
-$ helm uninstall acornsoft-dashboard
+$ helm uninstall kore-board
 ```
 
 
@@ -77,7 +77,7 @@ $ helm uninstall acornsoft-dashboard
 # metrics-scraper
 
 $ kubectl run metrics-scraper -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:latest --port=8000\
+  --image=ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest --port=8000\
   -- --db-file=metrics.db
 $ kubectl expose pod metrics-scraper -n ${NAMESPACE} --port=8000 --name=metrics-scraper
 
@@ -85,14 +85,14 @@ $ kubectl expose pod metrics-scraper -n ${NAMESPACE} --port=8000 --name=metrics-
 # backend
 
 $ kubectl run backend -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.backend:latest --port=3001
+  --image=ghcr.io/acornsoftlab/kore-board.backend:latest --port=3001
 $ kubectl expose pod backend -n ${NAMESPACE} --name=backend --type='NodePort' --port=3001
 
 
 # rbac
-$ kubectl create role acornsoft-dashboard -n ${NAMESPACE} --resource=* --verb=*
-$ kubectl create rolebinding acornsoft-dashboard -n ${NAMESPACE} --role=acornsoft-dashboard --serviceaccount=${NAMESPACE}:default
-$ kubectl create clusterrolebinding acornsoft-dashboard --clusterrole=cluster-admin --serviceaccount=${NAMESPACE}:default
+$ kubectl create role kore-board -n ${NAMESPACE} --resource=* --verb=*
+$ kubectl create rolebinding kore-board -n ${NAMESPACE} --role=kore-board --serviceaccount=${NAMESPACE}:default
+$ kubectl create clusterrolebinding kore-board --clusterrole=cluster-admin --serviceaccount=${NAMESPACE}:default
 
 
 # frontend
@@ -100,7 +100,7 @@ $ kubectl create clusterrolebinding acornsoft-dashboard --clusterrole=cluster-ad
 $ BACKEND_PORT="$(kubectl get svc/backend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
 
 $ kubectl run frontend -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:latest\
+  --image=ghcr.io/acornsoftlab/kore-board.frontend:latest\
   --port=3000\
   --env="BACKEND_PORT=${BACKEND_PORT}"
 
@@ -113,8 +113,8 @@ $ kubectl expose pod frontend -n ${NAMESPACE} --name=frontend --type='NodePort' 
 ```
 $ kubectl delete -n ${NAMESPACE} pod/backend pod/frontend pod/metrics-scraper
 $ kubectl delete -n ${NAMESPACE} service/backend service/frontend service/metrics-scraper
-$ kubectl delete -n ${NAMESPACE} role/acornsoft-dashboard rolebinding/acornsoft-dashboard
-$ kubectl delete clusterrolebinding/acornsoft-dashboard
+$ kubectl delete -n ${NAMESPACE} role/kore-board rolebinding/kore-board
+$ kubectl delete clusterrolebinding/kore-board
 $ kubectl delete ns ${NAMESPACE}
 ```
 
