@@ -35,7 +35,7 @@
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in configData" v-bind:key="idx" class="row mb-0 card-body p-2">
 							<dt class="col-sm-12"><span class="card-title mb-2">{{ val.key }}</span></dt>
-							<dd class="col-sm-12"><b-form-textarea id="txtSpec" max-rows="30" v-model="val.val" class="card-body p-2 border text-sm"></b-form-textarea></dd>
+							<dd class="col-sm-12"><b-form-textarea id="txtSpec" max-rows="10" v-model="val.val" class="card-body p-2 border text-sm"></b-form-textarea></dd>
 						</dl>
 						<b-button variant="primary" size="sm" class="mb-1 ml-2" @click="onSave()">Save</b-button>
 					</div>
@@ -63,7 +63,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueAceEditor from "@/components/aceeditor";
 
 export default {
@@ -117,7 +116,7 @@ export default {
 				list[el.key] = el.val
 			})
 			this.origin.data = list
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.origin)
+			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.origin)
 					.then( resp => {
 						this.origin = Object.assign({}, resp.data);
 						this.toast(`ConfigMap ${ this.metadata.name } successfully updated.`, "success");

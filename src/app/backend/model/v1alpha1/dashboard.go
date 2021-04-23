@@ -2,15 +2,13 @@ package model
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strings"
-
-	resty "github.com/go-resty/resty/v2"
-
-	log "github.com/sirupsen/logrus"
-
+	"github.com/acornsoftlab/dashboard/model"
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
+	resty "github.com/go-resty/resty/v2"
+	log "github.com/sirupsen/logrus"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -18,6 +16,7 @@ import (
 	metricsapi "k8s.io/metrics/pkg/apis/metrics"
 	metricsV1beta1api "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+	"strings"
 )
 
 type Dashboard struct {
@@ -65,7 +64,13 @@ func NewDashboard(contextName string) Dashboard {
 
 func (self *Dashboard) Get() error {
 
-	conf := config.Value.KubeConfigs[self.context]
+	allocateTotal := resource{} // self.Nodes.Address/Status/Roles 외 리소스 allocatable
+	usageTotal := resource{}    // self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
+
+	conf, err := config.KubeConfigs(self.context)
+	if err != nil {
+		return err
+	}
 
 	apiClient, err := kubernetes.NewForConfig(conf)
 	if err != nil {
@@ -145,10 +150,18 @@ func (self *Dashboard) Get() error {
 	}
 	self.Workloads["statefulset"] = dashboardAvailable{Available: len(sfsList.Items), Ready: ready}
 
-	// self.Nodes.Address/Status/Roles 외 리소스 allocatable
-	allocateTotal := resource{}
-
 	for _, m := range nodeList.Items {
+		nodeSummary := model.Summary{}
+		request := apiClient.CoreV1().RESTClient().Get().Resource("nodes").Name(m.Name).SubResource("proxy").Suffix("stats/summary")
+		responseRawArrayOfBytes, err := request.DoRaw(context.Background())
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(responseRawArrayOfBytes, &nodeSummary)
+		if err != nil {
+			return err
+		}
+
 		self.Nodes[m.Name] = dashboardNode{
 			Address: m.Status.Addresses[0].Address,
 			Status:  findNodeStatus(m),
@@ -156,15 +169,19 @@ func (self *Dashboard) Get() error {
 			Usage: map[string]*dashboardUsage{
 				"cpu":     {Allocatable: m.Status.Allocatable.Cpu().MilliValue()},
 				"memory":  {Allocatable: m.Status.Allocatable.Memory().Value()},
-				"storage": {Allocatable: m.Status.Allocatable.Storage().Value()},
+				"storage": {Allocatable: nodeSummary.Node.Fs.Capacitybytes},
 				"pod":     {Allocatable: m.Status.Allocatable.Pods().Value()},
 			},
 		}
 
 		allocateTotal.cpu = +m.Status.Allocatable.Cpu().MilliValue()
 		allocateTotal.memory += m.Status.Allocatable.Memory().Value()
-		allocateTotal.storage += m.Status.Allocatable.Storage().Value()
+		allocateTotal.storage += nodeSummary.Node.Fs.Capacitybytes
 		allocateTotal.pods += m.Status.Allocatable.Pods().Value()
+
+		parsePercentUsage(nodeSummary.Node.Fs.Usedbytes, self.Nodes[m.Name].Usage["storage"])
+		usageTotal.storage += nodeSummary.Node.Fs.Usedbytes
+
 	}
 
 	versionedNodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
@@ -180,17 +197,12 @@ func (self *Dashboard) Get() error {
 		return err
 	}
 
-	// self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
-	usageTotal := resource{}
 	for _, m := range nodeMetrics.Items {
 		nd := self.Nodes[m.Name]
 		parsePercentUsage(m.Usage.Cpu().MilliValue(), nd.Usage["cpu"])
 		parsePercentUsage(m.Usage.Memory().Value(), nd.Usage["memory"])
-		parsePercentUsage(m.Usage.Storage().Value(), nd.Usage["storage"])
-
 		usageTotal.cpu += m.Usage.Cpu().MilliValue()
 		usageTotal.memory += m.Usage.Memory().Value()
-		usageTotal.storage += m.Usage.Storage().Value()
 	}
 
 	// self.Workloads.Pods (노드별 파드 수 & running 파드 수)
@@ -226,7 +238,7 @@ func (self *Dashboard) Get() error {
 	_, err = client.R().
 		SetHeader("Content-Type", "application/json").
 		SetResult(&self.Metrics).
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s", *config.Value.MetricsScraperUrl, self.context))
 
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)

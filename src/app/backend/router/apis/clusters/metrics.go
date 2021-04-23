@@ -16,15 +16,15 @@ import (
 func GetNodeMetrics(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
 
 	// invoke metrics-scraper api
 	client := resty.New()
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s/nodes/%s/metrics/%s", config.Value.MetricsScraperUrl, cluster, c.Param("NODE"), c.Param("METRICS")))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s/nodes/%s/metrics/%s", *config.Value.MetricsScraperUrl, cluster, c.Param("NODE"), c.Param("METRICS")))
 	if err != nil {
-		g.SendMessage(500, fmt.Sprintf("Unable to get scrapping metrics (cause=%v)", err))
+		g.SendMessage(http.StatusInternalServerError, "Unable to get scrapping metrics", err)
 	} else {
 		g.C.Data(http.StatusOK, "application/json", resp.Body())
 	}
@@ -35,15 +35,15 @@ func GetNodeMetrics(c *gin.Context) {
 func GetPodMetrics(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
 
 	// invoke metrics-scraper api
 	client := resty.New()
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s/namespaces/%s/pods/%s/metrics/%s", config.Value.MetricsScraperUrl, cluster, c.Param("NAMESPACE"), c.Param("POD"), c.Param("METRICS")))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s/namespaces/%s/pods/%s/metrics/%s", *config.Value.MetricsScraperUrl, cluster, c.Param("NAMESPACE"), c.Param("POD"), c.Param("METRICS")))
 	if err != nil {
-		g.SendMessage(500, fmt.Sprintf("Unable to get scrapping metrics (cause=%v)", err))
+		g.SendMessage(http.StatusInternalServerError, "Unable to get scrapping metrics", err)
 	} else {
 		g.C.Data(http.StatusOK, "application/json", resp.Body())
 	}

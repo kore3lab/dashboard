@@ -24,72 +24,78 @@ import (
 func ListContexts(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	//ctx parameter 가 CurrentContext와 다르고 Contexts 에 포함되어 있다면 CurrentContext 변경
-	ctx := c.DefaultQuery("ctx", config.Value.CurrentContext)
-	if ctx != config.Value.CurrentContext && lang.ArrayContains(config.Value.Contexts, ctx) {
-		config.Value.CurrentContext = ctx
-	}
+	// query "ctx" 가 공백이면 default context  사용
+	ctx := lang.NVL(c.Query("ctx"), config.Value.DefaultContext)
 
-	// client
-	kubeconfig := config.Value.KubeConfigs[config.Value.CurrentContext]
-
-	// namespaces
-	k8sClient, err := kubernetes.NewForConfig(kubeconfig)
-	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	nsList, err := k8sClient.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{})
-	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
-		return
-	}
-	namespaces := []string{}
-	for _, ns := range nsList.Items {
-		namespaces = append(namespaces, ns.GetObjectMeta().GetName())
-	}
-
-	// resources
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(kubeconfig)
-	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	resourcesList, err := discoveryClient.ServerPreferredResources()
-	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	// make a "groups > group > resources > resource" data structure
-	var nm string
 	resources := make(map[string]interface{})
-	for _, grpList := range resourcesList {
-		if strings.Contains(grpList.GroupVersion, "/") {
-			nm = strings.Split(grpList.GroupVersion, "/")[0]
-		} else {
-			nm = ""
+	namespaces := []string{}
+
+	if len(config.Value.Contexts) > 0 {
+
+		// client
+		kubeconfig, err := config.KubeConfigs(ctx)
+		if err != nil {
+			g.SendMessage(http.StatusBadRequest, err.Error(), err)
+			return
 		}
 
-		if resources[nm] == nil {
-			resources[nm] = make(map[string]interface{})
-		}
-		var group map[string]interface{}
-		if resources[nm] == nil {
-			group = make(map[string]interface{})
-		} else {
-			group = resources[nm].(map[string]interface{})
+		// namespaces
+		k8sClient, err := kubernetes.NewForConfig(kubeconfig)
+		if err != nil {
+			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+			return
 		}
 
-		for _, r := range grpList.APIResources {
-			group[r.Name] = map[string]interface{}{
-				"name":         r.Name,
-				"groupVersion": grpList.GroupVersion,
-				"kind":         r.Kind,
-				"namespaced":   r.Namespaced,
+		nsList, err := k8sClient.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{})
+		if err != nil {
+			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+			return
+		}
+		for _, ns := range nsList.Items {
+			namespaces = append(namespaces, ns.GetObjectMeta().GetName())
+		}
+
+		// resources
+		discoveryClient, err := discovery.NewDiscoveryClientForConfig(kubeconfig)
+		if err != nil {
+			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+			return
+		}
+
+		resourcesList, err := discoveryClient.ServerPreferredResources()
+		if err != nil {
+			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+			return
+		}
+
+		// make a "groups > group > resources > resource" data structure
+		var nm string
+		for _, grpList := range resourcesList {
+			if strings.Contains(grpList.GroupVersion, "/") {
+				nm = strings.Split(grpList.GroupVersion, "/")[0]
+			} else {
+				nm = ""
 			}
+
+			if resources[nm] == nil {
+				resources[nm] = make(map[string]interface{})
+			}
+			var group map[string]interface{}
+			if resources[nm] == nil {
+				group = make(map[string]interface{})
+			} else {
+				group = resources[nm].(map[string]interface{})
+			}
+
+			for _, r := range grpList.APIResources {
+				group[r.Name] = map[string]interface{}{
+					"name":         r.Name,
+					"groupVersion": grpList.GroupVersion,
+					"kind":         r.Kind,
+					"namespaced":   r.Namespaced,
+				}
+			}
+
 		}
 
 	}
@@ -97,7 +103,7 @@ func ListContexts(c *gin.Context) {
 	g.Send(http.StatusOK, map[string]interface{}{
 		"contexts": config.Value.Contexts,
 		"currentContext": map[string]interface{}{
-			"name":       config.Value.CurrentContext,
+			"name":       ctx,
 			"resources":  resources,
 			"namespaces": namespaces,
 		},
@@ -111,11 +117,12 @@ func CreateContexts(c *gin.Context) {
 	conf := cmdapi.Config{}
 
 	if g.C.BindJSON(&conf) != nil {
-		g.SendMessage(http.StatusInternalServerError, "Unable to bind request body")
+		g.SendMessage(http.StatusBadRequest, "Unable to bind request body", nil)
 	} else {
-		err := cmd.ModifyConfig(config.Value.ConfigLoadingRules, conf, false)
+
+		err := cmd.WriteToFile(conf, config.Value.ConfigLoadingRules.GetDefaultFilename())
 		if err != nil {
-			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig")
+			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig", err)
 		} else {
 			config.Setup()
 			reloadConfigMetricsScraper()
@@ -132,7 +139,7 @@ func GetContext(c *gin.Context) {
 
 	context := conf.Contexts[c.Param("CLUSTER")]
 	if context == nil {
-		g.SendMessage(http.StatusNotFound, fmt.Sprintf("not found a context '%s'", c.Param("CLUSTER")))
+		g.SendMessage(http.StatusNotFound, fmt.Sprintf("not found a context '%s'", c.Param("CLUSTER")), nil)
 	} else {
 		g.Send(http.StatusOK, map[string]interface{}{
 			"cluster": conf.Clusters[context.Cluster],
@@ -148,31 +155,44 @@ func CreateContext(c *gin.Context) {
 	conf := config.Value.KubeConfig.DeepCopy()
 	name := c.Param("CLUSTER")
 
-	if conf.Contexts[name] != nil {
-		g.SendMessage(http.StatusBadRequest, fmt.Sprintf("Already exist a context '%s'", name))
+	if conf != nil && conf.Contexts[name] != nil {
+		g.SendMessage(http.StatusBadRequest, fmt.Sprintf("Already exist a context '%s'", name), nil)
 	} else {
 		json := make(map[string]interface{})
 		if g.C.BindJSON(&json) != nil {
-			g.SendMessage(http.StatusInternalServerError, "Unable to bind request body")
+			g.SendMessage(http.StatusInternalServerError, "Unable to bind request body", nil)
 			return
 		}
 
-		cluster := &cmdapi.Cluster{}
-		context := &cmdapi.Context{}
-		user := &cmdapi.AuthInfo{}
+		cluster := &cmdapi.Cluster{} // cluster
+		context := &cmdapi.Context{} // context
+		user := &cmdapi.AuthInfo{}   // user
 
 		jsonC := json["cluster"].(map[string]interface{})
 		jsonU := json["user"].(map[string]interface{})
 
-		context.Cluster = name
-		context.AuthInfo = fmt.Sprintf("%s", name)
+		context.Cluster = fmt.Sprintf("%s-cluster", name)
+		context.AuthInfo = fmt.Sprintf("%s-user", name)
 
+		// cluster, user 중복 회피
+		if config.Value.KubeConfig != nil {
+			if _, exist := config.Value.KubeConfig.Clusters[context.Cluster]; exist {
+				context.Cluster = fmt.Sprintf("%s-%s-cluster", name, lang.RandomString(5))
+			}
+			if _, exist := config.Value.KubeConfig.AuthInfos[context.AuthInfo]; exist {
+				context.AuthInfo = fmt.Sprintf("%s-%s-user", name, lang.RandomString(5))
+			}
+		}
+
+		log.Infof("%s, %s, %s", name, context.Cluster, context.AuthInfo)
+
+		// cluster
 		cluster.Server = jsonC["server"].(string)
 		val, exists := jsonC["certificate-authority-data"].(string)
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
-				g.SendMessage(http.StatusBadRequest, "Unable to decode cerificate-authority-data")
+				g.SendMessage(http.StatusBadRequest, "Unable to decode cerificate-authority-data", err)
 				return
 			}
 			cluster.CertificateAuthorityData = ca
@@ -180,12 +200,13 @@ func CreateContext(c *gin.Context) {
 			cluster.CertificateAuthority = jsonC["certificate-authority"].(string)
 		}
 
+		// user
 		val, exists = jsonU["client-certificate-data"].(string)
 
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
-				g.SendMessage(http.StatusBadRequest, "Unable to decode client-certificate-data")
+				g.SendMessage(http.StatusBadRequest, "Unable to decode client-certificate-data", err)
 				return
 			}
 			user.ClientCertificateData = ca
@@ -197,7 +218,7 @@ func CreateContext(c *gin.Context) {
 		if exists {
 			ca, err := base64.StdEncoding.DecodeString(val)
 			if err != nil {
-				g.SendMessage(http.StatusBadRequest, "Unable to decode client-key-data")
+				g.SendMessage(http.StatusBadRequest, "Unable to decode client-key-data", err)
 				return
 			}
 			user.ClientKeyData = ca
@@ -205,13 +226,21 @@ func CreateContext(c *gin.Context) {
 			user.ClientKey = jsonU["client-key"].(string)
 		}
 
+		//context
+		if conf == nil {
+			conf = &cmdapi.Config{
+				Clusters:  make(map[string]*cmdapi.Cluster),
+				AuthInfos: make(map[string]*cmdapi.AuthInfo),
+				Contexts:  make(map[string]*cmdapi.Context),
+			}
+		}
 		conf.Clusters[context.Cluster] = cluster
 		conf.AuthInfos[context.AuthInfo] = user
 		conf.Contexts[name] = context
 
 		err := cmd.ModifyConfig(config.Value.ConfigLoadingRules, *conf, false)
 		if err != nil {
-			g.SendMessage(http.StatusBadRequest, "unable to modify kubeconfig")
+			g.SendMessage(http.StatusBadRequest, "unable to modify kubeconfig", err)
 		} else {
 			reloadConfigMetricsScraper()
 			config.Setup()
@@ -240,14 +269,14 @@ func DeleteContext(c *gin.Context) {
 
 		err := cmd.ModifyConfig(config.Value.ConfigLoadingRules, *conf, false)
 		if err != nil {
-			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig")
+			g.SendMessage(http.StatusBadRequest, "Unable to modify kubeconfig", err)
 		} else {
 			reloadConfigMetricsScraper()
 			config.Setup()
 			ListContexts(g.C)
 		}
 	} else {
-		g.SendMessage(http.StatusNotFound, fmt.Sprintf("not found context %s", name))
+		g.SendMessage(http.StatusNotFound, fmt.Sprintf("not found context %s", name), nil)
 	}
 }
 
@@ -256,7 +285,7 @@ func reloadConfigMetricsScraper() {
 	client := resty.New()
 	_, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Patch(fmt.Sprintf("%s/api/v1/config", config.Value.MetricsScraperUrl))
+		Patch(fmt.Sprintf("%s/api/v1/config", *config.Value.MetricsScraperUrl))
 
 	if err != nil {
 		log.Errorf("Unable to metrics scraper config reload (cause=%v)", err)

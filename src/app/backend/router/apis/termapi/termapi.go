@@ -105,8 +105,7 @@ func ProcCluster(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.termtype = "cluster"
 	getContext(g, termreq)
@@ -117,7 +116,7 @@ func ProcPod(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.pod = lang.NVL(c.Param("POD"), "")
 	termreq.termtype = "pod"
@@ -129,7 +128,7 @@ func ProcContainer(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.CurrentContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.pod = lang.NVL(c.Param("POD"), "")
 	termreq.container = lang.NVL(c.Param("CONTAINER"), "")
@@ -148,7 +147,7 @@ func makeAuthToken(g app.Gin, req *termRequest) {
 	//캐시 등록
 	if err := instSvr.Cache.Add(token, &ttyParameter, cache.DefaultExpiration); err != nil {
 		log.Errorf("save token and ttyParam err:%v", err)
-		g.SendMessage(http.StatusInternalServerError, "save token and ttyParam err")
+		g.SendMessage(http.StatusInternalServerError, "save token and ttyParam err", err)
 		return
 	}
 
@@ -299,18 +298,31 @@ func processWSConn(ctx context.Context, conn *websocket.Conn) error {
 
 //기존 client-go kubeconfig 정보사용
 func getContext(g app.Gin, req *termRequest) {
+<<<<<<< HEAD
 
 	conf := config.Value.KubeConfig
 	if req.cluster == "default" && config.Value.KubeConfigs["default"].Host != "" { //In cluster mode
 		req.kubeconfig = config.Value.KubeConfigs["default"].Host
 		req.kubetoken = config.Value.KubeConfigs["default"].BearerToken
+=======
+
+	conf := config.Value.KubeConfig
+
+	if config.Value.IsRunningInCluster { //In cluster mode
+		req.kubeconfig = config.Value.InClusterConfig.Host
+		req.kubetoken = config.Value.InClusterConfig.BearerToken
+>>>>>>> 6be12e3be1569a23addcaf0e8fe28e7c8d17529d
 		req.inclustermode = "true"
 	} else {
 		var context *clientcmdapi.Context
 		if conf.Contexts[req.cluster] != nil {
 			context = conf.Contexts[req.cluster]
 		} else {
+<<<<<<< HEAD
 			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context")
+=======
+			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context", nil)
+>>>>>>> 6be12e3be1569a23addcaf0e8fe28e7c8d17529d
 			return
 		}
 
@@ -325,7 +337,11 @@ func getContext(g app.Gin, req *termRequest) {
 
 		resultb, err := clientcmd.Write(*termKubeConfig)
 		if err != nil {
+<<<<<<< HEAD
 			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context")
+=======
+			g.SendMessage(http.StatusInternalServerError, "Unable to find request Context", err)
+>>>>>>> 6be12e3be1569a23addcaf0e8fe28e7c8d17529d
 			return
 		}
 

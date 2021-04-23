@@ -21,7 +21,6 @@
 	</div>
 </template>
 <script>
-import axios from "axios"
 export default {
 	data() {
 		return {
@@ -41,6 +40,7 @@ export default {
 		}
 	},
 	mounted() {
+		this.$nuxt.$on("navbar-set-context-selected", (ctx) => this.onContextSelected(ctx) );
 	},
 	methods: {
 		// context select
@@ -57,30 +57,30 @@ export default {
 			};
 
 			this.showOverlay = ctx;
-			axios.get(`${this.backendUrl()}/api/clusters?ctx=${ctx}`)
-					.then((resp)=>{
-						if(resp.data.contexts) {
-							let local;
-							try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {}
-							if (equals(local,resp.data.contexts)) {
-								this.contexts(local);
-							} else {
-								this.contexts(resp.data.contexts);
-								localStorage.setItem("contexts",resp.data.contexts);
-							}
+			this.$axios.get(`/api/clusters?ctx=${ctx}`)
+				.then((resp)=>{
+					if(resp.data.contexts) {
+						let local;
+						try { local = JSON.parse(localStorage.getItem("contexts")); } catch (e) {}
+						if (equals(local,resp.data.contexts)) {
+							this.contexts(local);
+						} else {
+							this.contexts(resp.data.contexts);
+							localStorage.setItem("contexts",resp.data.contexts);
 						}
-						this.currentContext(ctx ? ctx : resp.data.currentContext.name);
-						let nsList = [{ value: "", text: "All Namespaces" }];
-						if (resp.data.currentContext.namespaces) {
-							resp.data.currentContext.namespaces.forEach(el => {
-								nsList.push({ value: el, text: el });
-							});
-						}
-						this.namespaces(nsList);
-						this.resources(resp.data.currentContext.resources);
-						localStorage.setItem("currentContext", this.currentContext());
+					}
+					this.currentContext(ctx ? ctx : resp.data.currentContext.name);
+					let nsList = [{ value: "", text: "All Namespaces" }];
+					if (resp.data.currentContext.namespaces) {
+						resp.data.currentContext.namespaces.forEach(el => {
+							nsList.push({ value: el, text: el });
+						});
+					}
+					this.namespaces(nsList);
+					this.resources(resp.data.currentContext.resources);
+					localStorage.setItem("currentContext", this.currentContext());
 
-					}).catch(error=> {
+				}).catch(error=> {
 				this.toast(error.message, "danger");
 			}).finally(() => {
 				this.showOverlay = "";
@@ -91,11 +91,11 @@ export default {
 		onContextDelete(ctx, index) {
 			this.confirm(`Delete a selected cluster "${ctx}" , Are you sure?`, yes => {
 				if(!yes) return;
-				axios.delete(`${this.backendUrl()}/api/clusters/${ctx}`)
-						.then( resp => {
-							this.contexts().splice(index, 1);
-							this.toast("Delete a selected cluster...OK", "success");
-						}).catch(e => { this.msghttp(e);});
+				this.$axios.delete(`/api/clusters/${ctx}`)
+					.then( resp => {
+						this.contexts().splice(index, 1);
+						this.toast("Delete a selected cluster...OK", "success");
+					}).catch(e => { this.msghttp(e);});
 
 			})
 		},

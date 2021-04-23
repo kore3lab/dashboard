@@ -24,7 +24,7 @@ TAG="$3"
 GROUP="$4"
 
 if [ "${GROUP}" == "" ];	then GROUP="ghcr.io/acornsoftlab";	fi
-PROJECT="acornsoft-dashboard"
+PROJECT="kore-board"
 ROOT="$(pwd)"
 FRONTEND="${GROUP}/${PROJECT}.frontend"
 BACKEND="${GROUP}/${PROJECT}.backend"

@@ -85,7 +85,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -135,7 +134,7 @@ export default {
 			}
 		},
 		getEndpoints(data) {
-			axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
+			this.$axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
 			.then(resp => {
 				let list =[];
 				this.isEndpoint = true;

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: acornsoft-dashboard
+  name: kore
 
 ---
 
@@ -9,27 +9,24 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app: acornsoft-dashboard
-  name: acornsoft-dashboard
-  namespace: acornsoft-dashboard
-
+    app: kore-board
+  name: kore-board
+  namespace: kore
 
 ---
 
-kind: Service
-apiVersion: v1
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  labels:
-    app: acornsoft-dashboard
-    acornsoft.dashboard: metrics-scraper
-  name: metrics-scraper
-  namespace: acornsoft-dashboard
-spec:
-  ports:
-    - port: 8000
-      targetPort: 8000
-  selector:
-    app: metrics-scraper
+  name: clusterrolebinding-kore-board
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: kore-board
+  namespace: kore
 
 ---
 
@@ -37,40 +34,41 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: acornsoft-dashboard
+    app: kore-board
     acornsoft.dashboard: metrics-scraper
   name: metrics-scraper
-  namespace: acornsoft-dashboard
+  namespace: kore
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: acornsoft-dashboard
+      app: kore-board
       acornsoft.dashboard: metrics-scraper
   template:
     metadata:
       labels:
-        app: acornsoft-dashboard
+        app: kore-board
         acornsoft.dashboard: metrics-scraper
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.3.0
+          image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
+            - --log-level=info
           ports:
             - containerPort: 8000
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /
-              port: 8000
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
+#          livenessProbe:
+#            httpGet:
+#              scheme: HTTP
+#              path: /
+#              port: 8000
+#            initialDelaySeconds: 30
+#            timeoutSeconds: 30
           volumeMounts:
             - mountPath: /app/.kube
               name: dashboard-kubeconfig
@@ -84,33 +82,13 @@ spec:
       volumes:
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoft-dashboard-kubeconfig
+            name: kore-board-kubeconfig
         - name: tmp-volume
           emptyDir: {}
-      serviceAccountName: dashboard
+      serviceAccountName: kore-board
       nodeSelector:
         "kubernetes.io/os": linux
 
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: acornsoft-dashboard
-    acornsoft.dashboard: backend
-  name: backend
-  namespace: acornsoft-dashboard
-spec:
-  type: NodePort
-  ports:
-    - name: http
-      nodePort: 30081
-      port: 3001
-      protocol: TCP
-      targetPort: 3001
-  selector:
-    app: backend
 
 ---
 
@@ -118,27 +96,38 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: acornsoft-dashboard
+    app: kore-board
     acornsoft.dashboard: backend
   name: backend
+  namespace: kore
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend
+      app: kore-board
       acornsoft.dashboard: backend
   template:
     metadata:
       labels:
-        app: backend
+        app: kore-board
+        acornsoft.dashboard: backend
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.3.0
+          image: ghcr.io/acornsoftlab/kore-board.backend:latest
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
+            - --log-level=info
             - --metrics-scraper-url=http://metrics-scraper:8000
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
           ports:
             - containerPort: 3000
               protocol: TCP
@@ -150,33 +139,13 @@ spec:
       volumes:
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoft-dashboard-kubeconfig
+            name: kore-board-kubeconfig
         - name: tmp-volume
           emptyDir: {}
-      serviceAccountName: dashboard
+      serviceAccountName: kore-board
       nodeSelector:
         "kubernetes.io/os": linux
 
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    app: acornsoft-dashboard
-    acornsoft.dashboard: frontend
-  name: frontend
-  namespace: acornsoft-dashboard
-spec:
-  type: NodePort
-  ports:
-    - name: http
-      nodePort: 30080
-      port: 3000
-      protocol: TCP
-      targetPort: 3000
-  selector:
-    app: frontend
 
 ---
 
@@ -184,24 +153,25 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: acornsoft-dashboard
+    app: kore-board
     acornsoft.dashboard: frontend
   name: frontend
-  namespace: acornsoft-dashboard
+  namespace: kore
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: acornsoft-dashboard
+      app: kore-board
       acornsoft.dashboard: frontend
   template:
     metadata:
       labels:
-        app: frontend
+        app: kore-board
+        acornsoft.dashboard: frontend
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.3.0
+          image: ghcr.io/acornsoftlab/kore-board.frontend:latest
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT
@@ -217,3 +187,65 @@ spec:
       volumes:
         - name: tmp-volume
           emptyDir: {}
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kore-board
+    acornsoft.dashboard: frontend
+  name: frontend
+  namespace: kore
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 30080
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: kore-board
+    acornsoft.dashboard: frontend
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kore-board
+    acornsoft.dashboard: backend
+  name: backend
+  namespace: kore
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 30081
+      port: 3001
+      protocol: TCP
+      targetPort: 3001
+  selector:
+    app: kore-board
+    acornsoft.dashboard: backend
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kore-board
+    acornsoft.dashboard: metrics-scraper
+  name: metrics-scraper
+  namespace: kore
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: kore-board
+    acornsoft.dashboard: metrics-scraper

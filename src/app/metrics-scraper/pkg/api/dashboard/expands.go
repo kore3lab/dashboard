@@ -43,7 +43,7 @@ func clusterHandler(db *sql.DB) http.HandlerFunc {
 
 		clsuter := vars["Cluster"]
 		if clsuter == "" {
-			clsuter = config.Value.CurrentContext
+			clsuter = config.Value.DefaultContext
 		}
 
 		resp, err := getClusterMetrics(db, clsuter)

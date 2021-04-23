@@ -60,8 +60,16 @@
 								<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
 							</dd>
 							<dt class="col-sm-2">Pod Status</dt><dd class="col-sm-10"><span v-for="(val,idx) in cs" v-bind:key="idx" v-bind:class="val.style">{{ val.status }} : {{ val.count }}  </span><span v-if="!isStatus">-</span></dd>
-							<dt class="col-sm-2">CPU</dt><dd class="col-sm-10"><span v-if="totalCpu !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalCpu }}</span><span v-if="totalCpu === 0">-</span></dd>
-							<dt class="col-sm-2">Memory</dt><dd class="col-sm-10"><span v-if="totalMemory !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalMemory }} Mi</span><span v-if="totalMemory === 0">-</span></dd>
+							<dt class="col-sm-2">CPU</dt><dd class="col-sm-10">
+							<span v-if="totalCpu !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalCpu }}</span>
+							<span v-if="cpuRequests !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Requests : {{ cpuRequests.toFixed(2) }}</span>
+							<span v-if="cpuLimits !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Limits : {{ cpuLimits.toFixed(2) }}</span>
+							<span v-if="totalCpu === 0 && cpuRequests === 0 && cpuLimits === 0">-</span></dd>
+							<dt class="col-sm-2">Memory</dt><dd class="col-sm-10">
+							<span v-if="totalMemory !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalMemory }} Mi</span>
+							<span v-if="memoryRequests !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Requests : {{ memoryRequests.toFixed(1) }} Mi</span>
+							<span v-if="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Limits : {{ memoryLimits.toFixed(1) }} Mi</span>
+							<span v-if="totalMemory === 0 && memoryRequests === 0 && memoryLimits === 0">-</span></dd>
 						</dl>
 					</div>
 				</div>
@@ -111,7 +119,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
 
@@ -160,6 +167,10 @@ export default {
 			nowMemory: {},
 			totalCpu: 0,
 			totalMemory: 0,
+			cpuRequests: 0,
+			cpuLimits: 0,
+			memoryRequests: 0,
+			memoryLimits: 0,
 			isCpu: false,
 			isMemory: false,
 			isStatus: false,
@@ -180,14 +191,14 @@ export default {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)}} }]
 						}
 					},
 					memory: {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
 						}
 					}
 				},
@@ -255,11 +266,15 @@ export default {
 			this.cs = [];
 			this.topCpu = [];
 			this.topMemory = [];
+			this.cpuRequests = 0
+			this.cpuLimits = 0
+			this.memoryRequests = 0
+			this.memoryLimits = 0
 			this.isStatus = false;
 			this.isPods = false;
 			this.isCpu = false;
 			this.isMemory = false;
-			axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
@@ -288,11 +303,17 @@ export default {
 			if(el.spec.containers) {
 				el.spec.containers.forEach(el => {
 					if(el.resources && el.resources.requests) {
-						this.topCpu.push(el.resources.requests.cpu)
+						if(el.resources.requests.cpu) {
+							this.topCpu.push(el.resources.requests.cpu)
+							this.cpuRequests += this.cpuRL(el.resources.requests.cpu)
+						}
+					}
+					if(el.resources.limits && el.resources.limits.cpu) {
+						this.cpuLimits += this.cpuRL(el.resources.limits.cpu)
 					}
 				})
 			}
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0];
@@ -361,11 +382,17 @@ export default {
 			if(el.spec.containers) {
 				el.spec.containers.forEach(el => {
 					if(el.resources && el.resources.requests) {
-						this.topMemory.push(el.resources.requests.memory)
+						if(el.resources.requests.memory) {
+							this.topMemory.push(el.resources.requests.memory)
+							this.memoryRequests += this.memoryRL(el.resources.requests.memory)
+						}
+					}
+					if(el.resources.limits && el.resources.limits.memory) {
+						this.memoryLimits += this.memoryRL(el.resources.limits.memory)
 					}
 				})
 			}
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
 					.then(resp => {
 						if (resp.data.items) {
 							let data = resp.data.items[0];
@@ -409,7 +436,7 @@ export default {
 				}
 				let keys = Object.keys(map)
 				for (let i = 0; i < keys.length; i++) {
-					da[i] = map[keys[i]] / 1024
+					da[i] = map[keys[i]] / 1024 / 1024
 				}
 				let sum = 0;
 				for(let i=0;i<this.topMemory.length;i++) {
@@ -427,7 +454,7 @@ export default {
 				if (sum) top = sum
 				else top = top*1.2
 				if (top === 0) top = 1
-				this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top / 1024;
+				this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top / 1024 / 1024;
 				this.$data.chart.data.memory = {
 					labels: labels,
 					datasets: [

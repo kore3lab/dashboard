@@ -87,7 +87,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -132,7 +131,7 @@ export default {
 		getPods() {
 			this.isPod = false;
 			let podList = [];
-			axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
 					.then( resp => {
 						resp.data.items.forEach(el => {
 							el.spec.volumes.forEach(e => {

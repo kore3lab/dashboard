@@ -24,7 +24,7 @@
 							<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
 							<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
 							<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
-							<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx">{{ val.plural }}</span></dd>
+							<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/configuration/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind}}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
 							<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
 							<dt class="col-sm-3">Conditions</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span></dd>
 						</dl>

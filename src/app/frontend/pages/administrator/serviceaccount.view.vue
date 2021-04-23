@@ -68,7 +68,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -110,7 +109,7 @@ export default {
 			let list = []
 			let count = 0;
 			secrets.map((v) => {
-				axios.get(this.getApiUrl("","secrets",this.metadata.namespace,v.name))
+				this.$axios.get(this.getApiUrl("","secrets",this.metadata.namespace,v.name))
 						.then((resp) => {
 							this.isShow.push({show: false})
 							list.push({

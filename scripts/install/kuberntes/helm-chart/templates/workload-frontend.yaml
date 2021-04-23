@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:{{ .Chart.AppVersion }}
+          image: ghcr.io/acornsoftlab/kore-board.frontend:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           env:
           - name: BACKEND_PORT

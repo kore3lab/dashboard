@@ -1,5 +1,5 @@
 <template>
-	<div class="wrapper">
+	<div class="wrapper toggled">
 		<c-navbar />
 		<c-aside />
 		<nuxt />
@@ -10,7 +10,6 @@
 import Aside	from "./components/aside.vue"
 import Navbar	from "./components/navbar.vue"
 import Footer	from "./components/footer.vue"
-import "~/assets/css/app.css"
 
 export default {
 	components: {

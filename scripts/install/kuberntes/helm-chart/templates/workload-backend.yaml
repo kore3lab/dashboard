@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.backend:{{ .Chart.AppVersion }}
+          image: ghcr.io/acornsoftlab/kore-board.backend:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -60,7 +60,7 @@ spec:
       volumes:
         - name: dashboard-kubeconfig
           configMap:
-            name: acornsoft-dashboard-kubeconfig
+            name: kore-board-kubeconfig
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: {{ .Chart.Name }}

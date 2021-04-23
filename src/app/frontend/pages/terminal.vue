@@ -4,7 +4,6 @@
 </template>
 
 <script>
-import axios		from "axios";
 import { Xterm } from "../static/terminal/js/xterm";
 import { WebTTY, protocols } from "../static/terminal/js/webtty";
 import { ConnectionFactory } from "../static/terminal/js/websocket";
@@ -52,7 +51,7 @@ export default {
 					return;
 			}
 
-			axios.get(this.backendUrl() + this.requrl)
+			this.$axios.get(this.requrl)
 					.then( resp => {
 						this.token = resp.data.Token;
             this.connWs();
