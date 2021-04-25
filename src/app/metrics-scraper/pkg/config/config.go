@@ -10,6 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	IN_CLUSTER_NAME = "kubernetes@in-cluster"
+)
+
 type conf struct {
 	ConfigLoadingRules clientcmd.ClientConfigLoader
 	DefaultContext     string
@@ -72,8 +76,8 @@ func Setup() {
 		if err != nil {
 			log.Error("running empty cluster (cannot load a kubeconfig in-cluster)")
 		} else {
-			Value.kubeConfigs["kubernetes"] = cnf
-			Value.Contexts = []string{"kubernetes"}
+			Value.kubeConfigs[IN_CLUSTER_NAME] = cnf
+			Value.Contexts = []string{IN_CLUSTER_NAME}
 			log.Infoln("running in-cluster mode")
 		}
 	} else {

@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: metrics-scraper
+    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
 spec:
@@ -18,7 +18,7 @@ spec:
       targetPort: 8000
   selector:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: metrics-scraper
+    kore.board: metrics-scraper
 
 ---
 
@@ -27,29 +27,31 @@ apiVersion: apps/v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: metrics-scraper
+    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.metricsScraper.service.replicaCount }}
+  replicas: {{ .Values.metricsScraper.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
-      acornsoft.dashboard: metrics-scraper
+      kore.board: metrics-scraper
   template:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-        acornsoft.dashboard: metrics-scraper
+        kore.board: metrics-scraper
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:
       containers:
         - name: metrics-scraper
           image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:{{ .Chart.AppVersion }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --kubeconfig=/app/.kube/config
+            - --log-level=info
+            - --db-file=/app/data/metrics.db
           ports:
             - containerPort: 8000
               protocol: TCP
@@ -61,9 +63,10 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 30
           volumeMounts:
-            - mountPath: /app/.kube
-              name: dashboard-kubeconfig
-            - mountPath: /tmp
+            - mountPath: /app/.kube/config
+              name: kubeconfig
+              subPath: config
+            - mountPath: /app/data
               name: data-volume
           securityContext:
             allowPrivilegeEscalation: false
@@ -71,9 +74,12 @@ spec:
             runAsUser: 1001
             runAsGroup: 2001
       volumes:
-        - name: dashboard-kubeconfig
+        - name: kubeconfig
           configMap:
             name: kore-board-kubeconfig
+            items:
+            - key: config
+              path: config
         - name: data-volume
       {{- if .Values.metricsScraper.persistence.enabled }}
           persistentVolumeClaim:

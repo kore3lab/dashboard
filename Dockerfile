@@ -23,5 +23,4 @@ COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
 ENV HOST 0.0.0.0
 ENV BACKEND_PORT 3001
 
-EXPOSE 3000
 ENTRYPOINT [ "nginx", "-g", "daemon off;" ]

@@ -30,8 +30,8 @@ export default {
 	async fetch() {
 		if(!this.currentContext()) {
 			// query or 이전 선택된 context 확인
-			let ctx = this.$route.query.context;
-			if (!ctx) ctx = localStorage.getItem("currentContext");
+			let ctx = this.$route.query.context ? this.$route.query.context: "";
+			if (!ctx && localStorage.getItem("currentContext")!=null) ctx = localStorage.getItem("currentContext");
 			if(ctx) {
 				if( !this.contexts().find(el => el===ctx)) ctx = "";
 			}

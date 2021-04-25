@@ -9,14 +9,12 @@
 .brand-link { margin-left: 3.7rem;}
 .layout-fixed .brand-link { width: 13.2rem;}
 
-aside a.brand-link img { width: 1.7em; height:1.7em;}
+aside a.brand-link img {width: 1.7em; height:1.7em;}
 #aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
 #aside-contexts > div { margin: .5rem .2rem;}
 #aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
 #aside-contexts p { font-size:x-small; margin: 0;}
-body:not(.layout-top-nav) .content-wrapper {
-	margin-left:0
-}
+body:not(.layout-top-nav) .content-wrapper {margin-left:0}
 
 /* custom  */
 .lh-vh-50 {line-height: 50vh;} .lh-vh-100 {line-height: 100vh;}

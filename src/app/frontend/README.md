@@ -30,10 +30,3 @@ $ npm run start:frontend
 [nuxtjs](https://ko.nuxtjs.org/)
 [nuxtjs github](https://github.com/nuxt/nuxt.js/)
 [패스트캠퍼스 Vue.js 수업 자료](https://joshua1988.github.io/vue-camp/textbook.html)
-```
-SECRET="$(kubectl get sa -n kore -l app=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
-TOKEN="$(kubectl get secret ${SECRET} -n kore -o jsonpath='{.data.token}' | base64 --decode)"
-
-echo ${SECRET}
-echo ${TOKEN}
-```

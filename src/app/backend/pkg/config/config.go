@@ -227,7 +227,7 @@ func initScretToken(path string) {
 	os.Remove(path)
 	b := []byte(Value.SecretToken)
 	if err := ioutil.WriteFile(path, b, os.FileMode(777)); err != nil {
-		log.Errorf("cannot write a secret token file (cause=%s)", err.Error())
+		log.Errorf("cannot write a secret token file (cause=%s, path=%s)", err.Error(), path)
 	} else {
 		log.Infof("create a token file (path=%s)", path)
 	}
