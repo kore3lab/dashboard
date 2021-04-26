@@ -171,9 +171,9 @@ export TMPDIR=/nonexistent
 if [ "${ARG_TERM_TYPE}" == "cluster" ];then
     exec su -s /bin/bash nobody
 elif [ "${ARG_TERM_TYPE}" == "pod" ];then
-    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} -- /bin/bash 2>/dev/null || /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} -- /bin/sh
+    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} -- /bin/bash || /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} -- /bin/sh || echo "remote shell is not supported"
 elif [ "${ARG_TERM_TYPE}" == "container" ];then
-    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} --container ${ARG_CONTAINER} -- /bin/bash 2>/dev/null || /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} --container ${ARG_CONTAINER} -- /bin/sh
+    /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} --container ${ARG_CONTAINER} -- /bin/bash || /usr/bin/kubectl exec --kubeconfig .kube/config --stdin --tty --namespace=${ARG_NAMESPACE} ${ARG_POD} --container ${ARG_CONTAINER} -- /bin/sh || echo "remote shell is not supported"
 else
     echo "term type argument error"
     exit 1    

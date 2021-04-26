@@ -105,7 +105,6 @@ func ProcCluster(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-
 	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.termtype = "cluster"
