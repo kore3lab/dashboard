@@ -26,7 +26,6 @@ $ echo "$(kubectl get secret ${SECRET} -n kore -o jsonpath='{.data.token}' | bas
 	</div>
 </template>
 <script>
-
 export default {
 	components: {
 	},

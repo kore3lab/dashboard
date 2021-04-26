@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: backend
+    kore.board: backend
   name: backend
   namespace: {{ .Release.Namespace }}
 spec:
@@ -18,7 +18,7 @@ spec:
       targetPort: 3001
   selector:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: backend
+    kore.board: backend
 
 ---
 
@@ -27,40 +27,50 @@ apiVersion: apps/v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: backend
+    kore.board: backend
   name: backend
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.backend.service.replicaCount }}
+  replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
-      acornsoft.dashboard: backend
+      kore.board: backend
   template:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-        acornsoft.dashboard: backend
+        kore.board: backend
     spec:
       containers:
         - name: backend
           image: ghcr.io/acornsoftlab/kore-board.backend:{{ .Chart.AppVersion }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --kubeconfig=/app/.kube/config
             - --metrics-scraper-url=http://metrics-scraper:8000
+            - --log-level=info
           ports:
             - containerPort: 3000
               protocol: TCP
           volumeMounts:
-          - mountPath: /app/.kube
-            name: dashboard-kubeconfig
-          - mountPath: /tmp
-            name: tmp-volume
+            - mountPath: /app/.kube/config
+              name: kubeconfig
+              subPath: config
+            - mountPath: /tmp
+              name: tmp-volume
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 2001
       volumes:
-        - name: dashboard-kubeconfig
+        - name: kubeconfig
           configMap:
             name: kore-board-kubeconfig
+            items:
+            - key: config
+              path: config
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: {{ .Chart.Name }}

@@ -26,8 +26,9 @@ $ npm run start:backend
 |이름                   |기본값                 |설명                                                                                       |
 |---                    |---                    |---                                                                                        |
 |--kubeconfig           |                       |kubeconfig 파일 위치                                                                       |
-|--log-level            |info                   |로그 레벨(panic,fatal,error,warning,info,debug,trace) https://github.com/sirupsen/logrus)  |
+|--log-level            |debug                  |로그 레벨(panic,fatal,error,warning,info,debug,trace) https://github.com/sirupsen/logrus)  |
 |--metrics-scraper-url  |http://localhost:8000  |metrics-scraper api url                                                                    |
+|--token                |env.TOKEN              |custom token filepath                                                                      |
 
 
 * 환경변수 (env)
@@ -53,12 +54,25 @@ $ npm run start:backend
 |/api/clusters/:cluster/dashboard   |GET    |Dashboard 데이터 조회                    |
 |/api/dashboard                     |GET    |Dashboard 데이터 조회 (default cluster)  |
 
+### preparation
+
+* get a token
+
+```
+COOKIE="$(pwd)/token.cookies"
+curl -X POST -H "Content-Type: application/json" --cookie-jar "${COOKIE}" http://localhost:3001/api/token -d @- <<EOF
+{
+    "secret": "eyJhbGciOiJSUzI1NiIsImtpZCI6IlFwOVFFQTRZcGFTZHExSUNYV3RtUlJHM3JkLV83akxzQU5sZ1BzSXk4eEEifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrb3JlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImtvcmUtYm9hcmQtdG9rZW4tNzdiZGciLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoia29yZS1ib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjI3MjdhZmIzLWQ1YWEtNGEzZi05NzY2LTM2OWM4NGM2ODU5MiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprb3JlOmtvcmUtYm9hcmQifQ.y934q_JkTiy2Es_54cMXsPtb6BL_qmlSK_xhay6kPEXsj66D-25iy8Jvau3KP1KLZI3TStA37P1VGA5jRhKECyeFxi1Vjmye0gubyCsGdi8zAc8Alhwfbv9fhQXUXaYrGEDvLjeGCx0vTYIFwilWpW4vsOqj8dv68jb18jAdnjiDbW7mEs_uWnJjCML0p_rYNyeFR4G5ONv3STFRXVhTz-T1n0OZQiirIPuJaVWm_ooBmYAWo_wOPIGTk7u1Q8v3ORYmBlTmlEq-SdoaTdqQgO1vS22nAXxh2GFvpdli6Jg3GD7gaKD92WYMXPC7jXnySKj9iVI0swnoLfOzBkg-5A"
+}
+EOF
+```
+
 * Examples
 
 ```
-$ curl -X GET http://localhost:3001/api/clusters
-$ curl -X GET http://localhost:3001/api/topology
-$ curl -X GET http://localhost:3001/api/clusters/apps-05/dashboard
+$ curl -X GET -b "${COOKIE}" http://localhost:3001/api/clusters
+$ curl -X GET -b "${COOKIE}" http://localhost:3001/api/topology
+$ curl -X GET -b "${COOKIE}" http://localhost:3001/api/clusters/apps-05/dashboard
 ```
 
 
@@ -106,7 +120,7 @@ $ kubectl get crd virtualservices.networking.istio.io -o jsonpath="{.spec.group}
 * Example
 
 ```
-$ curl -X POST -H "Content-Type: application/json" http://localhost:3001/raw -d @- <<EOF
+$ curl -X POST -H "Content-Type: application/json" -b "${COOKIE}" http://localhost:3001/raw -d @- <<EOF
 {
     "apiVersion": "v1",
     "kind": "Namespace",
@@ -136,7 +150,7 @@ EOF
 * JSON merge patch example
 
 ```
-$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/api/v1/namespaces/default/pods/busybox -d @- <<EOF
+$ curl -X PATCH -H "Content-Type: application/merge-patch+json" -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/default/pods/busybox -d @- <<EOF
 {
     "metadata": {
         "labels": {
@@ -152,7 +166,7 @@ $ kubectl get po busybox -n default  -o jsonpath="{.metadata.labels}"
 * JSON patch example
 
 ```
-$ curl -X PATCH -H "Content-Type: application/json-patch+json" http://localhost:3001/raw/api/v1/namespaces/default/pods/busybox -d @- <<EOF
+$ curl -X PATCH -H "Content-Type: application/json-patch+json" -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/default/pods/busybox -d @- <<EOF
 [
     {
         "op": "replace", 
@@ -225,7 +239,7 @@ EOF
 $ curl -X GET http://localhost:3001/raw/api/v1/namespaces/test-namespace
 
 # Update
-$ curl -X PATCH -H "Content-Type: application/merge-patch+json" http://localhost:3001/raw/api/v1/namespaces/test-namespace  -d @- <<EOF
+$ curl -X PATCH -H "Content-Type: application/merge-patch+json" -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/test-namespace  -d @- <<EOF
 {
     "metadata": {
         "labels": {
@@ -239,11 +253,11 @@ EOF
 $ kubectl  get ns/test-namespace -o jsonpath={.metadata.labels.istio-injection}
 
 # Delete
-$ curl -X DELETE http://localhost:3001/raw/api/v1/namespaces/test-namespace
+$ curl -X DELETE -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/test-namespace
 
 
 # List
-$ curl -X GET http://localhost:3001/raw/api/v1/namespaces
+$ curl -X GET -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces
 ```
 
 

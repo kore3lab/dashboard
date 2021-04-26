@@ -4,8 +4,8 @@
 		<c-context />
 
 		<nuxt-link to="/" class="brand-link align-bottom">
-			<img src="/favicon.svg">
-			<span class="text-info font-weight-bold align-bottom"> K</span><span class="align-bottom">ore</span><sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup><sub class="text-sm ml-1">dashboard</sub>
+			<img src="/favicon.svg" class="brand-image">
+			<span class="brand-text text-info font-weight-bold align-bottom"> K</span><span class="align-bottom">ore</span><sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup><sub class="text-sm ml-1">dashboard</sub>
 		</nuxt-link>
 
 		<!-- Sidebar -->

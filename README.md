@@ -51,7 +51,7 @@ $ git read-tree HEAD -m -u
 ```
 
 
-* Install dependencies (frontend,graph)
+* Installation dependencies (frontend,graph)
 
 ```
 # graph
@@ -81,96 +81,29 @@ $ curl http://localhost:3001/healthy
 $ curl http://localhost:8000/api/v1
 ```
 
-## Deployment
+## Installation guide
 
-### Deploy on Docker
+[Installation guide](./scripts/install/README.md)
 
-* install 
 
-```
-$ KUBECONFIG="${HOME}/.kube/config"
+## Login token
 
-$ docker run --rm -d --name metrics-scraper \
-    -v "${KUBECONFIG}:/app/.kube/config"\
-    -v "$(pwd)/.tmp:/app/data"\
-    ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db
+### 조회
 
-$ docker run --rm -d --name backend --privileged\
-    -p 3001:3001\
-    -v "${KUBECONFIG}:/app/.kube/config"\
-    --link metrics-scraper:metrics-scraper\
-    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000
-
-$ docker run --rm -d --name frontend\
-    -p 3000:80\
-    -e BACKEND_PORT="3001"\
-    ghcr.io/acornsoftlab/kore-board.frontend:latest
-
-$ docker ps
-$ docker logs backend | grep TOKEN
-```
-
-* clean-up
+* Kubernetes : `kore-board` serviceaccount 의 secret
 
 ```
-$ docker stop backend metrics-scraper frontend
+$ SECRET="$(kubectl get sa -n kore -l app=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
+$ echo "$(kubectl get secret kore-board -n kore -o jsonpath='{.data.token}' | base64 --decode)"
 ```
 
-## Login token 
-
-### Kubernetes
-
-* default token 은 `kore-board` serviceaccount 의 secret 값
-
-```
-$ NAMESPACE="kore"
-$ APP="kore-board"
-$ SECRET="$(kubectl get sa -n ${NAMESPACE} -l app=${APP} -o jsonpath='{.items[0].secrets[0].name}')"
-
-$ echo "$(kubectl get secret ${SECRET} -n ${NAMESPACE} -o jsonpath='{.data.token}' | base64 --decode)"
-```
-
-* 사용자 정의 token 값 지정 
-
-```
-//TODO
-```
-
-
-### Docker
-
-* backend log 정보에서 찾기
+* backend 로그에서 조회
 
 ```
 $ docker logs backend | grep TOKEN
+
+$ kubectl logs $(kubectl get po -l kore.board=backend -o jsonpath='{..items[0]..metadata.name}' -n kore) -n kore | grep TOKEN
 ```
-
-
-* 사용자 token 값 지정
-
-```
-# 사용자 token 값 생성 및 token 파일에 저장
-
-$ TOKEN="$(pwd)/.tmp/token"
-$ rm "${TOKEN}"
-$ echo -n "$(openssl rand -hex 32)" > "${TOKEN}"
-$ cat "${TOKEN}" && echo ""
-
-# backend 실행 시 volumn mount 하고 시작옵션 --token 에 해당 파일 지정 
-
-$ docker run --rm -d --name backend --privileged\
-    -p 3001:3001\
-    -v "${HOME}/.kube/config:/app/.kube/config"\
-    -v "${TOKEN}:/app/token"\
-    --link metrics-scraper:metrics-scraper\
-    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --token=/app/token --metrics-scraper-url=http://metrics-scraper:8000
-```
-
-
-### Deploy on Kubernetes
-
-[Install on Kubernetes](./scripts/install/README.md)
-
 
 ## Development
 
@@ -227,7 +160,7 @@ $ npm run docker:build:backend --kore-board:docker_image_tag=v0.2.0
 * 3002 : graph 개발
 * 8000 : metrics scraper
 
-### Debugging for "in-cluster" clusater enviroment 
+## Debugging for "in-cluster" clusater enviroment 
 
 ```
 # delete token, ca fils
@@ -250,8 +183,6 @@ $ export KUBERNETES_SERVICE_PORT=$(kubectl config view --raw=true -o jsonpath='{
 $ rm "$(pwd)/.tmp/config"
 $ export KUBECONFIG="$(pwd)/.tmp/config"
 ```
-
-
 
 ## Modules
 

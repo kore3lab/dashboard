@@ -28,6 +28,7 @@ export default {
 		{ src: "~/plugins/mixin-common-methods", mode: "client" },
 		{ src: "~/plugins/mixin-viewpage", mode: "client" },
 		{ src: "~/plugins/admin-lte", mode: "client" },
+		{ src: '~/plugins/axios', mode: "client" }
 	],
 	buildModules: ["@nuxt/typescript-build"],
 	modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios", "cookie-universal-nuxt"],
@@ -36,15 +37,15 @@ export default {
 		icons: true,
 	},
 	axios: {
-		//https://axios.nuxtjs.org/setup,
-		port: process.env.BACKEND_PORT || "3001",
-		prefix: "/",
+		baseURL: "/",
 		credentials: true,
 		headers: {
 			common: { "Accept": "application/json"}
 		}
 	},
 	publicRuntimeConfig: {
+		nodeEnv: process.env.NODE_ENV,						// production or development
+		backendPort: process.env.BACKEND_PORT || "3001",	// only development mode
 		itemsPerPage: process.env.ITEMS_PER_PAGE || "10"
 	},
 	build: {
