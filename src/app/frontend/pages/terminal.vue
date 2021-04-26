@@ -4,7 +4,6 @@
 </template>
 
 <script>
-import axios		from "axios";
 import { Xterm } from "../static/terminal/js/xterm";
 import { WebTTY, protocols } from "../static/terminal/js/webtty";
 import { ConnectionFactory } from "../static/terminal/js/websocket";
@@ -31,6 +30,7 @@ export default {
 		window.addEventListener("resize", this.handleResize);
 
 		this.getToken();
+		this.handleResize()
 	},
 	beforeDestroy(){
 		window.removeEventListener("resize", this.handleResize);
@@ -51,7 +51,7 @@ export default {
 					return;
 			}
 
-			axios.get(this.backendUrl() + this.requrl)
+			this.$axios.get(this.requrl)
 					.then( resp => {
 						this.token = resp.data.Token;
             this.connWs();
@@ -62,9 +62,18 @@ export default {
 		connWs() {
 			//웹소캣 접속
 			const httpsEnabled = `${location.protocol}` === "https:";
-			const url = (httpsEnabled ? 'wss://' : 'ws://') + `${location.hostname}:${this.$config.backendPort}` + '/api/terminal/' + 'ws';
+			const reqProtocol = httpsEnabled ? 'wss://' : 'ws://';
+			const reqTailURL = '/api/terminal/ws';
+            let reqHost = "";
 
-			let authToken = this.token;
+			if (`${this.$config.nodeEnv}` == "development") {
+				reqHost = `${location.hostname}:${this.$config.backendPort}`;
+			} else {
+				reqHost = `${location.host}`;
+			}
+			const url = reqProtocol + reqHost + reqTailURL;
+
+            let authToken = this.token;
 			let factory = new ConnectionFactory(url, protocols);
 			let wt = new WebTTY(this.instterm, factory, "", authToken);
 			let closer = wt.open();

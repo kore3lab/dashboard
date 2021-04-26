@@ -1,29 +1,10 @@
 image:
   pullPolicy: IfNotPresent  #Always
 
-configmap:
-  enabled: false
-
-backend:
-  replicaCount: 1
-  service:
-    type: ClusterIP
-    # type: NodePort
-    # nodePort: 30081
-
-frontend:
-  replicaCount: 1
-  service:
-    type: ClusterIP
-    # type: NodePort
-    # nodePort: 30080
-
 metricsScraper:
   replicaCount: 1
   service:
     type: ClusterIP
-    # type: NodePort
-    # nodePort: 30088
   persistence:
     enabled: false
     accessMode: ReadWriteOnce
@@ -40,4 +21,15 @@ metricsScraper:
   ##
   #persistence:
   #  existingClaim: "exist-pvc"
+
+backend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+
+frontend:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+
 

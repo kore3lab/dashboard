@@ -13,7 +13,6 @@ import (
 	"github.com/acornsoftlab/dashboard/pkg/app"
 	"github.com/acornsoftlab/dashboard/pkg/client"
 	"github.com/acornsoftlab/dashboard/pkg/config"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -24,17 +23,23 @@ import (
 func GetAPIGroupList(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	// instancing dynamic client
-	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config.Value.KubeConfigs[context])
+	// kubeconfig
+	conf, err := config.KubeConfigs(g.C.Param("CLUSTER"))
 	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	// instancing dynamic client
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(conf)
+	if err != nil {
+		g.SendError(err)
 		return
 	}
 
 	groups, err := discoveryClient.ServerGroups()
 	if err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
+		g.SendError(err)
 		return
 	}
 
@@ -46,14 +51,20 @@ func GetAPIGroupList(c *gin.Context) {
 func ApplyRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
+	// kubeconfig
+	conf, err := config.KubeConfigs(g.C.Param("CLUSTER"))
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
 	// api clinet
-	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	api := client.NewDynamicClient(config.Value.KubeConfigs[context])
+	api := client.NewDynamicClient(conf)
 
 	// invoke POST
 	r, err := api.POST(g.C.Request.Body, g.C.Request.Method == "PUT")
 	if err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
 		return
 	}
 
@@ -67,18 +78,24 @@ func DeleteRaw(c *gin.Context) {
 	// url parameter validation
 	v := []string{"VERSION", "RESOURCE", "NAME"}
 	if err := g.ValidateUrl(v); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	// kubeconfig
+	conf, err := config.KubeConfigs(g.C.Param("CLUSTER"))
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
 		return
 	}
 
 	// instancing dynamic client
-	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	api := client.NewDynamicClientSchema(conf, c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	// invoke delete
 	if err := api.DELETE(c.Param("NAME"), v1.DeleteOptions{}); err != nil {
-		g.SendMessage(http.StatusInternalServerError, err.Error())
+		g.SendError(err)
 		return
 	}
 
@@ -88,27 +105,34 @@ func DeleteRaw(c *gin.Context) {
 func GetRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
+	var err error
+
+	// kubeconfig
+	conf, err := config.KubeConfigs(g.C.Param("CLUSTER"))
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
 	// instancing dynamic client
-	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	api := client.NewDynamicClientSchema(conf, c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	var r interface{}
-	var err error
 
 	if c.Param("NAME") == "" {
 		r, err = api.List(v1.ListOptions{})
 		if err != nil {
-			g.SendMessage(http.StatusInternalServerError, err.Error())
+			g.SendError(err)
 			return
 		}
 	} else {
 		r, err = api.GET(c.Param("NAME"), v1.GetOptions{})
 		if err != nil {
 			if strings.HasSuffix(err.Error(), "not found") {
-				g.SendMessage(http.StatusNotFound, err.Error())
+				g.SendMessage(http.StatusNotFound, err.Error(), err)
 			} else {
-				g.SendMessage(http.StatusInternalServerError, err.Error())
+				g.SendError(err)
 			}
 			return
 		}
@@ -122,27 +146,34 @@ func GetRaw(c *gin.Context) {
 func PatchRaw(c *gin.Context) {
 	g := app.Gin{C: c}
 
+	var err error
+
 	// url parameter validation
 	v := []string{"VERSION", "RESOURCE", "NAME"}
 	if err := g.ValidateUrl(v); err != nil {
-		g.SendMessage(http.StatusBadRequest, err.Error())
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	// kubeconfig
+	conf, err := config.KubeConfigs(g.C.Param("CLUSTER"))
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
 		return
 	}
 
 	// instancing dynamic client
-	context := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
-	api := client.NewDynamicClientSchema(config.Value.KubeConfigs[context], c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
+	api := client.NewDynamicClientSchema(conf, c.Param("GROUP"), c.Param("VERSION"), c.Param("RESOURCE"))
 	api.SetNamespace(c.Param("NAMESPACE"))
 
 	var r interface{}
-	var err error
 
 	r, err = api.PATCH(c.Param("NAME"), types.PatchType(c.ContentType()), c.Request.Body, v1.PatchOptions{})
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "not found") {
-			g.SendMessage(http.StatusNotFound, err.Error())
+			g.SendMessage(http.StatusNotFound, err.Error(), err)
 		} else {
-			g.SendMessage(http.StatusInternalServerError, err.Error())
+			g.SendError(err)
 		}
 		return
 	}

@@ -35,7 +35,6 @@
 </template>
 <script>
 
-import axios			from "axios"
 import VueAceEditor 	from "@/components/aceeditor"
 import VueNavigator 	from "@/components/navigator"
 
@@ -71,7 +70,7 @@ export default {
 	},
 	methods: {
 		onCreate() {
-			axios.post(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
+			this.$axios.post(`/raw/clusters/${this.currentContext()}`, this.raw)
 					.then( resp => {
 						this.origin = Object.assign({}, resp.data);
 						this.raw = resp.data;

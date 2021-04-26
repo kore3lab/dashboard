@@ -46,7 +46,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 import VueAceEditor from "@/components/aceeditor";
 
 export default {

@@ -45,7 +45,7 @@ func main() {
 	dbFile = flag.String("db-file", "/tmp/metrics.db", "What file to use as a SQLite3 database.")
 	metricResolution = flag.Duration("metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	metricDuration = flag.Duration("metric-duration", 15*time.Minute, "The duration after which metrics are purged from the database.")
-	logLevel = flag.String("log-level", "info", "The log level")
+	logLevel = flag.String("log-level", "debug", "The log level")
 	// When running in a scoped namespace, disable Node lookup and only capture metrics for the given namespace(s)
 	metricNamespace = flag.StringSliceP("namespace", "n", []string{getEnv("POD_NAMESPACE", "")}, "The namespace to use for all metric calls. When provided, skip node metrics. (defaults to cluster level metrics)")
 
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	// configuration
-	//      customized by acornsoft-dashboard
+	//      customized by kore-board
 	config.SetKubeconfig(*kubeconfig)
 	config.Setup()
 
@@ -99,7 +99,7 @@ func main() {
 			return
 
 		case <-ticker.C:
-			// customized by acornsoft-dashboard
+			// customized by kore-board
 			for _, ctx := range config.Value.Contexts {
 				err = update(ctx, db, metricDuration, metricNamespace)
 			}
@@ -116,8 +116,14 @@ func update(cluster string, db *sql.DB, metricDuration *time.Duration, metricNam
 	podMetrics := &v1beta1.PodMetricsList{}
 	var err error
 
-	// customized by acornsoft-dashboard
-	client, err := metricsclient.NewForConfig(config.Value.KubeConfigs[cluster])
+	// customized by kore-board
+	conf, err := config.KubeConfigs(cluster)
+	if err != nil {
+		log.Fatalf(err.Error())
+		return err
+	}
+
+	client, err := metricsclient.NewForConfig(conf)
 	if err != nil {
 		log.Fatalf("Unable to generate a clientset: %s", err)
 		return err
@@ -147,7 +153,7 @@ func update(cluster string, db *sql.DB, metricDuration *time.Duration, metricNam
 	}
 
 	// Insert scrapes into DB
-	err = sidedb.UpdateDatabase(db, cluster, nodeMetrics, podMetrics) // customized by acornsoft-dashboard
+	err = sidedb.UpdateDatabase(db, cluster, nodeMetrics, podMetrics) // customized by kore-board
 	if err != nil {
 		log.Errorf("Error updating database: %s", err)
 		return err
@@ -156,11 +162,11 @@ func update(cluster string, db *sql.DB, metricDuration *time.Duration, metricNam
 	// Delete rows outside of the metricDuration time
 	err = sidedb.CullDatabase(db, cluster, metricDuration)
 	if err != nil {
-		log.Errorf("Error culling database: %s on %s", err, cluster) // customized by acornsoft-dashboard
+		log.Errorf("Error culling database: %s on %s", err, cluster) // customized by kore-board
 		return err
 	}
 
-	log.Infof("Database updated: %s cluster, %d nodes, %d pods", cluster, len(nodeMetrics.Items), len(podMetrics.Items)) // customized by acornsoft-dashboard
+	log.Infof("Database updated: %s cluster, %d nodes, %d pods", cluster, len(nodeMetrics.Items), len(podMetrics.Items)) // customized by kore-board
 	return nil
 }
 

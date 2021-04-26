@@ -34,7 +34,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -75,7 +74,7 @@ export default {
 		getQuotas(name) {
 			this.isQuota = false;
 			this.quotas = [];
-			axios.get(this.getApiUrl("","resourcequotas",name))
+			this.$axios.get(this.getApiUrl("","resourcequotas",name))
 			.then(resp => {
 				resp.data.items.forEach(el =>{
 					this.isQuota = true
@@ -86,7 +85,7 @@ export default {
 		getLimit(name) {
 			this.isLimit = false;
 			this.limits = [];
-			axios.get(this.getApiUrl("","limitranges",name))
+			this.$axios.get(this.getApiUrl("","limitranges",name))
 			.then(resp => {
 				resp.data.items.forEach(el =>{
 					this.isLimit = true

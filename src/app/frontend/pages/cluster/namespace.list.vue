@@ -25,9 +25,9 @@
 				<!-- count & filter -->
 				<div class="row mb-2">
 					<div class="col-11">
-						<b-form-group class="mb-0 font-weight-light">
-							<button type="submit" class="btn btn-default btn-sm" @click="onChangePhase('All')">All</button>
-							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light"  font="light" buttons size="sm" @input="onChangePhase"></b-form-checkbox-group>
+						<b-form-group class="mb-0 font-weight-light overflow-auto">
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
+							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light" font="light" switches size="sm" @input="onChangePhase" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
 					<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
@@ -37,12 +37,15 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
+									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
@@ -72,7 +75,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -107,10 +109,21 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => this.selectedClear() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
+		onChangePhase() {
+			let selectedPhase = this.selectedPhase;
+			this.items = this.origin.filter(el => {
+				return (selectedPhase.length === 0) || selectedPhase.includes(el.phase.status);
+			});
+			this.totalItems = this.items.length;
+			this.currentPage = 1
+		},
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
@@ -125,20 +138,10 @@ export default {
 				this.$refs.selectableTable.clearSelected()
 			}
 		},
-		//  Phase 필터링
-		onChangePhase(a) {
-			if(a === "All") this.selectedPhase = [];
-			let selectedPhase = this.selectedPhase;
-			this.items = this.origin.filter(el => {
-				return (selectedPhase.length === 0) || selectedPhase.includes(el.phase.status);
-			});
-			this.totalItems = this.items.length;
-			this.currentPage = 1
-		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","namespaces"))
+			this.$axios.get(this.getApiUrl("","namespaces"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -151,9 +154,14 @@ export default {
 						});
 						this.origin = this.items;
 						this.onFiltered(this.items);
+						this.onChangePhase()
 					})
 					.catch(e => { this.msghttp(e);})
 					.finally(()=> { this.isBusy = false;});
+		},
+		selectedClear() {
+			this.selectedPhase = [];
+			this.query_All()
 		},
 		//  status 필터링
 		onFiltered(filteredItems) {
@@ -169,11 +177,6 @@ export default {
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		toEndpointList(p) {
-			let list = [];
-			for(let i =0; i < p.ports.length; i++) list.push(`${p.host}:${p.ports[i]["port"]} ${p.ports[i].protocol}`)
-			return list;
 		},
 		// status 확인
 		onPhase(phase) {

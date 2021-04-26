@@ -65,7 +65,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -94,7 +93,7 @@ export default {
 		},
 		getJobs(uid) {
 			let list = [];
-			axios.get(this.getApiUrl("batch","jobs",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("batch","jobs",this.selectedNamespace))
 					.then(resp => {
 						resp.data.items.forEach(el => {
 							if (el.metadata.ownerReferences && el.metadata.ownerReferences[0].uid === uid) {

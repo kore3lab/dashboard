@@ -3,6 +3,122 @@ kind: ConfigMap
 metadata:
   labels:
     app: {{ .Chart.Name }}
-  name: acornsoft-dashboard-kubeconfig
+  name: kore-board-kubeconfig
 data:
   config: |
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: kore-board
+  name: kore-board-nginx
+  namespace: kore
+data:
+  default.conf: |2-
+    server {
+        listen       80;
+        listen  [::]:80;
+        server_name  localhost;
+
+        access_log /var/log/nginx/aaaccess.log main;
+        error_log /var/log/nginx/eeerror.log ;
+
+        location / {
+            location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2)$ {
+                expires 30d;
+                add_header Pragma public;
+                add_header Cache-Control "public";
+            }
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page   500 502 503 504   /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+
+        location ~ ^/api/terminal/(.*)  {
+            proxy_pass   http://backend:3001;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+        }
+
+        location ~ ^/api/(.*)  {
+            proxy_pass   http://backend:3001;
+            proxy_redirect              off;
+            proxy_set_header            Host $host;
+            proxy_set_header            X-Real-IP $remote_addr;
+            proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+            # proxy_set_header            X-Custom-Referrer $x_custom_referrer;
+        }
+
+        location ~ ^/raw/(.*)  {
+            proxy_pass   http://backend:3001;
+            proxy_redirect              off;
+            proxy_set_header            Host $host;
+            proxy_set_header            X-Real-IP $remote_addr;
+            proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+            # proxy_set_header            X-Custom-Referrer $x_custom_referrer;
+        }
+    }
+
+  nginx.conf: |2-
+
+    user  nginx;
+    worker_processes  auto;
+
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        map $http_upgrade $connection_upgrade {
+            default upgrade;
+            '' close;
+        }
+
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log  /var/log/nginx/access.log  main;
+
+        sendfile        on;
+        #tcp_nopush     on;
+
+        keepalive_timeout  65;
+
+        gzip  on;
+        gzip_disable "msie6";
+        gzip_comp_level 6;
+        gzip_min_length 1100;
+        gzip_buffers 16 8k;
+        gzip_proxied any;
+        gzip_types
+              text/plain
+              text/css
+              text/js
+              text/xml
+              text/javascript
+              application/javascript
+              application/x-javascript
+              application/json
+              application/xml
+              application/rss+xml
+              image/svg+xml;
+
+        include /etc/nginx/conf.d/*.conf;
+    }

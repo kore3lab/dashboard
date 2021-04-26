@@ -27,7 +27,7 @@
 				<div class="row mb-2">
 					<div class="col-10">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
-							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="query_All">All</button>
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
 							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onChangeStatus" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
@@ -38,12 +38,15 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @sort-changed="onSortChanged()" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
+									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
@@ -72,7 +75,7 @@
 									</template>
 								</b-table>
 							</div>
-							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
+								<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 						</div>
 					</div>
 				</div><!-- //GRID-->
@@ -84,7 +87,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -136,10 +138,13 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => this.selectedClear() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
@@ -170,8 +175,7 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.loadMetrics();
-			this.selectedStatus = [];
-			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -190,9 +194,14 @@ export default {
 						});
 						this.origin = this.items;
 						this.onFiltered(this.items);
+						this.onChangeStatus()
 					})
 					.catch(e => { this.msghttp(e);})
 					.finally(()=> { this.isBusy = false;});
+		},
+		selectedClear() {
+			this.selectedStatus = [];
+			this.query_All()
 		},
 		getNode(el) {
 			return {
@@ -241,8 +250,6 @@ export default {
 				return "Daemon Set"
 			} else if (kind === "ReplicaSet") {
 				return "Replica Set"
-			} else if (kind === "ReplicationController") {
-				return "Replication Controller"
 			} else {
 				return kind
 			}
@@ -278,7 +285,7 @@ export default {
 		// load pod's Metrics
 		async loadMetrics() {
 			this.metricsItems = [];
-			let resp = await axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
+			let resp = await this.$axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
 			if (!resp) return
 			this.metricsItems = resp.data.items
 		},

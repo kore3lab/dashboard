@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/acornsoftlab/dashboard/model/v1alpha1"
@@ -13,12 +14,12 @@ import (
 func Topology(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
 	namespace := c.Param("NAMESPACE")
 
 	topology := model.NewTopology(cluster)
 	if err := topology.Get(namespace); err != nil {
-		g.SendMessage(500, err.Error())
+		g.SendError(err)
 	} else {
 		g.Send(http.StatusOK, topology)
 	}
@@ -28,11 +29,12 @@ func Topology(c *gin.Context) {
 func Dashboard(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.CurrentContext)
+	fmt.Printf("cluster=%s", g.C.Param("CLUSTER"))
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
 
 	dashboard := model.NewDashboard(cluster)
 	if err := dashboard.Get(); err != nil {
-		g.SendMessage(500, err.Error())
+		g.SendError(err)
 	} else {
 		g.Send(http.StatusOK, dashboard)
 	}

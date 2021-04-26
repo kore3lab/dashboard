@@ -10,13 +10,11 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags acornsoft-dashboard.backend -o acornsoft-dashboard.backend -v backend.go
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags kore-board.backend -o kore-board.backend -v backend.go
 
 #-------------------------------------------
-# STEP 2 : build a image
+# STEP 2 : terminal
 #-------------------------------------------
-# FROM honester/httpbin:latest
-#FROM scratch
 FROM ubuntu:18.04
 
 USER root
@@ -26,7 +24,7 @@ ARG ARCH=amd64
 RUN rm -f /bin/sh && ln -s /bin/bash /bin/sh
 ENV KUBECTL_VERSION v1.20.2
 
-COPY --from=builder /usr/src/app/acornsoft-dashboard.backend /app/
+COPY --from=builder /usr/src/app/kore-board.backend /app/
 
 ## start install WebTerminal addon
 RUN apt-get update && \
@@ -51,9 +49,14 @@ ENV SESSION_STORAGE_SIZE=10M
 ENV KUBECTL_INSECURE_SKIP_TLS_VERIFY=true
 ## end install WebTerminal addon
 
+#-------------------------------------------
+# STEP 3 : execute a binary
+#-------------------------------------------
+ARG app_env=production
 ENV KUBECONFIG  ""
 ENV GIN_MODE=release
+ENV APP_ENV=${app_env:-"production"}
 
-ENTRYPOINT [ "/app/acornsoft-dashboard.backend" ]
+ENTRYPOINT [ "/app/kore-board.backend" ]
 
 EXPOSE 3001

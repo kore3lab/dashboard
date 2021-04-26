@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: acornsoft-dashboard-metrics-scraper
+  name: kore-board-metrics-scraper
   labels:
     app: {{ .Chart.Name }}
   name: {{ .Chart.Name }}

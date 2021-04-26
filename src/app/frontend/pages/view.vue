@@ -8,7 +8,7 @@
 					<span v-show="!errorcheck">
 						<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
-						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true"><i>JSON</i></button>
+						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
 						<button id="terminal" class="btn btn-tool" v-show="isTerminal"  @click="openTerminal()"><i class="fas fa-terminal"></i></button>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
@@ -78,7 +78,7 @@
 					</div>
 				</div>
 				<!-- 2. if Yaml(editor) then  -->
-				<div v-show="isYaml && !errorcheck" class="card-body p-1">
+				<div v-show="isYaml && !errorcheck" class="card-body p-1 overflow-hidden">
 					<div class="row">
 						<div class="col-sm-12 text-right mb-1">
 							<b-button variant="primary" size="sm" @click="onApply">Apply</b-button>
@@ -111,7 +111,6 @@
 </template>
 <script>
 
-import axios			from "axios"
 import VueAceEditor 	from "@/components/aceeditor"
 import VueJsonTree 		from "@/components/jsontree"
 export default {
@@ -143,6 +142,7 @@ export default {
 			localSrc: "",
 			errorcheck: false,
 			errorMessage: "",
+			errorM: [],
 			isCreated: false,
 			delay: 0,
 			disabled: false,
@@ -162,7 +162,12 @@ export default {
 	},
 	watch: {
 		isYaml() {
-			return this.raw = Object.assign({}, this.raw)
+			return this.raw = Object.assign({}, this.origin)
+		},
+		raw() {
+			if(!this.raw) {
+				this.raw = { metadata: {}, spec: {} }
+			}
 		},
 		value(newVal) {
 			this.src = newVal.src;
@@ -235,7 +240,7 @@ export default {
 			this.isYaml = false;
 			if (this.delay === 1) return;
 			this.delay++;
-			axios.get(this.localUrl)
+			this.$axios.get(this.localUrl)
 					.then(resp => {
 						this.errorcheck = false;
 						this.origin = Object.assign({}, resp.data);
@@ -252,6 +257,7 @@ export default {
 						this.isTerminal = this.title === 'Pod';
 						if (this.isCreated) {
 							this.$nuxt.$emit("onReadCompleted", this.origin);
+							this.$nuxt.$emit('resetHistory',this.raw);
 						}
 						this.delay = 0;
 					})
@@ -267,9 +273,15 @@ export default {
 			this.errorMessage = e.response.data.message ;
 		},
 		onApply() {
-			if(this.disabled) return this.disabled = false
-			axios.put(`${this.backendUrl()}/raw/clusters/${this.currentContext()}`, this.raw)
+			if(this.disabled) {
+				this.msghttp(this.errorM)
+				return this.disabled = false
+			}
+			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.raw)
 					.then( resp => {
+						if(!resp.data) {
+							return this.toast('Invalid modification.','warning')
+						}
 						this.origin = Object.assign({}, resp.data);
 						this.raw = resp.data;
 						this.toast('Patch Successful')
@@ -278,14 +290,14 @@ export default {
 		},
 		onDelete() {
 			this.deleteOverlay.processing = true;
-			axios.delete(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			this.$axios.delete(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( _ => {
 						this.watch();
 					})
 					.catch(e => {this.msghttp(e);});
 		},
 		watch() {
-			axios.get(`${this.backendUrl()}/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			this.$axios.get(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( resp => {
 						if (resp.status === 404) {
 							this.deleteOverlay.visible = false;
@@ -308,7 +320,8 @@ export default {
 		},
 		onError(error) {
 			this.disabled = true;
-			this.msghttp(error)
+			this.errorM = error
+			// this.msghttp(error)
 		},
 		onReset() {
 			this.raw = Object.assign({}, this.origin);

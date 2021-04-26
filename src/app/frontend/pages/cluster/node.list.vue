@@ -27,18 +27,21 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
+									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
 									</template>
 									<template v-slot:cell(ready)="data">
-										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" >{{ value.value }}  </span>
+										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" class="mr-1" >{{ value.value }}</span>
 									</template>
 									<template v-slot:cell(usageCpu)="data">
 										<b-progress :value="data.item.usageCpu" :max="100" variant="info" show-value class="mb-3"></b-progress>
@@ -65,7 +68,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -103,6 +105,9 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
@@ -119,8 +124,7 @@ export default {
 		},
 		// 조회
 		query_All() {
-			this.isBusy = true;
-			axios.get(this.getApiUrl("","nodes"))
+			this.$axios.get(this.getApiUrl("","nodes"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -176,7 +180,8 @@ export default {
 		},
 		// node cpu,memory 사용량 먼저 읽은 후 전체리스트 조회
 		onUsage() {
-			axios.get(`${this.backendUrl()}/api/clusters/${this.currentContext()}/dashboard`)
+			this.isBusy = true;
+			this.$axios.get(`/api/clusters/${this.currentContext()}/dashboard`)
 					.then((resp) => {
 						this.metrics = resp.data.nodes
 					}).finally(()=> { this.query_All()} )

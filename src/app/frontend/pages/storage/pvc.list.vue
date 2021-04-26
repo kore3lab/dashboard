@@ -32,12 +32,15 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable select-mode="single" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
+									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
@@ -73,7 +76,6 @@
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
 
@@ -113,6 +115,9 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
@@ -130,7 +135,7 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","persistentvolumeclaims",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","persistentvolumeclaims",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -165,7 +170,7 @@ export default {
 		// pod List 조회 이후 query_All 실행
 		getPods() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						resp.data.items.forEach(el => {
 							this.getPodname(el)

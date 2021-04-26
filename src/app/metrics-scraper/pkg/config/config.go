@@ -1,19 +1,38 @@
-package config // add by acornsoft-dashboard
+package config // add by kore-board
 
 import (
-	log "github.com/sirupsen/logrus"
+	"errors"
+	"fmt"
+
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	log "github.com/sirupsen/logrus"
+)
+
+const (
+	IN_CLUSTER_NAME = "kubernetes@in-cluster"
 )
 
 type conf struct {
 	ConfigLoadingRules clientcmd.ClientConfigLoader
-	CurrentContext     string
-	KubeConfigs        map[string]*rest.Config
+	DefaultContext     string
+	kubeConfigs        map[string]*rest.Config
 	Contexts           []string
 }
 
 var Value = &conf{}
+
+func KubeConfigs(ctx string) (*rest.Config, error) {
+
+	for _, s := range Value.Contexts {
+		if s == ctx {
+			return Value.kubeConfigs[ctx], nil
+		}
+	}
+
+	return nil, errors.New(fmt.Sprintf("cannot found context=%s", ctx))
+}
 
 func SetKubeconfig(kubeconfig string) {
 	// KUBECONFIG 로드 Rules
@@ -33,7 +52,7 @@ func SetKubeconfig(kubeconfig string) {
 
 func Setup() {
 
-	Value.KubeConfigs = map[string]*rest.Config{}
+	Value.kubeConfigs = map[string]*rest.Config{}
 	Value.Contexts = []string{}
 
 	// kubeconfig 파일 로드
@@ -43,10 +62,10 @@ func Setup() {
 			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*cfg, key, &clientcmd.ConfigOverrides{}, Value.ConfigLoadingRules).ClientConfig()
 			if err == nil {
 				Value.Contexts = append(Value.Contexts, key)
-				Value.KubeConfigs[key] = contextCfg
+				Value.kubeConfigs[key] = contextCfg
 			}
 		}
-		Value.CurrentContext = cfg.CurrentContext
+		Value.DefaultContext = cfg.CurrentContext
 	} else {
 		log.Warnf("cannot load kubeconfig (cause=%v)", err)
 	}
@@ -55,14 +74,18 @@ func Setup() {
 	if len(Value.Contexts) == 0 {
 		cnf, err := rest.InClusterConfig()
 		if err != nil {
-			log.Panic("cannot load kubeconfig inCluster")
+			log.Error("running empty cluster (cannot load a kubeconfig in-cluster)")
+		} else {
+			Value.kubeConfigs[IN_CLUSTER_NAME] = cnf
+			Value.Contexts = []string{IN_CLUSTER_NAME}
+			log.Infoln("running in-cluster mode")
 		}
-		Value.KubeConfigs["default"] = cnf
-		Value.Contexts = []string{"default"}
+	} else {
+		log.Infof("running out-cluster mode (contexts=%v)", len(Value.Contexts))
 	}
 
-	if Value.CurrentContext == "" {
-		Value.CurrentContext = Value.Contexts[0]
+	if len(Value.Contexts) > 0 && Value.DefaultContext == "" {
+		Value.DefaultContext = Value.Contexts[0]
 	}
 
 }

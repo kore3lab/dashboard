@@ -88,7 +88,6 @@
 	</div>
 </template>
 <script>
-import axios			from "axios"
 
 export default {
 	data() {
@@ -145,7 +144,7 @@ export default {
 		getPv() {
 			this.isPV = false;
 			let list = [];
-			axios.get(this.getApiUrl('','persistentvolumes'))
+			this.$axios.get(this.getApiUrl('','persistentvolumes'))
 			.then(resp => {
 				resp.data.items.forEach(el => {
 					if(el.spec.storageClassName && el.spec.storageClassName === this.metadata.name) {
