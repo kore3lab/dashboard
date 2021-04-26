@@ -62,9 +62,18 @@ export default {
 		connWs() {
 			//웹소캣 접속
 			const httpsEnabled = `${location.protocol}` === "https:";
-			const url = (httpsEnabled ? 'wss://' : 'ws://') + `${location.hostname}:${this.$config.backendPort}` + '/api/terminal/' + 'ws';
+			const reqProtocol = httpsEnabled ? 'wss://' : 'ws://';
+			const reqTailURL = '/api/terminal/ws';
+            let reqHost = "";
 
-			let authToken = this.token;
+			if (`${this.$config.nodeEnv}` == "development") {
+				reqHost = `${location.hostname}:${this.$config.backendPort}`;
+			} else {
+				reqHost = `${location.host}`;
+			}
+			const url = reqProtocol + reqHost + reqTailURL;
+
+            let authToken = this.token;
 			let factory = new ConnectionFactory(url, protocols);
 			let wt = new WebTTY(this.instterm, factory, "", authToken);
 			let closer = wt.open();
