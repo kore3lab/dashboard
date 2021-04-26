@@ -54,7 +54,7 @@ $ npm run start:backend
 |/api/clusters/:cluster/dashboard   |GET    |Dashboard 데이터 조회                    |
 |/api/dashboard                     |GET    |Dashboard 데이터 조회 (default cluster)  |
 
-### preparation
+### prerequisites
 
 * get a token
 

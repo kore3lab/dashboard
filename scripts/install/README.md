@@ -1,6 +1,6 @@
 # Installation
 
-## Prerequites
+## Prerequisites
 
 ### Metrics-Server
 
@@ -62,7 +62,7 @@ $ docker stop frontend backend metrics-scraper
 
 ## Kubernetes
 
-### Prerequites  : create a kubeconfig configmap `kore-board-kubeconfig`
+### Prerequisite  : create a kubeconfig configmap `kore-board-kubeconfig`
 
 * Create
 ```
@@ -142,7 +142,7 @@ $ helm template --debug -n kore kore-board ./kuberntes/helm-chart/ \
   --set frontend.service.nodePort=30080
 ```
 
-# apply test
+* apply test
 
 ```
 $ kubectl create ns kore

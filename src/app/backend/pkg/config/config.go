@@ -162,39 +162,21 @@ func Setup() {
 
 }
 
+/* ---
+* 현재 로그인 validation 은 토큰 문자열 단순 비교
+* 비교 되는 토큰 생성 기준 (backend)
+  * 1순위: 시작 파라메터 `--token`  환경 변수 `TOKEN` 에 지정되어 있는 파일경로에서 토큰값 read
+  * 2순위:  in-cluster 가 있는 경우  지정된 namespace 의 serviceaccount secret 토큰값 read
+  * 3순위:  in-cluster 가 없는 경우 default cluster 에서  지정된 namespace 의 serviceaccount secret 토큰값 read
+  * 4순위 : 자동생성
+* 생성된 토큰은 파일로 저장 (/var/run/kore-board-token)		*/
 func initScretToken(path string) {
 
 	var apiClient *kubernetes.Clientset
 	var err error
 
-	// secret 을 읽어올 cluster 선정
-	if Value.InClusterConfig == nil {
-		apiClient, err = NewKubeClient(Value.DefaultContext)
-		if err != nil {
-			log.Errorln(err.Error())
-		}
-	} else {
-		apiClient, err = kubernetes.NewForConfig(Value.InClusterConfig)
-		if err != nil {
-			log.Errorln(err.Error())
-		}
-	}
-
-	if apiClient != nil {
-		ns := lang.NVL(os.Getenv("NAMESPACE"), "kore")
-		nm := lang.NVL(os.Getenv("SERVICE_ACCOUNT"), "kore-board")
-		sa, err := apiClient.CoreV1().ServiceAccounts(ns).Get(context.TODO(), nm, metav1.GetOptions{})
-		if err != nil {
-			log.Warnf("cannot load service account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
-		} else {
-			se, err := apiClient.CoreV1().Secrets(ns).Get(context.TODO(), sa.Secrets[0].Name, metav1.GetOptions{})
-			if err == nil {
-				Value.SecretToken = string(se.Data["token"])
-			} else {
-				log.Warnf("cannot load token env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
-			}
-		}
-	} else {
+	// 1. token path 에서 token 값 읽음
+	if path != "" {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			log.Infof("can not find a secret token file '%s'", path)
 		} else {
@@ -208,13 +190,49 @@ func initScretToken(path string) {
 	}
 
 	if Value.SecretToken == "" {
+		// secret 을 읽어올 cluster 선정
+		if Value.InClusterConfig == nil {
+			apiClient, err = NewKubeClient(Value.DefaultContext)
+			if err != nil {
+				log.Errorln(err.Error())
+			}
+		} else {
+			apiClient, err = kubernetes.NewForConfig(Value.InClusterConfig)
+			if err != nil {
+				log.Errorln(err.Error())
+			}
+		}
+
+		// 대상 클러스터가 있는 경우 namespace에서 serviceaccount token 을 읽음
+		if apiClient != nil {
+			ns := lang.NVL(os.Getenv("NAMESPACE"), "kore")
+			nm := lang.NVL(os.Getenv("SERVICE_ACCOUNT"), "kore-board")
+			sa, err := apiClient.CoreV1().ServiceAccounts(ns).Get(context.TODO(), nm, metav1.GetOptions{})
+			if err != nil {
+				log.Warnf("cannot load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
+			} else {
+				se, err := apiClient.CoreV1().Secrets(ns).Get(context.TODO(), sa.Secrets[0].Name, metav1.GetOptions{})
+				if err == nil {
+					log.Infof("load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s", ns, nm)
+					Value.SecretToken = string(se.Data["token"])
+				} else {
+					log.Warnf("cannot load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
+				}
+			}
+		}
+
+	}
+
+	// 토큰 값 자동 생성
+	if Value.SecretToken == "" {
 		b := make([]byte, 256) //490
 		rand.Read(b)
 		Value.SecretToken = fmt.Sprintf("%x", b)
 		log.Warnln("generate a new random secret token")
 	}
 
-	// save token file
+	// token 파일 저장
+	path = lang.NVL(path, "/var/run/kore-board-token")
 	dir := filepath.Dir(path)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, os.FileMode(777)); err != nil {
