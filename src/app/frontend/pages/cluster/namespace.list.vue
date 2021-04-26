@@ -25,9 +25,9 @@
 				<!-- count & filter -->
 				<div class="row mb-2">
 					<div class="col-11">
-						<b-form-group class="mb-0 font-weight-light">
-							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
-							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light"  font="light" buttons size="sm" @input="onChangePhase"></b-form-checkbox-group>
+						<b-form-group class="mb-0 font-weight-light overflow-auto">
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
+							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light" font="light" switches size="sm" @input="onChangePhase" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
 					<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
@@ -37,15 +37,18 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success" style="margin:150px 0">
+										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="align-middle text-lg">Loading...</span>
+											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
+									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('','namespaces')}/${data.item.name}`}">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -55,6 +58,9 @@
 									<template v-slot:cell(phase)="data">
 										<div v-bind:class="data.item.phase.style">{{ data.item.phase.status }}</div>
 									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -63,15 +69,15 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Namespace" group="Cluster" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -93,35 +99,49 @@ export default {
 				{ key: "phase", label: "Status", sortable: true },
 			],
 			isBusy: false,
+			origin: [],
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => this.selectedClear() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		//  Phase 필터링
+		onSortChanged() {
+			this.currentPage = 1
+		},
 		onChangePhase() {
 			let selectedPhase = this.selectedPhase;
 			this.items = this.origin.filter(el => {
-				return (this.selectedPhase.length === 0) || this.selectedPhase.includes(el.phase);
+				return (selectedPhase.length === 0) || selectedPhase.includes(el.phase.status);
 			});
 			this.totalItems = this.items.length;
 			this.currentPage = 1
 		},
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'namespaces','', items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","namespaces"))
+			this.$axios.get(this.getApiUrl("","namespaces"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -129,22 +149,27 @@ export default {
 								name: el.metadata.name,
 								labels: el.metadata.labels,
 								phase: this.onPhase(el.status.phase),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.origin = this.items;
 						this.onFiltered(this.items);
+						this.onChangePhase()
 					})
 					.catch(e => { this.msghttp(e);})
 					.finally(()=> { this.isBusy = false;});
+		},
+		selectedClear() {
+			this.selectedPhase = [];
+			this.query_All()
 		},
 		//  status 필터링
 		onFiltered(filteredItems) {
 			let status = { active:0, terminating:0 }
 
 			filteredItems.forEach(el=> {
-				if(el.phase === "Active") status.active++;
-				if(el.phase === "Terminating") status.terminating++;
+				if(el.phase.status === "Active") status.active++;
+				if(el.phase.status === "Terminating") status.terminating++;
 			});
 
 			this.optionsPhase[0].text = status.active >0 ? `Active (${status.active})`: "Active";
@@ -152,11 +177,6 @@ export default {
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		toEndpointList(p) {
-			let list = [];
-			for(let i =0; i < p.ports.length; i++) list.push(`${p.host}:${p.ports[i]["port"]} ${p.ports[i].protocol}`)
-			return list;
 		},
 		// status 확인
 		onPhase(phase) {

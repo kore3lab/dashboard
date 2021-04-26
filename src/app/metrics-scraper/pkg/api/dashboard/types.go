@@ -41,7 +41,7 @@ type ResourceSelector struct {
 // SidecarMetric is a format of data used by our sidecar. This is also the format of data that is being sent by backend API.
 type SidecarMetric struct {
 	// DataPoints is a list of X, Y int64 data points, sorted by X.
-	DataPoints []DataPoint `json:"dataPoints"` // modified by acornsoft-dashboard
+	DataPoints []DataPoint `json:"dataPoints"` // modified by kore-board
 	// MetricPoints is a list of value, timestamp metrics used for sparklines on a pod list page.
 	MetricPoints []MetricPoint `json:"metricPoints"`
 	// MetricName is the name of metric stored in this struct.

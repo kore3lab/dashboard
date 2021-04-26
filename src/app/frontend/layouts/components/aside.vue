@@ -4,7 +4,8 @@
 		<c-context />
 
 		<nuxt-link to="/" class="brand-link align-bottom">
-			<i class="fab fa-mixcloud mr-0 text-info font-weight-bold"> K</i><span class="brand-text font-weight-bolder">ore<sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup></span><sub>dashboard</sub>
+			<img src="/favicon.svg" class="brand-image">
+			<span class="brand-text text-info font-weight-bold align-bottom"> K</span><span class="align-bottom">ore</span><sup><i class="fas fa-sm fa-cubes ml-1 text-warning"></i></sup><sub class="text-sm ml-1">dashboard</sub>
 		</nuxt-link>
 
 		<!-- Sidebar -->
@@ -20,7 +21,7 @@
 							<li class="nav-item small"><nuxt-link to="/cluster/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
 						</ul>
 					</li>
-					<li class="nav-item  menu-open">
+					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-server"></i><p>Workload</p></a>
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
@@ -30,10 +31,9 @@
 							<li class="nav-item small"><nuxt-link to="/workload/job.list"  class="nav-link"><i class="nav-icon text-sm mr-0">J</i><p>obs</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/workload/daemonset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>aemon Sets</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/workload/replicaset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplica Sets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/workload/replicationcontroller.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>eplication Controllers</p></nuxt-link></li>
 						</ul>
 					</li>
-					<li class="nav-item  menu-open">
+					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-network-wired"></i><p>Networking</p></a>
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/networking/service.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervices</p></nuxt-link></li>
@@ -45,7 +45,7 @@
 					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-hdd"></i><p>Storage</p></a>
 						<ul class="nav nav-treeview">
-							<li class="nav-item small"><nuxt-link to="/storage/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Valumn Claims</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/storage/pvc.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Volume Claims</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/storage/pv.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ersistent Volumes</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/storage/storageclass.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>troage Classes</p></nuxt-link></li>
 						</ul>
@@ -53,17 +53,17 @@
 					<li class="nav-item menu-open">
 						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-cog"></i><p>Configuration</p></a>
 						<ul class="nav nav-treeview">
-							<li class="nav-item small"><nuxt-link to="/administrator/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/resourcequota.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imite Ranges</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/administrator/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
-							<li class="nav-item small"><nuxt-link to="/cluster/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/configmap.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>onfig Maps</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/secret.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ecrets</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/resourcequota.list"  class="nav-link"><i class="nav-icon text-sm mr-0">R</i><p>esource Quotas</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imit Ranges</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
+							<li class="nav-item small"><nuxt-link to="/configuration/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
 						</ul>
 					</li>
 					<li class="nav-item menu-open">
-						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-users-cog"></i><p>Adminstrator</p></a>
+						<a href="pages/widgets.html" class="nav-link"><i class="nav-icon fas fa-users-cog"></i><p>Administrator</p></a>
 						<ul class="nav nav-treeview">
 							<li class="nav-item small"><nuxt-link to="/administrator/serviceaccount.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>ervice Accounts</p></nuxt-link></li>
 							<li class="nav-item small"><nuxt-link to="/administrator/clusterrole.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>luster Roles</p></nuxt-link></li>

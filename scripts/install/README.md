@@ -1,61 +1,100 @@
-# Install on Kubernetes
+# Installation
 
-## Prerequites
+## Prerequisites
 
-* Create a namespace
-```
-$ kubectl create ns acornsoft-dashboard
-```
+### Metrics-Server
 
-* Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
+* 조회 대상 클러스터에 metrics-server 설치 (args --kubelet-insecure-tls 추가)
 
-```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config -n acornsoft-dashboard
-```
-
-* If exists a configmap then Careate a configmap `acornsoft-dashboard-kubeconfig`  (in-cluster mode 제외)
-```
-$ kubectl create configmap acornsoft-dashboard-kubeconfig --from-file=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n acornsoft-dashboard -f -
-```
-
-* metrics-server 가 설치되어 있지 않다면 metrics-server 설치
 ```
 $ kubectl get po  -n kube-system | grep metrics-server
 
 $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
 
+## Docker
 
-## Install using Yaml
+### Installation using `docker-compose`
 
-* Install
+* Installation
+```
+$ export KUBECONFIG="${HOME}/.kube/config"
+
+$ docker-compose -f docker-compose/docker-compose.yaml up -d
+```
+dck
+* clean-up
+```
+$ docker-compose -f docker-compose/docker-compose.yaml down
+```
+
+### Installation using `docker run`
+
+* Installation
+
+```
+$ export KUBECONFIG="${HOME}/.kube/config"
+
+$ docker run --rm -d --name metrics-scraper \
+    -v "${KUBECONFIG}:/app/.kube/config"\
+    -v "$(pwd):/app/data"\
+    ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db
+
+$ docker run --rm -d --name backend \
+    -p 3001:3001\
+    -v "${KUBECONFIG}:/app/.kube/config"\
+    --link metrics-scraper:metrics-scraper\
+    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000
+
+$ docker run --rm -d --name frontend\
+    -p 3000:80\
+    -v "$(pwd):/tmp"\
+    -v "$(pwd)/docker-compose/default.conf:/etc/nginx/conf.d/default.conf"\
+    -v "$(pwd)/docker-compose/nginx.conf:/etc/nginx/nginx.conf"\
+    --link backend:backend\
+    ghcr.io/acornsoftlab/kore-board.frontend:latest
+```
+
+* clean-up
+```
+$ docker stop frontend backend metrics-scraper
+```
+
+## Kubernetes
+
+### Prerequisite  : create a kubeconfig configmap `kore-board-kubeconfig`
+
+* Create
+```
+$ kubectl create ns kore
+$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config -n kore
+```
+
+* Modify
+
+```
+$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n kore -f -
+```
+
+### Installation using Yaml
+
+* Installation
 ```
 $ kubectl apply -f kuberntes/recommended.yaml
 ```
 
-* Clean-up
+* clean-up
 ```
 $ kubectl delete -f kuberntes/recommended.yaml
 ```
 
+### Installation using Helm Chart
 
-## Install using Helm Chart
 
-* dry-run
-
-```
-$ kubectl create ns acornsoft-dashboard
-$ helm install --dry-run --debug -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
-  --set backend.service.type=NodePort \
-  --set backend.service.nodePort=30081 \
-  --set frontend.service.type=NodePort \
-  --set frontend.service.nodePort=30080
-```
-
-* Install
+* Installation
 
 ```
-$ helm install -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart/ \
+$ helm install -n kore kore-board ./kuberntes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
@@ -64,73 +103,67 @@ $ helm install -n acornsoft-dashboard acornsoft-dashboard ./kuberntes/helm-chart
 $ helm list
 ```
 
-* Clean-up
+* clean-up
 ```
-$ helm uninstall acornsoft-dashboard
-```
-
-
-## Install "in-cluster" mode
-> Install for Single Cluster
-
-```
-# metrics-scraper
-
-$ kubectl run metrics-scraper -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:latest --port=8000\
-  -- --db-file=metrics.db
-$ kubectl expose pod metrics-scraper -n ${NAMESPACE} --port=8000 --name=metrics-scraper
-
-
-# backend
-
-$ kubectl run backend -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.backend:latest --port=3001
-$ kubectl expose pod backend -n ${NAMESPACE} --name=backend --type='NodePort' --port=3001
-
-
-# rbac
-$ kubectl create role acornsoft-dashboard -n ${NAMESPACE} --resource=* --verb=*
-$ kubectl create rolebinding acornsoft-dashboard -n ${NAMESPACE} --role=acornsoft-dashboard --serviceaccount=${NAMESPACE}:default
-$ kubectl create clusterrolebinding acornsoft-dashboard --clusterrole=cluster-admin --serviceaccount=${NAMESPACE}:default
-
-
-# frontend
-
-$ BACKEND_PORT="$(kubectl get svc/backend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
-
-$ kubectl run frontend -n ${NAMESPACE}\
-  --image=ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:latest\
-  --port=3000\
-  --env="BACKEND_PORT=${BACKEND_PORT}"
-
-$ kubectl expose pod frontend -n ${NAMESPACE} --name=frontend --type='NodePort' --port=3000
-
+$ helm uninstall kore-board
 ```
 
-* Clean-up
+## Custom Token 
+
+* backend `--token` 옵션 활용해 custom token 지정
+
+* examples
 
 ```
-$ kubectl delete -n ${NAMESPACE} pod/backend pod/frontend pod/metrics-scraper
-$ kubectl delete -n ${NAMESPACE} service/backend service/frontend service/metrics-scraper
-$ kubectl delete -n ${NAMESPACE} role/acornsoft-dashboard rolebinding/acornsoft-dashboard
-$ kubectl delete clusterrolebinding/acornsoft-dashboard
-$ kubectl delete ns ${NAMESPACE}
+# 사용자 token 값 생성 및 token 파일에 저장
+
+$ TOKEN="$(pwd)/token"
+$ rm "${TOKEN}"
+$ echo -n "$(openssl rand -hex 32)" > "${TOKEN}"
+$ cat "${TOKEN}" && echo ""
+
+# backend 실행 시 volumn mount 하고 시작옵션 --token 에 해당 파일 지정 
+$ docker run --rm -d --name backend \
+    -v "${KUBECONFIG}:/app/.kube/config"\
+    -v "${TOKEN}:/app/token"\
+    --link metrics-scraper:metrics-scraper\
+    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --token=/app/token --metrics-scraper-url=http://metrics-scraper:8000
 ```
-
-
-### Verify
-
-* Open in your browser
-
-```
-$ echo "http://<end-point ip>:$(kubectl get svc/frontend -n ${NAMESPACE} -o jsonpath="{.spec.ports[0].nodePort}")"
-```
-
 
 ## Developments
 
-* Packaging
+### Helm Chart
+
+* output yaml
+
+```
+$ helm template --debug -n kore kore-board ./kuberntes/helm-chart/ \
+  --set frontend.service.type=NodePort \
+  --set frontend.service.nodePort=30080
+```
+
+* apply test
+
+```
+$ kubectl create ns kore
+$ helm template --debug -n kore kore-board ./kuberntes/helm-chart/ \
+  --set frontend.service.type=NodePort \
+  --set frontend.service.nodePort=30080 \
+  | kubectl apply -n kore -f -
+```
+
+
+* dry-run
+
+```
+$ helm install --dry-run --debug -n kore kore-board ./kuberntes/helm-chart/ \
+  --set frontend.service.type=NodePort \
+  --set frontend.service.nodePort=30080
+```
+
+
+
+* Packaging helm-chart
 
 ```
 $ helm package helm-chart/    # packaging  (tgz file 생성)

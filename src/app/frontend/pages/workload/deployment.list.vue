@@ -32,20 +32,26 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success" style="margin:150px 0">
+										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="align-middle text-lg">Loading...</span>
+											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
+									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, src:`${getApiUrl('apps','deployments',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(status)="data">
 										<div class="list-unstyled mb-0" v-if="data.item.status">
-											<span v-for="(val, idx) in data.item.status" v-bind:key="idx" v-bind:class="val.style" class=" text-sm ml-1">{{ val.type }}</span>
+											<span v-for="(val, idx) in data.item.status" v-bind:key="idx" v-bind:class="val.style" class=" text-sm ml-1 ">{{ val.type }}</span>
 										</div>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -55,15 +61,15 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view crd="Deployment" group="Workload" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -86,11 +92,8 @@ export default {
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
@@ -99,10 +102,27 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('apps', 'deployments', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("apps","deployments",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("apps","deployments",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -111,8 +131,8 @@ export default {
 								namespace: el.metadata.namespace,
 								pods: this.toPods(el.status),
 								replicas: el.status.replicas ? el.status.replicas : 0,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
-								status: this.toStatus(el.status),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
+								status: this.toStatus(el.status.conditions),
 							});
 						});
 						this.onFiltered(this.items);
@@ -127,35 +147,24 @@ export default {
 			if ( status.availableReplicas ) podsLength = status.availableReplicas
 			return `${podsReady}/${podsLength}`
 		},
-		toStatus(status) {
-			let list = [];
-			let temp = [];
-			for (let i=0;i<status.conditions.length;i++) {
-				if (status.conditions[i].status === "True" && status.conditions[i].type === "Available") {
-					list.push({
-						type: status.conditions[i].type,
-						style: "text-success"
-					})
-				} else if (status.conditions[i].status === "True" && status.conditions[i].type === "Progressing") {
-					list.push({
-						type: status.conditions[i].type,
-						style: "text-primary"
-					})
-				} else if (status.conditions[i].status === "True") {
-					list.push({
-						type: status.conditions[i].type,
-						style: "text-danger"
-					})
-				} else {
-					return list
-				}
-			}
-			if (list[0].type === "Progressing") {
-				temp = list[0]
-				list[0] = list[1]
-				list[1] = temp
-			}
-			return list
+		toStatus(conditions) {
+			if(!conditions) return
+			let condition = []
+			conditions.forEach(el => {
+				condition.push({
+					type: el.type,
+					style: this.checkStyle(el.type),
+				})
+			})
+			condition.sort(function(a,b) {
+				return a.type < b.type ? -1 : a.type > b.type ? 1 : 0;
+			})
+			return condition
+		},
+		checkStyle(t) {
+			if(t === 'Progressing') return 'text-primary'
+			if(t === 'Available') return 'text-success'
+			else return 'text-danger'
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

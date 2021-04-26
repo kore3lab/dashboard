@@ -1,16 +1,19 @@
 package router
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/acornsoftlab/dashboard/docs"
+	model "github.com/acornsoftlab/dashboard/model/v1alpha1"
 	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/acornsoftlab/dashboard/router/apis/_raw"
 	api "github.com/acornsoftlab/dashboard/router/apis/clusters"
+	"github.com/acornsoftlab/dashboard/router/apis/termapi"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"net/http"
+	"strings"
 )
 
 var Router *gin.Engine
@@ -18,7 +21,7 @@ var Router *gin.Engine
 func CreateUrlMappings() {
 
 	// swagger docs
-	docs.SwaggerInfo.Title = "acornsoft-dashboard API"
+	docs.SwaggerInfo.Title = "kore-board API"
 	docs.SwaggerInfo.Description = "mulit-cluster kubernetes dashboard api"
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "github.com/acornsoftlab"
@@ -26,8 +29,10 @@ func CreateUrlMappings() {
 
 	// gin
 	Router = gin.Default()
-	Router.Use(cors())
-	Router.Use(route())
+	Router.Use(cors())         // cors
+	Router.Use(route())        // route rules
+	Router.Use(authenticate()) // authentication
+
 	// Router.Use(gin.Logger())
 	// Router.Use(Recovery())
 
@@ -35,21 +40,36 @@ func CreateUrlMappings() {
 	Router.GET("/healthy", healthy)                                           // healthy
 	Router.GET("/api/clusters", api.ListContexts)
 	Router.POST("/api/clusters", api.CreateContexts)
+
+	// Authentication API
+	Router.POST("/api/token", api.Authentication) // authentication & get access token
+	Router.DELETE("/api/token", api.Logout)
+
 	// API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER")
 	{
 		clustersAPI.GET("", api.GetContext)
 		clustersAPI.POST("", api.CreateContext)
 		clustersAPI.DELETE("", api.DeleteContext)
-		clustersAPI.GET("/topology", api.Topology)
-		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)
-		clustersAPI.GET("/dashboard", api.Dashboard)
+		clustersAPI.GET("/nodes/:NODE/metrics/:METRICS", api.GetNodeMetrics)                    // get node metrics
+		clustersAPI.GET("/namespaces/:NAMESPACE/pods/:POD/metrics/:METRICS", api.GetPodMetrics) // get pod metrics
+		clustersAPI.GET("/topology", api.Topology)                                              // get cluster topology graph
+		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
+		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
+		//terminal API
+		//terminal API
+		clustersAPI.GET("/terminal", termapi.ProcCluster)
+		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/terminal", termapi.ProcPod)
+		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/containers/:CONTAINER/terminal", termapi.ProcContainer)
 	}
 	clustersAPI_ := Router.Group("/api")
 	{
 		clustersAPI_.GET("/topology", api.Topology)
 		clustersAPI_.GET("/topology/namespaces/:NAMESPACE", api.Topology)
 		clustersAPI_.GET("/dashboard", api.Dashboard)
+
+		//for terminal websocket connect
+		clustersAPI_.GET("/terminal/ws", termapi.GenerateHandleWS)
 	}
 
 	// RAW-API POST/PUT (apply, patch)
@@ -64,7 +84,7 @@ func CreateUrlMappings() {
 
 	// RAW-API Core
 	//      non-Namespaced
-	//          /api/v1/namespaces/acornsoft-dashboard
+	//          /api/v1/namespaces/kore
 	//          /api/v1/nodes/apps-113
 	//      Namespaced
 	//          /api/v1/namespaces/default/services/kubernetes
@@ -152,14 +172,49 @@ func route() gin.HandlerFunc {
 func cors() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", lang.NVL(c.Request.Header.Get("Origin"), "*"))
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.AbortWithStatus(http.StatusNoContent)
 			return
+		}
+
+		c.Next()
+	}
+}
+
+func authenticate() gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		if !lang.ArrayContains([]string{"/healthy", "/api/token"}, c.Request.RequestURI) {
+			token, _ := c.Cookie("access-token")
+			expired := true
+			if token != "" {
+				expired, _ = model.ValidateAccessToken(token)
+			}
+			// expired "access-token"
+			if expired {
+				token, _ := c.Cookie("refresh-token")
+				if token == "" {
+					log.Infoln("expired access-token, refresh-token")
+					c.AbortWithStatus(http.StatusUnauthorized)
+					return
+				}
+				expired, err := model.ValidateRefreshToken(token)
+				if err != nil || expired {
+					log.Infoln("expired refresh-token")
+					c.AbortWithStatus(http.StatusUnauthorized)
+					return
+				}
+				//create a token
+				model.CreateToken(c)
+				log.Infoln("create a new token(access, refresh) from refresh-token")
+			}
+
 		}
 
 		c.Next()

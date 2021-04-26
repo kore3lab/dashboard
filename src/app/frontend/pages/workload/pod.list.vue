@@ -25,28 +25,31 @@
 			<div class="container-fluid">
 				<!-- search & filter -->
 				<div class="row mb-2">
-					<div class="col-11">
-						<b-form-group class="mb-0 font-weight-light">
-							<button type="submit" class="btn btn-default btn-sm" @click="query_All">All</button>
-							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light"  font="light" buttons size="sm" @input="onChangeStatus"></b-form-checkbox-group>
+					<div class="col-10">
+						<b-form-group class="mb-0 font-weight-light overflow-auto">
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
+							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onChangeStatus" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
-					<div class="col-1 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+					<div class="col-2 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
 				</div>
 				<!-- GRID-->
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @sort-changed="onSortChanged()" @row-selected="onRowSelected" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success" style="margin:150px 0">
+										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="align-middle text-lg">Loading...</span>
+											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
+									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, crd:'Pod', src:`${getApiUrl('','pods',data.item.namespace)}/${data.item.name}`}">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(status)="data">
 										<div class="list-unstyled mb-0" v-if="data.item.status.value">
@@ -62,28 +65,31 @@
 										</div>
 									</template>
 									<template v-slot:cell(controller)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:data.value.spaceKind, group:data.value.gr, src:`${getApiUrl(data.value.group,data.value.rs,data.item.namespace)}/${data.value.name}`}">{{ data.value.kind }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}</a>
 									</template>
 									<template v-slot:cell(node)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Node', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs, '',  data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
-							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
+								<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 						</div>
 					</div>
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view :crd="sidebar.crd" :group="sidebar.crd" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -93,6 +99,7 @@ export default {
 		return {
 			selectedNamespace: "",
 			selectedStatus: [],
+			allStatus: ["Running", "Pending", "Terminating", "CrashLoopBackOff", "ImagePullBackOff", "Completed", "ContainerCreating", "Failed", "etc"],
 			optionsStatus: [
 				{ text: "Running", value: "Running" },
 				{ text: "Pending", value: "Pending" },
@@ -100,8 +107,9 @@ export default {
 				{ text: "CrashLoopBackOff", value: "CrashLoopBackOff" },
 				{ text: "ImagePullBackOff", value: "ImagePullBackOff" },
 				{ text: "Completed", value: "Completed" },
+				{ text: "ContainerCreating", value: "ContainerCreating" },
 				{ text: "Failed", value: "Failed" },
-				{ text: "Unknown", value: "Unknown" }
+				{ text: "etc", value: "etc" }
 			],
 			keyword: "",
 			filterOn: ["name"],
@@ -113,8 +121,8 @@ export default {
 				{ key: "restartCount", label: "Restart", sortable: true  },
 				{ key: "controller", label: "Controlled By", sortable: true  },
 				{ key: "node", label: "Node", sortable: true  },
-				{ key: "qos", label: "QoS", sortable: true },
-				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "qos", label: "QoS", sortable: true  },
+				{ key: "creationTimestamp", label: "Age", sortable: true  },
 				{ key: "status", label: "Status", sortable: true  },
 			],
 			isBusy: false,
@@ -124,23 +132,40 @@ export default {
 			containerStatuses: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => this.selectedClear() );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'pods', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		//  status 필터링
 		onChangeStatus() {
-			var selectedStatus = this.selectedStatus;
+			let selectedStatus = this.selectedStatus;
 			this.items = this.origin.filter(el => {
+				if(selectedStatus.includes("etc")) {
+					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
+				}
 				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
 			});
 			this.totalItems = this.items.length;
@@ -150,7 +175,7 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.loadMetrics();
-			axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -162,16 +187,21 @@ export default {
 								restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
 								controller: this.getController(el),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								node: this.getNode(el),
 								qos: el.status.qosClass,
 							});
 						});
 						this.origin = this.items;
 						this.onFiltered(this.items);
+						this.onChangeStatus()
 					})
 					.catch(e => { this.msghttp(e);})
 					.finally(()=> { this.isBusy = false;});
+		},
+		selectedClear() {
+			this.selectedStatus = [];
+			this.query_All()
 		},
 		getNode(el) {
 			return {
@@ -185,21 +215,26 @@ export default {
 			let group
 			let gr = ""
 			if ( el.metadata.ownerReferences ) {
-				version = el.metadata.ownerReferences[0].apiVersion.split('/')
+				let or = el.metadata.ownerReferences[0]
+				version = or.apiVersion.split('/')
 				if (version.length>1) {
 					group = version[0]
 				}
-				if (el.metadata.ownerReferences[0].kind === "Node") {
+				if (or.kind === "Node") {
 					gr = "Cluster"
 				} else {
 					gr = "Workload"
 				}
+				let rs;
+				let len = or.kind.length
+				if(or.kind[len-1] === 's') rs = (or.kind).toLowerCase() + 'es'
+				else rs = (or.kind).toLowerCase() + 's'
 				return {
-					"name" : el.metadata.ownerReferences[0].name,
+					"name" : or.name,
 					"group" : group ||"",
-					"kind" : el.metadata.ownerReferences[0].kind,
-					"rs" : (el.metadata.ownerReferences[0].kind).toLowerCase()+'s',
-					"spaceKind" : this.onKind(el.metadata.ownerReferences[0].kind),
+					"kind" : or.kind,
+					"rs" : rs,
+					"spaceKind" : this.onKind(or.kind),
 					"gr" : gr,
 				}
 			} else {
@@ -215,19 +250,9 @@ export default {
 				return "Daemon Set"
 			} else if (kind === "ReplicaSet") {
 				return "Replica Set"
-			} else if (kind === "ReplicationController") {
-				return "Replication Controller"
 			} else {
 				return kind
 			}
-		},
-		// check Ready pod
-		toReady(status, spec) {
-			let containersReady = 0
-			let containersLength = 0
-			if ( spec.containers ) containersLength = spec.containers.length
-			if ( status.containerStatuses ) containersReady = status.containerStatuses.filter(el => el.ready).length
-			return `${containersReady}/${containersLength}`
 		},
 		// check pod's containers
 		toContainers(status) {
@@ -257,68 +282,26 @@ export default {
 				"containerStatuses": containerStatuses,
 			}
 		},
-		// pod status check
-		toStatus(deletionTimestamp, status) {
-			// 삭제
-			if (deletionTimestamp) {
-				return {
-					"value": "Terminating",
-					"style": "text-secondary",
-				}
-			}
-
-			// Pending
-			if (!status.containerStatuses) {
-				if(status.phase === "Failed") {
-					return {
-						"value": status.phase,
-						"style": "text-danger",
-					}
-				} else {
-					return {
-						"value": status.phase,
-						"style": "text-warning",
-					}
-				}
-			}
-
-			// [if]: Running, [else]: (CrashRoofBack / Completed / ContainerCreating)
-			if(status.containerStatuses.filter(el => el.ready).length === status.containerStatuses.length) {
-				const state = Object.keys(status.containerStatuses.find(el => el.ready).state)[0]
-				return {
-					"value": state.charAt(0).toUpperCase() + state.slice(1),
-					"style": "text-success",
-				}
-			}
-			else {
-				const state = status.containerStatuses.find(el => !el.ready).state
-				let style = "text-secondary"
-				if ( state[Object.keys(state)].reason === "Completed") style = "text-success"
-				return {
-					"value": state[Object.keys(state)].reason,
-					"style": style,
-				}
-			}
-		},
 		// load pod's Metrics
 		async loadMetrics() {
 			this.metricsItems = [];
-			let resp = await axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
+			let resp = await this.$axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
 			if (!resp) return
 			this.metricsItems = resp.data.items
 		},
 		onFiltered(filteredItems) {
-			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, unknown:0 }
+			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
 
 			filteredItems.forEach(el=> {
 				if(el.status.value === "Running") status.running++;
-				if(el.status.value === "Pending") status.pending++;
-				if(el.status.value === "Terminating") status.terminating++;
-				if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
-				if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
-				if(el.status.value === "Completed") status.completed++;
-				if(el.status.value === "Failed") status.failed++;
-				if(el.status.value === "Unknown") status.unknown++;
+				else if(el.status.value === "Pending") status.pending++;
+				else if(el.status.value === "Terminating") status.terminating++;
+				else if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
+				else if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
+				else if(el.status.value === "Completed") status.completed++;
+				else if(el.status.value === "Failed") status.failed++;
+				else if(el.status.value === "ContainerCreating") status.containerCreating++;
+				else status.etc++;
 			});
 
 			this.optionsStatus[0].text = status.running >0 ? `Running (${status.running})`: "Running";
@@ -327,8 +310,9 @@ export default {
 			this.optionsStatus[3].text = status.crashLoopBackOff >0 ? `CrashLoopBackOff (${status.crashLoopBackOff})`: "CrashLoopBackOff";
 			this.optionsStatus[4].text = status.imagePullBackOff >0 ? `ImagePullBackOff (${status.imagePullBackOff})`: "ImagePullBackOff";
 			this.optionsStatus[5].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
-			this.optionsStatus[6].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
-			this.optionsStatus[7].text = status.unknown >0 ? `Unknown (${status.unknown})`: "Unknown";
+			this.optionsStatus[6].text = status.containerCreating >0 ? `ContainerCreating (${status.containerCreating})`: "ContainerCreating";
+			this.optionsStatus[7].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
+			this.optionsStatus[8].text = status.etc >0 ? `etc (${status.etc})`: "etc";
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1

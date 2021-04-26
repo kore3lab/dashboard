@@ -11,10 +11,16 @@ export default {
 	props:["value"],
 	data () {
 		return {
-			localValue: this.value
+			localValue: this.value,
+			editor:  Ace.edit(),
+			reset: {},
 		}
 	},
 	mounted(){
+		// history reset
+		this.$nuxt.$on("resetHistory",(raw) => {
+			this.reset = raw
+		})
 		//  editor
 		this.editor = Ace.edit(this.$el.id);
 		this.editor.setOptions({
@@ -46,7 +52,11 @@ export default {
 			} catch (ex) {
 				console.error(ex.message);
 			}
-		}
-	}
+		},
+		reset() {
+			this.editor.getSession().getUndoManager().reset();
+			this.editor.getSession().setUndoManager(this.editor.getSession().getUndoManager())
+		},
+	},
 }
 </script>

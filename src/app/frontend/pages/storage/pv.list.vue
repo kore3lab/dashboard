@@ -31,21 +31,27 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success" style="margin:150px 0">
+										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="align-middle text-lg">Loading...</span>
+											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
+									<template #empty="scope">
+										<h4 class="text-center">does not exist.</h4>
+									</template>
 									<template v-slot:cell(name)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.item.name, crd:'Persistent Volume', src:`${getApiUrl('','persistentvolumes')}/${data.item.name}`}">{{ data.value }}</a>
+										{{ data.value }}
 									</template>
 									<template v-slot:cell(storageClass)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Storage Class', src:`${getApiUrl(data.value.group,data.value.rs)}/${data.value.name}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(claim)="data">
-										<a href="#" @click="sidebar={visible:true, name:data.value.name, crd:'Persistent Volume Claim', src:`${getApiUrl(data.value.group,data.value.rs,data.value.ns)}/${data.value.name}`}">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.value.ns, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+									</template>
+									<template v-slot:cell(creationTimestamp)="data">
+										{{ data.value.str }}
 									</template>
 								</b-table>
 							</div>
@@ -55,15 +61,15 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="sidebar.visible" width="50em" right shadow no-header>
-			<c-view :crd="sidebar.crd" group="Storage" :name="sidebar.name" :url="sidebar.src" @delete="query_All()" @close="sidebar.visible=false"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import axios		from "axios"
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -85,11 +91,8 @@ export default {
 			items: [],
 			currentPage: 1,
 			totalItems: 0,
-			sidebar: {
-				visible: false,
-				name: "",
-				src: "",
-			},
+			isShowSidebar: false,
+			viewModel:{},
 		}
 	},
 	layout: "default",
@@ -98,10 +101,27 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onSortChanged() {
+			this.currentPage = 1
+		},
+		onRowSelected(items) {
+			if(items) {
+				if(items.length) {
+					this.viewModel = this.getViewLink('', 'persistentvolumes', items[0].namespace, items[0].name)
+					this.isShowSidebar = true
+				} else {
+					this.isShowSidebar = false
+					this.$refs.selectableTable.clearSelected()
+				}
+			} else {
+				this.isShowSidebar = false
+				this.$refs.selectableTable.clearSelected()
+			}
+		},
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			axios.get(this.getApiUrl("","persistentvolumes"))
+			this.$axios.get(this.getApiUrl("","persistentvolumes"))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -111,7 +131,7 @@ export default {
 								capacity: el.spec.capacity ? el.spec.capacity.storage: "",
 								claim: this.getClaim(el.spec),
 								status: el.status.phase,
-								creationTimestamp: this.$root.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});
 						this.onFiltered(this.items);

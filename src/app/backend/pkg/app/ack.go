@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 
 	"github.com/astaxie/beego/validation"
@@ -31,12 +32,36 @@ type Gin struct {
 	C *gin.Context
 }
 
-func (g *Gin) SendMessage(httpCode int, msg string) {
+func (g *Gin) SendMessage(httpCode int, msg string, err error) {
+	if err != nil {
+		if err.Error() == msg {
+			log.Errorln(msg)
+		} else {
+			log.Errorf("%s (cause=%v)", msg, err.Error())
+		}
+
+	}
 	g.C.JSON(httpCode, Status{Message: msg})
 	return
 }
+func (g *Gin) SendError(err error) {
+
+	msg := ""
+	if err != nil {
+		msg = err.Error()
+		log.Errorln(msg)
+	}
+
+	g.C.JSON(http.StatusInternalServerError, Status{Message: msg})
+	return
+}
+
 func (g *Gin) Send(httpCode int, json interface{}) {
 	g.C.JSON(httpCode, json)
+	return
+}
+func (g *Gin) SendOK() {
+	g.C.JSON(http.StatusOK, Status{Message: ""})
 	return
 }
 

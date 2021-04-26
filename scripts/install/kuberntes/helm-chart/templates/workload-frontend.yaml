@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: frontend
+    kore.board: frontend
   name: frontend
   namespace: {{ .Release.Namespace }}
 spec:
@@ -13,12 +13,12 @@ spec:
 {{- if hasKey .Values.frontend.service "nodePort" }}
       nodePort: {{ .Values.frontend.service.nodePort }}
 {{- end }}
-      port: 3000
+      port: 80
       protocol: TCP
-      targetPort: 3000
+      targetPort: 80
   selector:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: frontend
+    kore.board: frontend
 
 ---
 
@@ -27,37 +27,51 @@ apiVersion: apps/v1
 metadata:
   labels:
     app: {{ .Chart.Name }}
-    acornsoft.dashboard: frontend
+    kore.board: frontend
   name: frontend
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.frontend.service.replicaCount }}
+  replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
-      acornsoft.dashboard: frontend
+      kore.board: frontend
   template:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-        acornsoft.dashboard: frontend
+        kore.board: frontend
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:{{ .Chart.AppVersion }}
-          imagePullPolicy: Always
+          image: ghcr.io/acornsoftlab/kore-board.frontend:{{ .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: BACKEND_PORT
             value: "30081"
           ports:
-            - containerPort: 3001
+            - containerPort: 80
               protocol: TCP
           volumeMounts:
           - mountPath: /tmp
             name: tmp-volume
+          - mountPath: /etc/nginx/conf.d/default.conf
+            name: nginx-conf
+            subPath: default.conf
+          - mountPath: /etc/nginx/nginx.conf
+            name: nginx-conf
+            subPath: nginx.conf
       volumes:
         - name: tmp-volume
           emptyDir: {}
+        - name: nginx-conf
+          configMap:
+            name: kore-board-nginx
+            items:
+            - key: nginx.conf
+              path: nginx.conf
+            - key: default.conf
+              path: default.conf
       serviceAccountName: {{ .Chart.Name }}
       nodeSelector:
         "kubernetes.io/os": linux

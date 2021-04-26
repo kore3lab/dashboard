@@ -46,8 +46,14 @@ func NewTopology(contextName string) Topology {
 
 func (self *Topology) Get(namespace string) error {
 
+	// kubeconfig
+	conf, err := config.KubeConfigs(self.context)
+	if err != nil {
+		return err
+	}
+
 	// api-client
-	api, err := kubernetes.NewForConfig(config.Value.KubeConfigs[self.context])
+	api, err := kubernetes.NewForConfig(conf)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,11 @@
-# Acornsoft Kubernetes Dashboard
+# :whale2: Kore Board
+> Multi-cluster kubernetes dashboard
+
+![Version](https://img.shields.io/github/release/acornsoftlab/dashboard) ![License](https://img.shields.io/github/license/acornsoftlab/dashboard) ![issues](https://img.shields.io/github/issues/acornsoftlab/dashboard) ![issues](https://img.shields.io/github/issues-closed/acornsoftlab/dashboard) ![pull requests](https://img.shields.io/github/issues-pr-closed/acornsoftlab/dashboard) ![workflow](https://img.shields.io/github/workflow/status/acornsoftlab/dashboard/Docker) ![code size](https://img.shields.io/github/languages/code-size/acornsoftlab/dashboard) 
+
+## Screen shoot
+
+![](https://raw.githubusercontent.com/itnpeople/dashboard/feature/auth/docs/resources/screenshoot-210421.png?token=AIRLNCQ4A6B27R6BUSWIFKTAP7ISK)
 
 ## Preparation
 
@@ -44,7 +51,7 @@ $ git read-tree HEAD -m -u
 ```
 
 
-* Install dependencies (frontend,graph)
+* Installation dependencies (frontend,graph)
 
 ```
 # graph
@@ -74,7 +81,33 @@ $ curl http://localhost:3001/healthy
 $ curl http://localhost:8000/api/v1
 ```
 
-## NPM 
+## Installation guide
+
+[Installation guide](./scripts/install/README.md)
+
+
+## Login token
+
+### 조회
+
+* Kubernetes : `kore-board` serviceaccount 의 secret
+
+```
+$ SECRET="$(kubectl get sa -n kore -l app=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
+$ echo "$(kubectl get secret kore-board -n kore -o jsonpath='{.data.token}' | base64 --decode)"
+```
+
+* backend 로그에서 조회
+
+```
+$ docker logs backend | grep TOKEN
+
+$ kubectl logs $(kubectl get po -l kore.board=backend -o jsonpath='{..items[0]..metadata.name}' -n kore) -n kore | grep TOKEN
+```
+
+## Development
+
+### npm
 
 * Develop
 ```
@@ -95,7 +128,7 @@ $ npm run run                 # frontend container 에서 nuxt 실행 (docker im
 
 * Containerization
   * default tag : "latest" (.npmrc 파일 참조)
-  * `--acornsoft-dashboard:docker_image_tag=<value>` 옵션으로 latest 대신 tag 지정 가능
+  * `--kore-board:docker_image_tag=<value>` 옵션으로 latest 대신 tag 지정 가능
 
 ```
 # docker build
@@ -118,7 +151,7 @@ $ npm run docker:build        # build
 $ npm run docker:build:push   # build & push
 
 # tag 를 옵션으로 지정하는 예
-$ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
+$ npm run docker:build:backend --kore-board:docker_image_tag=v0.2.0
 ```
 
 ### Using ports
@@ -127,191 +160,37 @@ $ npm run docker:build:backend --acornsoft-dashboard:docker_image_tag=v0.2.0
 * 3002 : graph 개발
 * 8000 : metrics scraper
 
-
-## Deployment
-
-
-### Deploy on Docker
+## Debugging for "in-cluster" clusater enviroment 
 
 ```
-$ docker run --rm -d\
-    --name metrics-scraper -p 8000:8000\
-    -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.metrics-scraper:v0.3.0\
-    --kubeconfig=/app/.kube/config --db-file=metrics.db
+# delete token, ca fils
+$ sudo rm /var/run/secrets/kubernetes.io/serviceaccount/token /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+$ sudo mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
 
-$ docker run --rm -d\
-    --name backend -p 3001:3001\
-    -v ${HOME}/.kube/config:/app/.kube/config\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.backend:v0.3.0\
-    --kubeconfig=/app/.kube/config
+# set namespace & serviceaccount name
+$ export NAMESPACE="kore"
+$ export SERVICE_ACCOUNT="kore-board"
 
-$ docker run --rm -d\
-    --name frontend -p 3000:3000\
-    -e BACKEND_PORT="3001"\
-    ghcr.io/acornsoftlab/acornsoft-dashboard.frontend:v0.3.0
+# create token, ca files
+$ echo -n "$(kubectl get secret -n ${NAMESPACE} $(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath={.secrets..name} | cut -f1 -d ' ') -o jsonpath='{$.data.token}' | base64 --decode)" | sudo tee /var/run/secrets/kubernetes.io/serviceaccount/token
+$ echo -n "$(kubectl config view --raw=true -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode)" | sudo tee /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 
-$ docker ps
+# set api-server endpoint
+$ export KUBERNETES_SERVICE_HOST=$(kubectl config view --raw=true -o jsonpath='{.clusters[0].cluster.server}' |  awk -F/ '{print $3}' |  awk -F: '{print $1}')
+$ export KUBERNETES_SERVICE_PORT=$(kubectl config view --raw=true -o jsonpath='{.clusters[0].cluster.server}' |  awk -F/ '{print $3}' |  awk -F: '{print $2}')
+
+# create a empty kubeconfig file
+$ rm "$(pwd)/.tmp/config"
+$ export KUBECONFIG="$(pwd)/.tmp/config"
 ```
 
+## Modules
 
-### Deploy on Kubernetes
+* [backend](./src/app/backend/README.md)
+* [frontend](./src/app/frontend/README.md)
+* [metrics-scraper](./src/app/metrics-scraper/README.md)
+* [graph](./src/app/graph/README.md)
 
-[Install on Kubernetes](./scripts/install/README.md)
-
-
-## Front-End
-> Web UI
-
-* Frameworks : [nuxtJS](https://ko.nuxtjs.org/guide/plugins/)
-* Template & Markup
-  * [AdminLTE](https://adminlte.io/)
-  * [bootstrap-vue v2.0.0](https://bootstrap-vue.org/docs/components/dropdown)
-  * [Bootstrap v4.3.1](https://getbootstrap.com/)
-
-
-### Run
-
-```
-$ npm run start:frontend
-```
-
-* 환경변수 (env)
-
-|이름             |기본값 |설명                             |
-|---              |---    |---                              |
-|BACKEND_PORT     |3001   |backend 서비스 포트              |
-|KIALI_PORT       |20001  |kiali 서비스 포트                |
-
-```
-$ export BACKEND_PORT="3001"
-$ export KIALI_PORT="20001"
-$ npm run start:frontend
-```
-
-### 참조
-
-[nuxtjs](https://ko.nuxtjs.org/)
-[nuxtjs github](https://github.com/nuxt/nuxt.js/)
-[패스트캠퍼스 Vue.js 수업 자료](https://joshua1988.github.io/vue-camp/textbook.html)
-
-## Back-End
-> Backend rest-api
-
-* backend restful api 
-* language :  go-lang 1.15
-* web frameworks : gin
-* client-go 주요 참고 소스 
-  * https://github.com/kubernetes/api/blob/master/core/v1/types.go
-  * https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/meta.go
-  * 리스트 조회: https://github.com/kubernetes/client-go/blob/master/listers/core/v1 
-
-### Run
-
-```
-$ npm run start:backend
-```
-
-* Arguments
-
-|이름                   |기본값                 |설명                                                                                       |
-|---                    |---                    |---                                                                                        |
-|--kubeconfig           |                       |kubeconfig 파일 위치                                                                       |
-|--log-level            |info                   |로그 레벨(panic,fatal,error,warning,info,debug,trace) https://github.com/sirupsen/logrus)  |
-|--metrics-scraper-url  |http://localhost:8000  |metrics-scraper api url                                                                    |
-
-
-* 환경변수 (env)
-
-|이름       |기본값 |설명                 |
-|---        |---    |---                  |
-|KUBECONFIG |       |kubeconfig 파일 위치 |
-
-
-### API
-
-[Acornsoft Dashbard Backend](https://github.com/acornsoftlab/dashboard/blob/master/src/app/backend/README.md) 참조 
-
-
-## Metrics-Scraper
-> Wrapping Kubernetes-sig dashbaord-metrics-scraper
-
-* Kubernetes dashboard-metrics-scraper(https://github.com/kubernetes-sigs/dashboard-metrics-scraper) 활용
-* https://github.com/kubernetes-sigs/dashboard-metrics-scraper repository 를  `subtree` 로 구성 
-
-
-### `subtree` 구성 방법
-
-```
-$ git subtree add --squash --prefix=src/app/metrics-scraper https://github.com/kubernetes-sigs/dashboard-metrics-scraper.git master
-```
-
-### Run
-
-```
-$ npm run start:metrics-scraper
-```
-
-* Arguments
-
-|이름                 |기본값               |설명                       |
-|---                  |---                  |---                        |
-|--kubeconfig         |kubeconfig 파일 위치 |                           |
-|--db-file            |/tmp/metrics.db      |sqllite database file path |
-|--metric-resolution  |1m0s                 |metrics 수집 주기          |
-|--metric-duration    |15m0s                |metrics 적산값 유지 기간   |
-|--log-level          |                     |로그 레벨                  |
-|--namespace          |                     |                           |
-
-* 환경변수 (env)
-
-|이름       |기본값 |설명                 |
-|---        |---    |---                  |
-|KUBECONFIG |       |kubeconfig 파일 위치 |
-
-
-### API
-
-|URL Pattern                                                                  |Method |설명                               |
-|---                                                                          |---    |---                                |
-|/api/v1/clusters/:cluster                                                    |GET    |클러스터 summary metrics  조회     |
-|/api/v1/clusters/:cluster/nodes/:node/metrics/:metrics                       |GET    |클러스터 Node metrics 조회         |
-|/api/v1/nodes/:node/metrics/:metrics                                         |GET    |default 클러스터 노드 metrics 조회 |
-|/api/v1/clusters/:cluster/namespaces/:namespaces/pods/:pod/metrics/:metrics  |GET    |클러스터 Pod metrics 조회          |
-|/api/v1/namespaces/:namespaces/pods/:pod/metrics/:metrics                    |GET    |default 클러스터 Pod metrics 조회  |
-
-* 변수
-  * `:cluster` : Kubeconfig context name
-  * `:node` :  Node name
-  * `:metrics` : `cpu` or `memory`
-  * `:pod` : Pod name
-
-* Examples
-
-```
-$ curl -X GET http://localhost:8000/api/v1/clusters/apps-05/nodes/apps-114/metrics/cpu
-$ curl -X GET http://localhost:8000/api/v1/nodes/apps-114/metrics/cpu
-$ curl -X GET http://localhost:8000/api/v1/clusters/apps-06/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
-$ curl -X GET http://localhost:8000/api/v1/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
-```
-
-
-## Graph
-> D3.js based javascript graph library
-
-### Build
-
-* frontend와 연동되어 build하면 frontend 에 복사된다.
-
-```
-$ npm run build:graph
-```
-
-```
-http://localhost:3002/topology.html   # topology graph
-http://localhost:3002/mesh.html       # mesh graph (deprecated)
-http://localhost:3002/rbac.html       # rbac graph
-```
 
 ## Link
 * https://github.com/acornsoftlab/dashboard
