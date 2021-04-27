@@ -121,6 +121,7 @@
 <script>
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
+import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	components: {
@@ -188,17 +189,21 @@ export default {
 			chart: {
 				options: {
 					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
+						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
 							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)}} }]
 						}
 					},
 					memory: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
+						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
@@ -346,36 +351,41 @@ export default {
 		getCpuGraph(value,labels) {
 			let top = 0; let da= [];
 			let map = {};
-			for (let i=0;i<value.length;i++) {
-				if(value[i].time in map) {
-					map[value[i].time] += value[i].val;
+			let re=[], li=[];
+			if(value)
+			{
+				for (let i=0;i<value.length;i++) {
+					if(value[i].time in map) {
+						map[value[i].time] += value[i].val;
+					} else {
+						map[value[i].time] = value[i].val;
+					}
 					if(top<map[value[i].time]) top = map[value[i].time]
-				} else {
-					map[value[i].time] = value[i].val;
 				}
-			}
-			let keys = Object.keys(map)
-			for (let i=0;i<keys.length;i++) {
-				da[i] = map[keys[i]]/1000
-			}
-			let sum = 0;
-			for(let i=0;i<this.topCpu.length;i++) {
-				if(this.topCpu[i].includes('m')) {
-					sum += Number(this.topCpu[i].slice(0,-1))
-				} else {
-					sum += this.topCpu[i]*1000
+				let keys = Object.keys(map)
+				for (let i=0;i<keys.length;i++) {
+					da[i] = map[keys[i]]/1000
+					if(this.cpuRequests) re[i] = this.cpuRequests
+					if(this.cpuLimits) li[i] = this.cpuLimits
 				}
-			}
-			this.isCpu = !!value
-			if (sum) top = sum
-			else top = top*1.2
-			if (top === 0) top = 1
-			this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top/1000;
-			this.$data.chart.data.cpu = {
-				labels: labels,
-				datasets: [
-					{ backgroundColor : "rgba(119,149,233,0.9)",data: da}
-				]
+				if(this.cpuLimits > 0) {
+					top = this.cpuLimits
+				} else if ( this.cpuRequests > 0) {
+					top = this.cpuRequests
+				} else {
+					top = top*1.2 / 1000
+				}
+				if(top === 0) top = 1
+				this.isCpu = !!value
+				this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top;
+				this.$data.chart.data.cpu = {
+					labels: labels,
+					datasets: [
+						{ backgroundColor : CHART_BG_COLOR.cpu,data: da,label:'Usage'},
+					]
+				}
+				if(this.cpuRequests) this.$data.chart.data.cpu.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
+				if(this.cpuLimits) this.$data.chart.data.cpu.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
 			}
 		},
 		onMemory(el,idx) {
@@ -425,42 +435,40 @@ export default {
 		getMemoryGraph(value, labels) {
 			let top = 0; let da= [];
 			let map = {};
+			let re=[], li=[];
 			if(value) {
 				for (let i = 0; i < value.length; i++) {
 					if (value[i].time in map) {
 						map[value[i].time] += value[i].val;
-						if (top < map[value[i].time]) top = map[value[i].time] * 2
 					} else {
 						map[value[i].time] = value[i].val;
 					}
+					if (top < map[value[i].time]) top = map[value[i].time] / 1024 / 1024
 				}
 				let keys = Object.keys(map)
 				for (let i = 0; i < keys.length; i++) {
 					da[i] = map[keys[i]] / 1024 / 1024
+					if(this.memoryRequests) re[i] = this.memoryRequests
+					if(this.memoryLimits) li[i] = this.memoryLimits
 				}
-				let sum = 0;
-				for(let i=0;i<this.topMemory.length;i++) {
-					if (this.topMemory[i].includes('Gi')){
-						sum += Number(this.topMemory[i].slice(0,-2))*1024*1024*1024
-					} else if(this.topMemory[i].includes('Mi')) {
-						sum += Number(this.topMemory[i].slice(0,-2))*1024*1024
-					} else if(this.topMemory[i].includes('Ki')){
-						sum += Number(this.topMemory[i].slice(0,-2))*1024
-					} else {
-						sum += this.topMemory[i]*1024
-					}
+				if(this.memoryLimits > 0) {
+					top = this.memoryLimits
+				} else if ( this.memoryRequests > 0) {
+					top = this.memoryRequests
+				} else {
+					top = top*1.2
 				}
+				if (top === 0) top = 1024
 				this.isMemory = !!value
-				if (sum) top = sum
-				else top = top*1.2
-				if (top === 0) top = 1
-				this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top / 1024 / 1024;
+				this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top;
 				this.$data.chart.data.memory = {
 					labels: labels,
 					datasets: [
-						{backgroundColor: "rgba(179,145,208,1)", data: da}
+						{backgroundColor: CHART_BG_COLOR.memory, data: da, label:'Usage'},
 					]
 				}
+				if(this.memoryRequests) this.$data.chart.data.memory.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
+				if(this.memoryLimits) this.$data.chart.data.memory.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
 			}
 		},
 		cpuSum(cpu) {

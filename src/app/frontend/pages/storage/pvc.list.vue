@@ -49,7 +49,7 @@
 										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(pods)="data">
-										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d[2], d[1]); isShowSidebar=true;">{{ d[1] }} </a>
+										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d.podNamespace, d.podName); isShowSidebar=true;">{{ d.podName }} </a>
 									</template>
 									<template v-slot:cell(accessModes)="data">
 										<ul class="list-unstyled mb-0">
@@ -182,7 +182,7 @@ export default {
 		getPvc(el) {
 			let list = []
 			for(let i=0;i<this.pvcPod.length;i++) {
-				if (el === this.pvcPod[i][0]) {
+				if (el === this.pvcPod[i].claimName) {
 					list.push(this.pvcPod[i])
 				}
 			}
@@ -190,14 +190,19 @@ export default {
 		},
 		getPodname(el) {
 			let pvclist = []
-			if (el.spec.volumes[0].persistentVolumeClaim !== undefined)
-			{
-				pvclist.push(el.spec.volumes[0].persistentVolumeClaim.claimName)
-				pvclist.push(el.metadata.name)
-				pvclist.push(el.metadata.namespace)
-			}
-			if (pvclist.length !== 0) {
-				this.pvcPod.push(pvclist)
+			if(el.spec.volumes) {
+				el.spec.volumes.filter(volume => {
+					if(volume.persistentVolumeClaim && volume.persistentVolumeClaim.claimName) {
+						pvclist = {
+							claimName : volume.persistentVolumeClaim.claimName,
+							podName : el.metadata.name,
+							podNamespace: el.metadata.namespace,
+						}
+					}
+				})
+				if (pvclist.length !== 0) {
+					this.pvcPod.push(pvclist)
+				}
 			}
 		},
 		// pvc 상태 체크

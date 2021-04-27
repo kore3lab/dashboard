@@ -108,6 +108,7 @@
 <script>
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
+import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	components: {
@@ -172,7 +173,11 @@ export default {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
@@ -235,7 +240,7 @@ export default {
 							this.$data.chart.data.cpu = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(119,149,233,0.9)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.cpu,data: da}
 								]
 							};
 						} else {
@@ -260,7 +265,7 @@ export default {
 							this.$data.chart.data.memory = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(179,145,208,1)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.memory,data: da}
 								]
 							};
 						} else {

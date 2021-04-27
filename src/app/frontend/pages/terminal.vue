@@ -66,7 +66,7 @@ export default {
 			const reqTailURL = '/api/terminal/ws';
             let reqHost = "";
 
-			if (`${this.$config.nodeEnv}` == "development") {
+			if (`${this.$config.nodeEnv}` === "development") {
 				reqHost = `${location.hostname}:${this.$config.backendPort}`;
 			} else {
 				reqHost = `${location.host}`;
