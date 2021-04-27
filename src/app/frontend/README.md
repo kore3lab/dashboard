@@ -1,10 +1,10 @@
 # Front-End
 > Web UI
 
-* Frameworks : [nuxtJS](https://ko.nuxtjs.org/guide/plugins/)
+* Frameworks : [nuxtJS](https://ko.nuxtjs.org/)
 * Template & Markup
   * [AdminLTE](https://adminlte.io/)
-  * [bootstrap-vue v2.0.0](https://bootstrap-vue.org/docs/components/dropdown)
+  * [bootstrap-vue v2.0.0](https://bootstrap-vue.org/docs)
   * [Bootstrap v4.3.1](https://getbootstrap.com/)
 
 

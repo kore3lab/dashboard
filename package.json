@@ -1,7 +1,7 @@
 {
   "name": "kore-board",
   "version": "0.3.1",
-  "description": "acornsoft kubernetes dashboard",
+  "description": "multi-cluater kubernetes dashboard",
   "repository": {
     "type": "git",
     "url": "https://github.com/acornsoftlab/dashboard.git"
