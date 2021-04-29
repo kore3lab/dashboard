@@ -85,7 +85,7 @@ spec:
           image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
           imagePullPolicy: Always
           args:
-            - --kubeconfig=/tmp/.kube/config
+            - --kubeconfig=/app/.kube/config
             - --log-level=info
             - --db-file=/app/data/metrics.db
           ports:
@@ -166,14 +166,16 @@ spec:
           image: ghcr.io/acornsoftlab/kore-board.backend:latest
           imagePullPolicy: Always
           args:
-            - --kubeconfig=/tmp/.kube/config
+            - --kubeconfig=/app/.kube/config
             - --metrics-scraper-url=http://metrics-scraper:8000
             - --log-level=info
           ports:
             - containerPort: 3000
               protocol: TCP
+          securityContext:
+            privileged: true
           volumeMounts:
-            - mountPath: /tmp/.kube
+            - mountPath: /app/.kube
               name: kubeconfig
             - mountPath: /tmp
               name: tmp-volume
@@ -225,8 +227,8 @@ data:
         listen  [::]:80;
         server_name  localhost;
 
-        access_log /var/log/nginx/aaaccess.log main;
-        error_log /var/log/nginx/eeerror.log ;
+        access_log /var/log/nginx/access.log main;
+        error_log /var/log/nginx/error.log ;
 
         location / {
             location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2)$ {
@@ -246,6 +248,7 @@ data:
 
         location ~ ^/api/terminal/(.*)  {
             proxy_pass   http://backend:3001;
+            proxy_redirect              off;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection $connection_upgrade;
