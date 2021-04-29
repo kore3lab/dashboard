@@ -3,6 +3,7 @@
 ## Prerequisites
 
 ### Metrics-Server
+> https://github.com/kubernetes-sigs/metrics-server
 
 * 조회 대상 클러스터에 metrics-server 설치 (args --kubelet-insecure-tls 추가)
 
@@ -22,7 +23,7 @@ $ export KUBECONFIG="${HOME}/.kube/config"
 
 $ docker-compose -f docker-compose/docker-compose.yaml up -d
 ```
-dck
+
 * clean-up
 ```
 $ docker-compose -f docker-compose/docker-compose.yaml down
@@ -64,13 +65,13 @@ $ docker stop frontend backend metrics-scraper
 
 ### Prerequisite  : create a kubeconfig configmap `kore-board-kubeconfig`
 
-* Create
+* create
 ```
 $ kubectl create ns kore
 $ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config -n kore
 ```
 
-* Modify
+* modify
 
 ```
 $ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n kore -f -
@@ -116,7 +117,6 @@ $ helm uninstall kore-board
 
 ```
 # 사용자 token 값 생성 및 token 파일에 저장
-
 $ TOKEN="$(pwd)/token"
 $ rm "${TOKEN}"
 $ echo -n "$(openssl rand -hex 32)" > "${TOKEN}"

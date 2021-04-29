@@ -59,7 +59,7 @@ $ git branch
   master
 ```
 
-* 리모트 최신소스를 forked repositry `develop` branch와 동기화 (rebase)
+* 리모트 최신소스를 forked repository `develop` branch와 동기화 (rebase)
 ```
 $  git fetch upstream
 $  git rebase upstream/develop
@@ -91,7 +91,7 @@ $ git branch
   * 수월한 충돌 해결을 미연에 방지 효과
   * [커밋 합치기(squash)](https://github.com/itnpeople/k8s.docs/blob/master/git.md) 섹션 참조
 
-* **필수** 리모트 최신소스를 forked repositry `develop` branch와 동기화(rebase)
+* **필수** 리모트 최신소스를 forked repository `develop` branch와 동기화(rebase)
 
 ```
 $ git fetch upstream
@@ -119,7 +119,7 @@ $ git push origin +<branch name>
   * feat: a new feature
   * fix: a bug fix
   * docs: changes to documentation
-  * style: formatting, missing semi colons, etc; no code change
+  * style: formatting, etc; no code change
   * refactor: refactoring production code
   * test: adding tests, refactoring test; no production code change
   * chore: updating build tasks, package manager configs, etc; no production code change

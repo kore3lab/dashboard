@@ -261,10 +261,10 @@ $ curl -X GET -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces
 ```
 
 
-### Debugging for docker container enviroment
+### Debugging for docker container environment
 * Dockerfile Build 
   * 디버깅용 backend 이미지 빌드 
     /src/app/backend/docker-compose -f dc-debug.yaml up --build
-  * vscode/goland 등 에디터 원격 디버깅 설정(remote port 5555)
+  * vscode/golang 등 에디터 원격 디버깅 설정(remote port 5555)
   * 참고링크 [컨테이너 내부 Go 애플리케이션 디버깅하기][https://mingrammer.com/debugging-containerized-go-app/]
   
