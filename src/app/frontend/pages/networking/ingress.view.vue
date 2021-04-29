@@ -105,7 +105,7 @@ export default {
 	methods: {
 		onSync(data) {
 			this.rules = [];
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.getRules(data.spec.rules);
 			this.lbIp = this.getLb(data.status.loadBalancer);

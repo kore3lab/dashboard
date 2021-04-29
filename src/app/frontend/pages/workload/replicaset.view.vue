@@ -224,8 +224,8 @@ export default {
 			this.totalCpu = 0; this.totalMemory = 0; this.cpus = {};
 			this.controller = this.getController(data.metadata.ownerReferences)
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
-			this.childPod = this.getChildPod(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
+			this.childPod = this.getChildPod(data.spec.selector.matchLabels);
 		},
 		getInfo(data) {
 			let replicas = `${data.status.availableReplicas || 0} current / ${data.status.replicas || 0} desired`
@@ -261,7 +261,8 @@ export default {
 
 			}
 		},
-		getChildPod(uid) {
+		getChildPod(label) {
+			label = this.stringifyLabels(label)
 			let childPod = [];
 			this.nowMemory = [];
 			this.nowCpu = [];
@@ -279,26 +280,22 @@ export default {
 			this.isPods = false;
 			this.isCpu = false;
 			this.isMemory = false;
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=' + label))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							if (el.metadata.ownerReferences) {
-								if (el.metadata.ownerReferences[0].uid === uid) {
-									this.isPods = true;
-									childPod.push({
-										name: el.metadata.name,
-										namespace: el.metadata.namespace,
-										ready: this.toReady(el.status,el.spec),
-										nowMemory: this.onMemory(el,idx),
-										nowCpu: this.onCpu(el,idx),
-										status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-										countStatus: this.countStatus(el.status),
-										idx: idx,
-									})
-									idx++;
-								}
-							}
+							this.isPods = true;
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								nowMemory: this.onMemory(el,idx),
+								nowCpu: this.onCpu(el,idx),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								countStatus: this.countStatus(el.status),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

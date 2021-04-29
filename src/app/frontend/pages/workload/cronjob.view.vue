@@ -87,7 +87,7 @@ export default {
 	methods: {
 		onSync(data) {
 			this.isJobs= false;
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.jobs = this.getJobs(data.metadata.uid)
 		},
@@ -109,6 +109,7 @@ export default {
 						this.jobs = list
 						return list
 					})
+			return list
 		},
 		getInfo(data) {
 			return {
