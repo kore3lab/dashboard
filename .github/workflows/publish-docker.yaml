@@ -32,40 +32,40 @@ jobs:
               VERSION="pr-${{ github.event.number }}"
             fi
           fi
-          echo ::set-output name=image_backend::${REGISTRY}/${PROJECT}.backend:${VERSION}
-          echo ::set-output name=image_frontend::${REGISTRY}/${PROJECT}.frontend:${VERSION}
-          echo ::set-output name=image_metrics_scraper::${REGISTRY}/${PROJECT}.metrics-scraper:${VERSION}
+          echo ::set-output name=prefix::${REGISTRY}/${PROJECT}
+          echo ::set-output name=version::${VERSION}
       - name: Check out the repository
         uses: actions/checkout@v2
-      - name: Build docker image [backend]
-        uses: docker/build-push-action@v2
-        with:
-          context: src/app/backend
-          tags: ${{steps.variables.outputs.image_backend}}
-          file: src/app/backend/Dockerfile
-          load: true
-      - name: Build docker image [frontend]
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          tags: ${{steps.variables.outputs.image_frontend}}
-          file: ./Dockerfile
-          load: true
-      - name: Build docker image [metrics-scraper]
-        uses: docker/build-push-action@v2
-        with:
-          context: src/app/metrics-scraper
-          tags: ${{steps.variables.outputs.image_metrics_scraper}}
-          file: src/app/metrics-scraper/Dockerfile
-          load: true
       - name: Login GHCR
         uses: docker/login-action@v1 
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN  }}
-      - name: Push GHCR
-        run: |
-          docker push ${{steps.variables.outputs.image_backend}}
-          docker push ${{steps.variables.outputs.image_frontend}}
-          docker push ${{steps.variables.outputs.image_metrics_scraper}}
+      - name: Build docker image [backend]
+        uses: docker/build-push-action@v2
+        with:
+          context: src/app/backend
+          file: src/app/backend/Dockerfile
+          push: true
+          tags: |
+            ${{steps.variables.outputs.prefix}}.backend:${{steps.variables.outputs.version}}
+            ${{steps.variables.outputs.prefix}}.backend:latest
+      - name: Build docker image [frontend]
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{steps.variables.outputs.prefix}}.frontend:${{steps.variables.outputs.version}}
+            ${{steps.variables.outputs.prefix}}.frontend:latest
+      - name: Build docker image [metrics-scraper]
+        uses: docker/build-push-action@v2
+        with:
+          context: src/app/metrics-scraper
+          file: src/app/metrics-scraper/Dockerfile
+          push: true
+          tags: |
+            ${{steps.variables.outputs.prefix}}.metrics-scraper:${{steps.variables.outputs.version}}
+            ${{steps.variables.outputs.prefix}}.metrics-scraper:latest
