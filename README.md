@@ -3,9 +3,6 @@
 
 ![Version](https://img.shields.io/github/release/acornsoftlab/dashboard) ![License](https://img.shields.io/github/license/acornsoftlab/dashboard) ![issues](https://img.shields.io/github/issues/acornsoftlab/dashboard) ![issues](https://img.shields.io/github/issues-closed/acornsoftlab/dashboard) ![pull requests](https://img.shields.io/github/issues-pr-closed/acornsoftlab/dashboard) ![workflow](https://img.shields.io/github/workflow/status/acornsoftlab/dashboard/Docker) ![code size](https://img.shields.io/github/languages/code-size/acornsoftlab/dashboard) 
 
-## Screen shoot
-
-![](https://raw.githubusercontent.com/itnpeople/dashboard/feature/auth/docs/resources/screenshoot-210421.png?token=AIRLNCQ4A6B27R6BUSWIFKTAP7ISK)
 
 ## Preparation
 
@@ -88,9 +85,8 @@ $ curl http://localhost:8000/api/v1
 
 ## Login token
 
-### 조회
 
-* Kubernetes : `kore-board` serviceaccount 의 secret
+* `kore-board` serviceaccount 의 secret token 조회
 
 ```
 $ SECRET="$(kubectl get sa -n kore -l app=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
@@ -105,7 +101,7 @@ $ docker logs backend | grep TOKEN
 $ kubectl logs $(kubectl get po -l kore.board=backend -o jsonpath='{..items[0]..metadata.name}' -n kore) -n kore | grep TOKEN
 ```
 
-## Development
+## Developments
 
 ### npm
 
@@ -160,18 +156,18 @@ $ npm run docker:build:backend --kore-board:docker_image_tag=v0.2.0
 * 3002 : graph 개발
 * 8000 : metrics scraper
 
-## Debugging for "in-cluster" clusater enviroment 
+## Debugging for "in-cluster" environment 
 
 ```
-# delete token, ca fils
+# 이전 token & ca 파일 삭제
 $ sudo rm /var/run/secrets/kubernetes.io/serviceaccount/token /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 $ sudo mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
 
-# set namespace & serviceaccount name
+# namespace & serviceaccount 이름 지정
 $ export NAMESPACE="kore"
 $ export SERVICE_ACCOUNT="kore-board"
 
-# create token, ca files
+# token & ca 파일 생성
 $ echo -n "$(kubectl get secret -n ${NAMESPACE} $(kubectl get sa ${SERVICE_ACCOUNT} -n ${NAMESPACE} -o jsonpath={.secrets..name} | cut -f1 -d ' ') -o jsonpath='{$.data.token}' | base64 --decode)" | sudo tee /var/run/secrets/kubernetes.io/serviceaccount/token
 $ echo -n "$(kubectl config view --raw=true -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode)" | sudo tee /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 
