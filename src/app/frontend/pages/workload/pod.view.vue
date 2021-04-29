@@ -77,6 +77,8 @@
 									</li>
 								</ul>
 							</dd>
+							<dt v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-2">CPU</dt><dd v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-10"><span v-show="cpuRequests !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ cpuRequests }}</span><span v-show="cpuLimits !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ cpuLimits }}</span></dd>
+							<dt v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-2">Memory</dt><dd v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-10"><span v-show="memoryRequests !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ memoryRequests }}Mi</span><span v-show="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ memoryLimits }}Mi</span></dd>
 						</dl>
 					</div>
 				</div>
@@ -207,6 +209,7 @@
 <script>
 import VueChartJs from "vue-chartjs"
 import VueJsonTree from "@/components/jsontree";
+import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	components: {
@@ -253,20 +256,28 @@ export default {
 			isInit: false,
 			onTols: false,
 			onAffis: false,
+			cpuRequests: 0,
+			cpuLimits: 0,
+			memoryRequests: 0,
+			memoryLimits: 0,
 			chart: {
 				options: {
 					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
+						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)} }}]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)}} }]
 						}
 					},
 					memory: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
+						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
@@ -296,92 +307,104 @@ export default {
 			this.initContainers = this.getInitContainers(data);
 		},
 		onCpu(spec) {
+			this.cpuLimits = 0
+			this.cpuRequests = 0
 			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/cpu`)
 					.then(resp => {
 						if (resp.data.items) {
-							let data = resp.data.items[0]
-							let labels =[], da= []; let top = 0;
-							data.metricPoints.forEach(d => {
-								if (d.value>top) top = d.value;
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(d.value/1000);
-							});
 							let topData = [];
 							if (spec.containers) {
 								spec.containers.forEach(el => {
 									if(el.resources) {
-										if(el.resources.requests && el.resources.requests.cpu) topData.push(el.resources.requests.cpu)
+										if(el.resources.requests && el.resources.requests.cpu) {
+											topData.push(el.resources.requests.cpu)
+											this.cpuRequests += this.cpuRL(el.resources.requests.cpu)
+										}
+										if(el.resources.limits && el.resources.limits.cpu) this.cpuLimits += this.cpuRL(el.resources.limits.cpu)
 									}
 								})
 							}
-							let sum = 0;
-							for(let i=0;i<topData.length;i++) {
-								if(topData[i].includes('m')) {
-									sum += Number(topData[i].slice(0,-1))
-								} else {
-									sum += topData[i]*1000
-								}
+							let data = resp.data.items[0]
+							let labels =[], da= []; let top = 0;
+							let re=[], li=[];
+							data.metricPoints.forEach(d => {
+								if (d.value>top) top = d.value / 1000;
+								let dt = new Date(d.timestamp);
+								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
+								da.push(d.value/1000);
+								if(this.cpuRequests) re.push(this.cpuRequests)
+								if(this.cpuLimits) li.push(this.cpuLimits)
+							});
+							if(this.cpuLimits > 0) {
+								top = this.cpuLimits
+							} else if (this.cpuRequests > 0) {
+								top = this.cpuRequests
+							} else {
+								top = top*1.2 / 1000
 							}
 							this.isCpu = !!data;
-							if (sum) top = sum
-							else top = top*1.2
 							if (top === 0) top = 1;
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = (top/1000);
+							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top;
 							this.$data.chart.data.cpu = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(119,149,233,0.9)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.cpu,data: da,label:'Usage'},
 								]
 							};
+							if(this.cpuRequests) this.$data.chart.data.cpu.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
+							if(this.cpuLimits) this.$data.chart.data.cpu.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
 						} else {
 							this.isCpu = false;
 						}
 					})
 		},
 		onMemory(spec) {
+			this.memoryLimits = 0
+			this.memoryRequests = 0
 			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/memory`)
 					.then(resp => {
 						if (resp.data.items){
-							let data = resp.data.items[0]
-							let labels =[], da= []; let top = 0;
-							data.metricPoints.forEach(d => {
-								if (d.value>top) top = d.value;
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(Math.round(d.value/1024/1024));
-							});
 							let topData = [];
 							if (spec.containers) {
 								spec.containers.forEach(el => {
 									if(el.resources) {
-										if(el.resources.requests && el.resources.requests.memory) topData.push(el.resources.requests.memory)
+										if(el.resources.requests && el.resources.requests.memory) {
+											topData.push(el.resources.requests.memory)
+											this.memoryRequests += this.memoryRL(el.resources.requests.memory)
+										}
+										if(el.resources.limits && el.resources.limits.cpu) this.memoryLimits += this.memoryRL(el.resources.limits.memory)
 									}
 								})
 							}
-							let sum = 0;
-							for(let i=0;i<topData.length;i++) {
-								if (topData[i].includes('Gi')){
-									sum += Number(topData[i].slice(0,-2))*1024*1024*1024
-								} else if(topData[i].includes('Mi')) {
-									sum += Number(topData[i].slice(0,-2))*1024*1024
-								} else if(topData[i].includes('Ki')){
-									sum += Number(topData[i].slice(0,-2))*1024
-								} else {
-									sum += topData[i]*1024
-								}
+							let data = resp.data.items[0]
+							let labels =[], da= []; let top = 0;
+							let re=[], li=[];
+							data.metricPoints.forEach(d => {
+								if (d.value>top) top = d.value / 1024 / 1024;
+								let dt = new Date(d.timestamp);
+								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
+								da.push(Math.round(d.value/1024/1024));
+								if(this.memoryRequests) re.push(this.memoryRequests)
+								if(this.memoryLimits) li.push(this.memoryLimits)
+							});
+							if(this.memoryLimits > 0) {
+								top = this.memoryLimits
+							} else if ( this.memoryRequests > 0) {
+								top = this.memoryRequests
+							} else {
+								top = top*1.2
 							}
 							this.isMemory = !!data;
-							if (sum) top = sum
-							else top = top*1.2
-							if( top === 0) top = 1;
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top/1024/1024;
+							if (top === 0) top = 1024
+							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top;
 							this.$data.chart.data.memory = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(179,145,208,1)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.memory,data: da,label:'Usage'},
 								]
 							};
+							if(this.memoryRequests) this.$data.chart.data.memory.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
+							if(this.memoryLimits) this.$data.chart.data.memory.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
 						} else {
 							this.isMemory = false;
 						}

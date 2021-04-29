@@ -23,11 +23,11 @@ Vue.mixin({
 			}
 		},
 		/**
-		* timestamp를 day,hour,minute,second로 구분 봔환함
-		*
-		* @param {date} timestamp 변환할 date 값
-		* @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
-		*/
+		 * timestamp를 day,hour,minute,second로 구분 봔환함
+		 *
+		 * @param {date} timestamp 변환할 date 값
+		 * @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
+		 */
 		getElapsedTime(timestamp) {
 			const dt = Date.parse(timestamp);
 			const elapsedTime = new Date() - dt;
@@ -64,8 +64,8 @@ Vue.mixin({
 				str += `${second}s`;
 			}
 			return {elapsedTime,str};
-			},
-			unitsToBytes(value) {
+		},
+		unitsToBytes(value) {
 			const base = 1024;
 			const suffixes = ["K", "M", "G", "T", "P", "E"];
 
@@ -146,16 +146,16 @@ Vue.mixin({
 			this.$axios.get(this.getApiUrl('events.k8s.io','events',''))
 				.then( resp => {
 					for(let i=0; i<resp.data.items.length; i++) {
-					if(resp.data.items[i].regarding.uid === uid) {
-						events.unshift({
-						name: resp.data.items[i].note || "-",
-						source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
-						count: resp.data.items[i].deprecatedCount || "-",
-						subObject: resp.data.items[i].regarding.fieldPath || "-",
-						lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
-						type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
-						})
-					}
+						if(resp.data.items[i].regarding.uid === uid) {
+							events.unshift({
+								name: resp.data.items[i].note || "-",
+								source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
+								count: resp.data.items[i].deprecatedCount || "-",
+								subObject: resp.data.items[i].regarding.fieldPath || "-",
+								lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
+								type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
+							})
+						}
 					}
 				})
 			return events
@@ -200,7 +200,7 @@ Vue.mixin({
 				let temp = [];
 				for (let i = 0; i < val.length; i++) {
 					for (let j = 0; j < val.length; j++) {
-							if (val[i].idx < val[j].idx) {
+						if (val[i].idx < val[j].idx) {
 							temp = val[i]
 							val[i] = val[j]
 							val[j] = temp
