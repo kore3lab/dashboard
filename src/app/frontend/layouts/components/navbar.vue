@@ -6,6 +6,7 @@
 			<li class="nav-item pt-1"><span class="text-lg text-muted">{{this.currentContext()}}</span></li>
 		</ul>
 		<ul class="navbar-nav ml-auto">
+			<li v-show="isNamespace() === 'yes'" class="nav-item pt-1"><b-form-select v-model="selected" :options="namespaces()" size="sm" @input="selectNamespace"></b-form-select></li>
 			<li class="nav-item"><nuxt-link :to="{path: '/terminal', query: {termtype: 'cluster', cluster: this.currentContext()}}" target="_blank" class="nav-link"><b-icon icon="terminal-fill" font-scale="1.2"></b-icon></nuxt-link></li>
 			<li class="nav-item"><a class="nav-link" data-widget="fullscreen" href="#" role="button"><i class="fas fa-expand-arrows-alt"></i></a></li>
 			<!--<li class="nav-item"><a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button"><i class="fas fa-th-large"></i></a></li>-->
@@ -16,7 +17,15 @@
 <script>
 
 export default {
-	mounted() {
+	data() {
+		return {
+			selected: "",
+		}
+	},
+	watch: {
+		selected() {
+			this.$nuxt.$emit("selectedNamespace",this.selected);
+		},
 	},
 	methods: {
 		logout() {

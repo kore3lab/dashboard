@@ -6,7 +6,6 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">D</span>Daemon Sets</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
@@ -94,6 +93,8 @@ export default {
 			],
 			isBusy: false,
 			items: [],
+			currentitems:[],
+			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
@@ -102,7 +103,15 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			this.isNamespace('yes')
+			this.selectedNamespace = this.selectNamespace()
+			this.query_All()
+		});
+		this.$nuxt.$on('selectedNamespace',(select) => {
+			this.selectedNamespace = select
+			this.query_All()
+		})
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -112,13 +121,28 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
+					for(let i=0;i<this.$config.itemsPerPage;i++) {
+						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
+					}
 					this.viewModel = this.getViewLink('apps', 'daemonsets', items[0].namespace, items[0].name)
+					if(this.currentitems.length ===0) this.currentitems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					this.isShowSidebar = false
-					this.$refs.selectableTable.clearSelected()
+					if(this.currentitems.title !== this.viewModel.title) {
+						if(this.currentitems.length ===0) this.isShowSidebar = false
+						else {
+							this.viewModel = Object.assign({},this.currentitems)
+							this.currentitems = []
+							this.isShowSidebar = true
+							this.$refs.selectableTable.selectRow(this.selectIndex)
+						}
+					} else {
+						this.isShowSidebar = false
+						this.$refs.selectableTable.clearSelected()
+					}
 				}
 			} else {
+				this.currentitems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}
@@ -150,6 +174,7 @@ export default {
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
+		this.$nuxt.$off('selectedNamespace')
 	}
 }
 </script>

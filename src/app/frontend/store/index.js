@@ -2,6 +2,8 @@ export const state = () => ({
   currentContext: "", // currentContext
   contexts: [], // context list
   namespaces: [], // currentContext namespace 리스트
+  selectNamespace: "", // select Namespace
+  isNamespace: 'no',
   resources: [], // currentContext resource 리스트
 });
 export const mutations = {
@@ -17,6 +19,12 @@ export const mutations = {
   setResources(state, resources) {
     state.resources = resources;
   },
+  setSelectNamespace(state, selectNamespace) {
+    state.selectNamespace = selectNamespace;
+  },
+  setIsNamespace(state, isNamespace) {
+    state.isNamespace = isNamespace
+  },
 };
 export const getters = {
   getCurrentContext(state) {
@@ -30,5 +38,11 @@ export const getters = {
   },
   getResources(state) {
     return state.resources;
+  },
+  getSelectNamespace(state) {
+    return state.selectNamespace;
+  },
+  getIsNamespace(state) {
+    return state.isNamespace
   },
 };
