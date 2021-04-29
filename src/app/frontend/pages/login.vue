@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper min-vh-100">
+	<div class="content-wrapper min-vh-100 overflow-hidden">
 		<div class="row" style="padding-top:10em">
 			<div class="col-md-3"></div>
 			<div class="col-md-6">
@@ -20,7 +20,7 @@ $ echo "$(kubectl get secret ${SECRET} -n kore -o jsonpath='{.data.token}' | bas
 		</div>
 		<div  class="row mt-2">>
 			<div class="col-md-3"></div>
-			<div class="col-md-6"><p v-show="message!=''" class="text-danger">{{message}}</p></div>
+			<div class="col-md-6"><p v-show="message!==''" class="text-danger">{{message}}</p></div>
 			<div class="col-md-3"></div>
 		</div>
 	</div>
