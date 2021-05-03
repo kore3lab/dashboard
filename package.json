@@ -29,20 +29,15 @@
     "docker:build:push": "concurrently \"npm run docker:build:push:frontend\" \"npm run docker:build:push:backend\" \"npm run docker:build:push:metrics-scraper\"",
     "run": "nuxt start"
   },
-  "dependencies": {
+  "devDependencies": {
     "@nuxtjs/axios": "^5.12.2",
     "bootstrap-vue": "^2.0.0",
-    "d3": "^6.5.0",
     "js-yaml": "^3.14.1",
     "libapps": "github:yudai/libapps#release-hterm-1.70",
     "nuxt": "^2.14.11",
-    "xterm": "^3.8.1"
-  },
-  "devDependencies": {
+    "xterm": "^3.8.1",
     "@fortawesome/fontawesome-free": "5.13.0",
     "@nuxt/typescript-build": "^0.6.0",
-    "@types/d3": "^6.3.0",
-    "@types/d3-zoom": "^2.0.0",
     "ace-builds": "^1.4.11",
     "admin-lte": "3.1.0-rc",
     "babel-cli": "^6.26.0",

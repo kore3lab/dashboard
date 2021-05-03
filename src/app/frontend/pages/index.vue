@@ -199,7 +199,11 @@ export default {
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
