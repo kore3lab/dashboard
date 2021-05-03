@@ -241,7 +241,6 @@ export default {
 	},
 	created() {
 		this.$nuxt.$on("navbar-context-selected", () => {
-			this.isNamespace('no')
 			let ctx = this.currentContext();
 			if(!ctx) return;
 			this.$axios.get(`/api/clusters/${ctx}/dashboard`)

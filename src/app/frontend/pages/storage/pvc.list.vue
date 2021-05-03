@@ -6,6 +6,7 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Persistent Volume Claims</h1></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
@@ -113,14 +114,9 @@ export default {
 	layout: "default",
 	created() {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.isNamespace('yes')
 			this.selectedNamespace = this.selectNamespace()
 			this.getPods()
 		});
-		this.$nuxt.$on('selectedNamespace',(select) => {
-			this.selectedNamespace = select
-			this.getPods()
-		})
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -251,7 +247,6 @@ export default {
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
-		this.$nuxt.$off('selectedNamespace')
 	}
 }
 </script>

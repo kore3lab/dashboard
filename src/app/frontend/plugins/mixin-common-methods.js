@@ -269,9 +269,5 @@ Vue.mixin({
 			if (_) this.$store.commit("setSelectNamespace", _);
 			else return this.$store.getters["getSelectNamespace"];
 		},
-		isNamespace(_) {
-			if (_) this.$store.commit("setIsNamespace",_);
-			return this.$store.getters["getIsNamespace"];
-		}
 	},
 });

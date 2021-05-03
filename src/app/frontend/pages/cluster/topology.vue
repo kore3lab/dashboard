@@ -6,6 +6,7 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">T</span>Topology</h1></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-1 text-right"><b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button></div>
 				</div>
 			</div>
@@ -45,19 +46,13 @@ export default {
 	layout: "default",
 	created() {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.isNamespace('yes')
 			this.selectedNamespace = this.selectNamespace()
 			this.query()
 		});
-		this.$nuxt.$on('selectedNamespace',(select) => {
-			this.selectedNamespace = select
-			this.query()
-		})
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	beforeDestroy(){
 		this.$nuxt.$off("navbar-context-selected")
-		this.$nuxt.$off('selectedNamespace')
 	},
 	methods: {
 		query() {

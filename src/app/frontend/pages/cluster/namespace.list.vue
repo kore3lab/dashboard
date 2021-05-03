@@ -112,7 +112,6 @@ export default {
 	layout: "default",
 	created() {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.isNamespace('no')
 			this.selectedClear()
 		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");

@@ -3,7 +3,6 @@ export const state = () => ({
   contexts: [], // context list
   namespaces: [], // currentContext namespace 리스트
   selectNamespace: "", // select Namespace
-  isNamespace: 'no',
   resources: [], // currentContext resource 리스트
 });
 export const mutations = {
@@ -16,14 +15,11 @@ export const mutations = {
   setNamespaces(state, namespaces) {
     state.namespaces = namespaces;
   },
-  setResources(state, resources) {
-    state.resources = resources;
-  },
   setSelectNamespace(state, selectNamespace) {
     state.selectNamespace = selectNamespace;
   },
-  setIsNamespace(state, isNamespace) {
-    state.isNamespace = isNamespace
+  setResources(state, resources) {
+    state.resources = resources;
   },
 };
 export const getters = {
@@ -36,13 +32,10 @@ export const getters = {
   getNamespaces(state) {
     return state.namespaces;
   },
-  getResources(state) {
-    return state.resources;
-  },
   getSelectNamespace(state) {
     return state.selectNamespace;
   },
-  getIsNamespace(state) {
-    return state.isNamespace
+  getResources(state) {
+    return state.resources;
   },
 };
