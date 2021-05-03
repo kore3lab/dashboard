@@ -29,7 +29,7 @@
     ]
   },
   "include": [
-   "src/**/*.ts"
+   "src/app/frontend/**/*.ts"
   ],
   "exclude": [
     "node_modules",

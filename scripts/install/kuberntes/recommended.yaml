@@ -24,9 +24,9 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: ServiceAccount
-  name: kore-board
-  namespace: kore
+  - kind: ServiceAccount
+    name: kore-board
+    namespace: kore
 
 ---
 apiVersion: v1
@@ -238,7 +238,7 @@ data:
             }
             root   /usr/share/nginx/html;
             index  index.html index.htm;
-            try_files $uri $uri/ /index.html;
+            try_files $uri $uri/index.html $uri/ =404;
         }
 
         error_page   500 502 503 504   /50x.html;
@@ -357,14 +357,14 @@ spec:
             - containerPort: 80
               protocol: TCP
           volumeMounts:
-          - mountPath: /tmp
-            name: tmp-volume
-          - mountPath: /etc/nginx/conf.d/default.conf
-            name: nginx-conf
-            subPath: default.conf
-          - mountPath: /etc/nginx/nginx.conf
-            name: nginx-conf
-            subPath: nginx.conf
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /etc/nginx/conf.d/default.conf
+              name: nginx-conf
+              subPath: default.conf
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-conf
+              subPath: nginx.conf
       nodeSelector:
         "kubernetes.io/os": linux
       volumes:
@@ -374,7 +374,7 @@ spec:
           configMap:
             name: kore-board-nginx
             items:
-            - key: nginx.conf
-              path: nginx.conf
-            - key: default.conf
-              path: default.conf
+              - key: nginx.conf
+                path: nginx.conf
+              - key: default.conf
+                path: default.conf

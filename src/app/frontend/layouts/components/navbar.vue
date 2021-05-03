@@ -16,8 +16,6 @@
 <script>
 
 export default {
-	mounted() {
-	},
 	methods: {
 		logout() {
 			this.$axios.delete(`/api/token`)
