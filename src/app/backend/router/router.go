@@ -1,19 +1,18 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/acornsoftlab/dashboard/docs"
-	model "github.com/acornsoftlab/dashboard/model/v1alpha1"
 	"github.com/acornsoftlab/dashboard/pkg/app"
+	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/acornsoftlab/dashboard/router/apis/_raw"
 	api "github.com/acornsoftlab/dashboard/router/apis/clusters"
 	"github.com/acornsoftlab/dashboard/router/apis/termapi"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"net/http"
-	"strings"
 )
 
 var Router *gin.Engine
@@ -29,24 +28,27 @@ func CreateUrlMappings() {
 
 	// gin
 	Router = gin.Default()
-	Router.Use(cors())         // cors
-	Router.Use(route())        // route rules
-	Router.Use(authenticate()) // authentication
-
+	Router.Use(cors()) // cors
+	authenticate := config.Value.Authenticator.HandlerFunc
 	// Router.Use(gin.Logger())
 	// Router.Use(Recovery())
 
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // restful-api docs
 	Router.GET("/healthy", healthy)                                           // healthy
-	Router.GET("/api/clusters", api.ListContexts)
-	Router.POST("/api/clusters", api.CreateContexts)
 
 	// Authentication API
-	Router.POST("/api/token", api.Authentication) // authentication & get access token
-	Router.DELETE("/api/token", api.Logout)
+	Router.POST("/api/auth/login", api.Login)                                // authentication & issuance  access/refresh token
+	Router.GET("/api/auth/login", api.GetAuth)                               // get auth-config
+	Router.GET("/api/auth/logout", api.Logout)                               // logout
+	Router.GET("/api/auth/user", authenticate(), api.GetUser)                // user info
+	Router.POST("/api/auth/token/refresh", authenticate(), api.RefreshToken) // authentication & get access token
+
+	// cluster (context)
+	Router.GET("/api/clusters", authenticate(), api.ListContexts)
+	Router.POST("/api/clusters", authenticate(), api.CreateContexts)
 
 	// API
-	clustersAPI := Router.Group("/api/clusters/:CLUSTER")
+	clustersAPI := Router.Group("/api/clusters/:CLUSTER", authenticate())
 	{
 		clustersAPI.GET("", api.GetContext)
 		clustersAPI.POST("", api.CreateContext)
@@ -57,12 +59,11 @@ func CreateUrlMappings() {
 		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
 		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
 		//terminal API
-		//terminal API
 		clustersAPI.GET("/terminal", termapi.ProcCluster)
 		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/terminal", termapi.ProcPod)
 		clustersAPI.GET("namespaces/:NAMESPACE/pods/:POD/containers/:CONTAINER/terminal", termapi.ProcContainer)
 	}
-	clustersAPI_ := Router.Group("/api")
+	clustersAPI_ := Router.Group("/api", authenticate())
 	{
 		clustersAPI_.GET("/topology", api.Topology)
 		clustersAPI_.GET("/topology/namespaces/:NAMESPACE", api.Topology)
@@ -73,14 +74,14 @@ func CreateUrlMappings() {
 	}
 
 	// RAW-API POST/PUT (apply, patch)
-	Router.POST("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
-	Router.PUT("/raw/clusters/:CLUSTER", _raw.ApplyRaw)
-	Router.POST("/raw", _raw.ApplyRaw)
-	Router.PUT("/raw", _raw.ApplyRaw)
+	Router.POST("/raw/clusters/:CLUSTER", authenticate(), _raw.ApplyRaw)
+	Router.PUT("/raw/clusters/:CLUSTER", authenticate(), _raw.ApplyRaw)
+	Router.POST("/raw", authenticate(), _raw.ApplyRaw)
+	Router.PUT("/raw", authenticate(), _raw.ApplyRaw)
 
 	// API-Group List
-	Router.GET("/raw/clusters/:CLUSTER/apis/", _raw.GetAPIGroupList)
-	Router.GET("/raw/apis/", _raw.GetAPIGroupList)
+	Router.GET("/raw/clusters/:CLUSTER/apis/", authenticate(), _raw.GetAPIGroupList)
+	Router.GET("/raw/apis/", authenticate(), _raw.GetAPIGroupList)
 
 	// RAW-API Core
 	//      non-Namespaced
@@ -90,8 +91,8 @@ func CreateUrlMappings() {
 	//          /api/v1/namespaces/default/services/kubernetes
 	//          /api/v1/namespaces/default/serviceaccounts/default
 
-	Router.GET("/raw/clusters/:CLUSTER/api/", _raw.GetRaw) // Core APIVersions
-	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION")
+	Router.GET("/raw/clusters/:CLUSTER/api/", authenticate(), _raw.GetRaw) // Core APIVersions
+	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION", authenticate(), route())
 	{
 		rawAPI.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceLis
 		rawAPI.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
@@ -103,8 +104,8 @@ func CreateUrlMappings() {
 		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
 		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 	}
-	Router.GET("/raw/api/", _raw.GetRaw) // Core APIVersions
-	rawAPI_ := Router.Group("/raw/api/:VERSION")
+	Router.GET("/raw/api/", authenticate(), _raw.GetRaw) // Core APIVersions
+	rawAPI_ := Router.Group("/raw/api/:VERSION", authenticate(), route())
 	{
 		rawAPI_.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceList
 		rawAPI_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
@@ -123,8 +124,8 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /apis/apps/v1/namespaces/kube-system/deployments/nginx
 	//          /apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings/clusterrolebinding-2g782
-	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", _raw.GetRaw) // APIGroup
-	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION")
+	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", authenticate(), _raw.GetRaw) // APIGroup
+	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION", authenticate(), route())
 	{
 		rawAPIs.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
 		rawAPIs.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
@@ -136,8 +137,8 @@ func CreateUrlMappings() {
 		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
 		rawAPIs.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
 	}
-	Router.GET("/raw/apis/:GROUP", _raw.GetRaw) // APIGroup
-	rawAPIs_ := Router.Group("/raw/apis/:GROUP/:VERSION")
+	Router.GET("/raw/apis/:GROUP", authenticate(), _raw.GetRaw) // APIGroup
+	rawAPIs_ := Router.Group("/raw/apis/:GROUP/:VERSION", authenticate(), route())
 	{
 		rawAPIs_.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
 		rawAPIs_.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
@@ -157,14 +158,12 @@ func CreateUrlMappings() {
 */
 func route() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.RequestURI, "/raw/clusters") || strings.HasPrefix(c.Request.RequestURI, "/raw/api") {
-			if c.Param("RESOURCE") == "" {
-				c.Params = append(c.Params,
-					gin.Param{Key: "RESOURCE", Value: c.Param("A")},
-					gin.Param{Key: "NAME", Value: c.Param("B")})
-			} else if c.Param("A") == "namespaces" {
-				c.Params = append(c.Params, gin.Param{Key: "NAMESPACE", Value: c.Param("B")})
-			}
+		if c.Param("RESOURCE") == "" {
+			c.Params = append(c.Params,
+				gin.Param{Key: "RESOURCE", Value: c.Param("A")},
+				gin.Param{Key: "NAME", Value: c.Param("B")})
+		} else if c.Param("A") == "namespaces" {
+			c.Params = append(c.Params, gin.Param{Key: "NAMESPACE", Value: c.Param("B")})
 		}
 	}
 }
@@ -180,41 +179,6 @@ func cors() gin.HandlerFunc {
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
-		}
-
-		c.Next()
-	}
-}
-
-func authenticate() gin.HandlerFunc {
-
-	return func(c *gin.Context) {
-
-		if !lang.ArrayContains([]string{"/healthy", "/api/token"}, c.Request.RequestURI) {
-			token, _ := c.Cookie("access-token")
-			expired := true
-			if token != "" {
-				expired, _ = model.ValidateAccessToken(token)
-			}
-			// expired "access-token"
-			if expired {
-				token, _ := c.Cookie("refresh-token")
-				if token == "" {
-					log.Infoln("expired access-token, refresh-token")
-					c.AbortWithStatus(http.StatusUnauthorized)
-					return
-				}
-				expired, err := model.ValidateRefreshToken(token)
-				if err != nil || expired {
-					log.Infoln("expired refresh-token")
-					c.AbortWithStatus(http.StatusUnauthorized)
-					return
-				}
-				//create a token
-				model.CreateToken(c)
-				log.Infoln("create a new token(access, refresh) from refresh-token")
-			}
-
 		}
 
 		c.Next()

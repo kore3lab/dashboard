@@ -1,41 +1,21 @@
 package config
 
 import (
-	"context"
-	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	"io/ioutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/acornsoftlab/dashboard/pkg/auth"
+	"github.com/acornsoftlab/dashboard/pkg/lang"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
-	"os"
-
-	"path/filepath"
 )
-
-const (
-	IN_CLUSTER_NAME = "kubernetes@in-cluster"
-)
-
-type conf struct {
-	ConfigLoadingRules clientcmd.ClientConfigLoader // kubeconfig loading rule
-	KubeConfig         *api.Config                  // kubeconfig file
-	DefaultContext     string                       // kubeconfig file - default context
-	Contexts           []string                     // kubeconfig file - context list
-	InClusterConfig    *rest.Config                 // api clietner kubeconfig - in-cluter
-	kubeConfigs        map[string]*rest.Config      // api clietner kubeconfig - each context
-	MetricsScraperUrl  *string                      // metrics scraper
-	SecretToken        string                       // secret token
-	SecretAccessKey    *string                      // access-key singing secret
-	SecretRefreshKey   *string                      // refresh-key singing secret
-	IsRunningInCluster bool                         // running in-cluster mode
-}
 
 var Value = &conf{}
 
@@ -59,28 +39,19 @@ func KubeConfigs(ctx string) (*rest.Config, error) {
 		return nil, errors.New(fmt.Sprintf("cannot found context=%s", ctx))
 	}
 }
-func KubeConfigsDefault(ctx string) *rest.Config {
-	if lang.ArrayContains(Value.Contexts, ctx) {
-		return Value.kubeConfigs[ctx]
-	} else {
-		return Value.kubeConfigs[Value.DefaultContext]
-	}
-}
 
 func init() {
 
 	// arguments
 	kubeconfig = flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets (defaults to in-cluster config)")
-	Value.MetricsScraperUrl = flag.String("metrics-scraper-url", "http://localhost:8000", "The address of the Metrics-scraper Apiserver")
+	flag.StringVar(&Value.MetricsScraperUrl, "metrics-scraper-url", "http://localhost:8000", "The address of the Metrics-scraper Apiserver")
 	logLevel := flag.String("log-level", "debug", "The log level")
-	secretTokenPath = flag.String("token", os.Getenv("TOKEN"), "The secret token path")
-	Value.SecretAccessKey = flag.String("access-secret", "whdmstkddkzhsthvmxm", "The singing secret of access key")
-	Value.SecretRefreshKey = flag.String("refresh-ecret", "dkzhsthvmxmwhdmstkd", "The singing secret of refresh key")
+	authconfig := flag.String("auth", auth.DefaultAuthenticator, fmt.Sprintf("The authenticator (default=%s)", auth.DefaultAuthenticator))
 
 	//logger
 	err := flag.Set("logtostderr", "true")
 	if err != nil {
-		log.Errorf("Error cannot set logtostderr: %v", err)
+		log.Warnf("error cannot set logtostderr: %s", err.Error())
 	}
 	flag.Parse()
 
@@ -103,6 +74,12 @@ func init() {
 		Value.ConfigLoadingRules = &clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig}
 	} else {
 		Value.ConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
+	}
+
+	// definition "authenticator"
+	log.Infof("auth-config %v", *authconfig)
+	if err = json.Unmarshal([]byte(*authconfig), &Value.AuthConfig); err != nil {
+		log.Errorf("invalid auth parameter (cause=%s)", err.Error())
 	}
 }
 
@@ -144,110 +121,34 @@ func Setup() {
 
 	// print infomation
 	if Value.InClusterConfig == nil {
-		log.Infof("contexts (len=%v) , non-in-cluster", len(Value.Contexts))
+		log.Infof("contexts %v , non-in-cluster", Value.Contexts)
 	} else {
-		log.Infof("contexts (len=%v) , in-cluster OK", len(Value.Contexts))
+		log.Infof("contexts %v , in-cluster OK", Value.Contexts)
 	}
 
-	// default-context = 없다면 첫번째
-	if len(Value.Contexts) > 0 && Value.DefaultContext == "" {
+	// default context (1:in-cluster > 2: first context)
+	if Value.IsRunningInCluster {
+		Value.DefaultContext = IN_CLUSTER_NAME
+	} else if len(Value.Contexts) > 0 {
 		Value.DefaultContext = Value.Contexts[0]
 	}
-
-	// authenticate 를 위한 secret token 초기화
-	initScretToken(*secretTokenPath)
-
-	// print infomation
-	log.Infof("TOKEN : %s", Value.SecretToken)
-
-}
-
-/* ---
-* 현재 로그인 validation 은 토큰 문자열 단순 비교
-* 비교 되는 토큰 생성 기준 (backend)
-  * 1순위: 시작 파라메터 `--token`  환경 변수 `TOKEN` 에 지정되어 있는 파일경로에서 토큰값 read
-  * 2순위:  in-cluster 가 있는 경우  지정된 namespace 의 serviceaccount secret 토큰값 read
-  * 3순위:  in-cluster 가 없는 경우 default cluster 에서  지정된 namespace 의 serviceaccount secret 토큰값 read
-  * 4순위 : 자동생성
-* 생성된 토큰은 파일로 저장 (/var/run/kore-board-token)		*/
-func initScretToken(path string) {
-
-	var apiClient *kubernetes.Clientset
-	var err error
-
-	// 1. token path 에서 token 값 읽음
-	if path != "" {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			log.Infof("can not find a secret token file '%s'", path)
-		} else {
-			if d, err := ioutil.ReadFile(path); err == nil {
-				Value.SecretToken = string(d)
-				log.Infof("read a secret token from '%s'", path)
-			} else {
-				log.Errorf("cannot read a secret token from '%s' (cause=%s)", path, err)
-			}
-		}
-	}
-
-	if Value.SecretToken == "" {
-		// secret 을 읽어올 cluster 선정
-		if Value.InClusterConfig == nil {
-			apiClient, err = NewKubeClient(Value.DefaultContext)
-			if err != nil {
-				log.Errorln(err.Error())
-			}
-		} else {
-			apiClient, err = kubernetes.NewForConfig(Value.InClusterConfig)
-			if err != nil {
-				log.Errorln(err.Error())
-			}
-		}
-
-		// 대상 클러스터가 있는 경우 namespace에서 serviceaccount token 을 읽음
-		if apiClient != nil {
-			ns := lang.NVL(os.Getenv("NAMESPACE"), "kore")
-			nm := lang.NVL(os.Getenv("SERVICE_ACCOUNT"), "kore-board")
-			sa, err := apiClient.CoreV1().ServiceAccounts(ns).Get(context.TODO(), nm, metav1.GetOptions{})
-			if err != nil {
-				log.Warnf("cannot load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
-			} else {
-				se, err := apiClient.CoreV1().Secrets(ns).Get(context.TODO(), sa.Secrets[0].Name, metav1.GetOptions{})
-				if err == nil {
-					log.Infof("load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s", ns, nm)
-					Value.SecretToken = string(se.Data["token"])
-				} else {
-					log.Warnf("cannot load token from service-account env.NAMESPACE=%s, env.SERVICE_ACCOUNT=%s, (cause %s)", ns, nm, err)
-				}
-			}
-		}
-
-	}
-
-	// 토큰 값 자동 생성
-	if Value.SecretToken == "" {
-		b := make([]byte, 256) //490
-		rand.Read(b)
-		Value.SecretToken = fmt.Sprintf("%x", b)
-		log.Warnln("generate a new random secret token")
-	}
-
-	// token 파일 저장
-	path = lang.NVL(path, "/var/run/kore-board-token")
-	dir := filepath.Dir(path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, os.FileMode(777)); err != nil {
-			log.Errorf("can not make a directory (dir=%s, cause=%s)", dir, err.Error())
-		} else {
-			log.Infof("create a token directory (dir=%s)", dir)
-		}
-	}
-
-	os.Remove(path)
-	b := []byte(Value.SecretToken)
-	if err := ioutil.WriteFile(path, b, os.FileMode(777)); err != nil {
-		log.Errorf("cannot write a secret token file (cause=%s, path=%s)", err.Error(), path)
+	if Value.DefaultContext == "" {
+		log.Warnln("there is no default context")
 	} else {
-		log.Infof("create a token file (path=%s)", path)
+		log.Infof("default context is \"%s\"", Value.DefaultContext)
+	}
+
+	// definition "authenticator"
+	if Value.AuthConfig != nil {
+		if Value.Authenticator, err = auth.CreateAuthenticator(Value.AuthConfig, Value.kubeConfigs[Value.DefaultContext]); err != nil {
+			log.Errorf("invalid authenticator (cause=%s)", err.Error())
+		}
+	}
+	if Value.Authenticator == nil {
+		Value.Authenticator = auth.DummyAuthenticator()
+		log.Warnln("initialized dummy authenticator")
+	} else {
+		log.Infof("initialized authenticator (strategy=%s, provider=%s)", Value.AuthConfig.Strategy, Value.AuthConfig.Secret["type"])
 	}
 
 }

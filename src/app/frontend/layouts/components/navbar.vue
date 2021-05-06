@@ -18,12 +18,7 @@
 export default {
 	methods: {
 		logout() {
-			this.$axios.delete(`/api/token`)
-				.then((resp) => {
-					this.$router.push("/login");
-					return false;
-				})
-				.catch(e => { this.msghttp(e);})
+			this.$auth.logout().catch(e => { this.msghttp(e);})
 
 		}
 	}

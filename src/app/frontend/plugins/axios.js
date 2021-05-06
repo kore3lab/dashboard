@@ -1,9 +1,7 @@
-export default function ({ $axios, $config, route, redirect }) {
+export default function ({ $axios, $config, app, route, redirect }) {
 
 	if ($config.nodeEnv === "development") {
-		$axios.onRequest(config => {
-			config.baseURL = `${location.protocol}//${location.hostname}:${$config.backendPort}`;
-		})
+		$axios.defaults.baseURL = `${location.protocol}//${location.hostname}:${$config.backendPort}`;
 	}
 
 	$axios.onError(err => {
@@ -12,6 +10,7 @@ export default function ({ $axios, $config, route, redirect }) {
 			return Promise.reject(err);
 		} else {
 			if (err.response.status === 401) {
+				app.$auth.logout();
 				redirect("/login")
 			} else {
 				return Promise.reject(err);
