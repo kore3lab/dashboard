@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/acornsoftlab/dashboard/model/v1alpha1"
@@ -29,7 +28,6 @@ func Topology(c *gin.Context) {
 func Dashboard(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	fmt.Printf("cluster=%s", g.C.Param("CLUSTER"))
 	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
 
 	dashboard := model.NewDashboard(cluster)

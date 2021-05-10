@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/acornsoftlab/dashboard/model"
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
@@ -16,7 +18,6 @@ import (
 	metricsapi "k8s.io/metrics/pkg/apis/metrics"
 	metricsV1beta1api "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
-	"strings"
 )
 
 type Dashboard struct {
@@ -238,7 +239,7 @@ func (self *Dashboard) Get() error {
 	_, err = client.R().
 		SetHeader("Content-Type", "application/json").
 		SetResult(&self.Metrics).
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s", *config.Value.MetricsScraperUrl, self.context))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
 
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)

@@ -22,7 +22,7 @@ func GetNodeMetrics(c *gin.Context) {
 	client := resty.New()
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s/nodes/%s/metrics/%s", *config.Value.MetricsScraperUrl, cluster, c.Param("NODE"), c.Param("METRICS")))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s/nodes/%s/metrics/%s", config.Value.MetricsScraperUrl, cluster, c.Param("NODE"), c.Param("METRICS")))
 	if err != nil {
 		g.SendMessage(http.StatusInternalServerError, "Unable to get scrapping metrics", err)
 	} else {
@@ -41,7 +41,7 @@ func GetPodMetrics(c *gin.Context) {
 	client := resty.New()
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s/namespaces/%s/pods/%s/metrics/%s", *config.Value.MetricsScraperUrl, cluster, c.Param("NAMESPACE"), c.Param("POD"), c.Param("METRICS")))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s/namespaces/%s/pods/%s/metrics/%s", config.Value.MetricsScraperUrl, cluster, c.Param("NAMESPACE"), c.Param("POD"), c.Param("METRICS")))
 	if err != nil {
 		g.SendMessage(http.StatusInternalServerError, "Unable to get scrapping metrics", err)
 	} else {
