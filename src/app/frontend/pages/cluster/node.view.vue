@@ -170,6 +170,13 @@ export default {
 						}
 					},
 					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return (data.yLabel).toFixed(2) + "Mi"
+								}
+							}
+						},
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],

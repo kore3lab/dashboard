@@ -1,11 +1,11 @@
 /* bootstrap custom - Tab */
-.content a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0rem .3rem}
+.content a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0 .3rem}
 .content a.nav-link {padding: .3rem .3rem; color:#aaa}
 
 /* default layout */
 .main-sidebar, .main-sidebar::before { width: 17rem;}
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
-.sidebar {margin-left: 3.7rem; padding: 0rem; padding-left: .1rem;}
+.sidebar {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
 .brand-link { margin-left: 3.7rem;}
 .layout-fixed .brand-link { width: 13.2rem;}
 

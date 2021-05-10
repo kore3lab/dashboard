@@ -27,7 +27,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" fixed class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -81,19 +81,19 @@ export default {
 			keyword: "",
 			filterOn: ["name"],
 			fields: [
-				{ key: "name", label: "Name", sortable: true, class:"text-truncate" },
-				{ key: "usageCpu", label: "CPU", sortable: true, class:"text-truncate"  },
-				{ key: "usageMemory", label: "Memory", sortable: true, class:"text-truncate"  },
-				{ key: "usageDisk", label: "Disk", sortable: true, class:"text-truncate" },
-				{ key: "taints", label: "Taints", sortable: true, class:"text-truncate" },
-				{ key: "roles", label: "Roles", sortable: true, class:"text-truncate" },
-				{ key: "k8sVersion", label: "Version", sortable: true, class:"text-truncate" },
-				{ key: "creationTimestamp", label: "Age", sortable: true, class:"text-truncate" },
-				{ key: "ready", label: "Status", sortable: true, class:"text-truncate"  },
+				{ key: "name", label: "Name", sortable: true },
+				{ key: "usageCpu", label: "CPU", sortable: true  },
+				{ key: "usageMemory", label: "Memory", sortable: true  },
+				{ key: "usageDisk", label: "Disk", sortable: true },
+				{ key: "taints", label: "Taints", sortable: true },
+				{ key: "roles", label: "Roles", sortable: true },
+				{ key: "k8sVersion", label: "Version", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "ready", label: "Status", sortable: true },
 			],
 			isBusy: false,
 			items: [],
-			currentitems:[],
+			currentItems:[],
 			selectIndex: 0,
 			totalItems: 0,
 			metrics: [],
@@ -119,14 +119,14 @@ export default {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
 					this.viewModel = this.getViewLink('', 'nodes', items[0].namespace, items[0].name)
-					if(this.currentitems.length ===0) this.currentitems = Object.assign({},this.viewModel)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					if(this.currentitems.title !== this.viewModel.title) {
-						if(this.currentitems.length ===0) this.isShowSidebar = false
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
 						else {
-							this.viewModel = Object.assign({},this.currentitems)
-							this.currentitems = []
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
 							this.isShowSidebar = true
 							this.$refs.selectableTable.selectRow(this.selectIndex)
 						}
@@ -136,7 +136,7 @@ export default {
 					}
 				}
 			} else {
-				this.currentitems = []
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}

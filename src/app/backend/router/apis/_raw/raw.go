@@ -7,7 +7,6 @@ package _raw
 */
 
 import (
-	"k8s.io/apimachinery/pkg/conversion"
 	"net/http"
 	"net/url"
 	"strings"
@@ -116,12 +115,11 @@ func GetRaw(c *gin.Context) {
 		return
 	}
 
-	var s conversion.Scope
 	ListOptions := v1.ListOptions{}
 	u, _ := url.Parse(c.Request.RequestURI)
 	query, _ := url.ParseQuery(u.RawQuery)
 
-	err = v1.Convert_url_Values_To_v1_ListOptions(&query,&ListOptions,s)
+	err = v1.Convert_url_Values_To_v1_ListOptions(&query,&ListOptions,nil)
 	if err != nil {
 		g.SendMessage(http.StatusBadRequest, err.Error(), err)
 		return

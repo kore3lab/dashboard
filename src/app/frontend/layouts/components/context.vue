@@ -102,7 +102,7 @@ export default {
 		onMoveTop(index) {
 			if (index === 0) return;
 			var list = JSON.parse(JSON.stringify(this.contexts()))	// deep clone
-			list.splice(0, 0, list.splice(index)[0]);
+			list.splice(0, 0, list.splice(index,1)[0]);
 			this.contexts(list);
 			localStorage.setItem("contexts", JSON.stringify(list));
 		},

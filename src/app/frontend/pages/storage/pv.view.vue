@@ -38,6 +38,20 @@
 			</div>
 		</div>
 
+		<div v-if="hostPath" class="row">
+			<div class="col-md-12">
+				<div class="card card-secondary card-outline">
+					<div class="card-header p-2"><h3 class="card-title text-md">Host Path</h3></div>
+					<div class="card-body p-2">
+						<dl class="row mb-0">
+							<dt class="col-sm-2 text-truncate">Type</dt><dd class="col-sm-10">{{ hostPath.type ? hostPath.type : '-' }}</dd>
+							<dt class="col-sm-2 text-truncate">Path</dt><dd class="col-sm-10">{{ hostPath.path }}</dd>
+						</dl>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div v-if="nfs" class="row">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
@@ -111,6 +125,7 @@ export default {
 			nfs: [],
 			claim: [],
 			flexVolume: [],
+			hostPath: [],
 		}
 	},
 	mounted() {
@@ -125,6 +140,7 @@ export default {
 		onSync(data) {
 			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
+			this.hostPath = this.getHP(data.spec.hostPath)
 			this.nfs = this.getNFS(data.spec.nfs);
 			this.claim = this.getClaim(data.spec.claimRef);
 			this.flexVolume = this.getFV(data.spec.flexVolume);
@@ -138,6 +154,14 @@ export default {
 				accessModes: data.spec.accessModes || '-',
 				storageClassName: data.spec.storageClassName || '-',
 				status: data.status? data.status.phase : '-'
+			}
+		},
+		getHP(hp) {
+			if(!hp) return
+
+			return {
+				type: hp.type,
+				path: hp.path,
 			}
 		},
 		getNFS(nfs) {
