@@ -201,7 +201,7 @@ export default {
 			this.maxCpu = data.status.capacity.cpu;
 			this.maxMemory = this.tranMemory(data.status.capacity.memory)/(1024);
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod();
 		},
 		getInfo(data) {
@@ -337,11 +337,10 @@ export default {
 			let childPod = [];
 			this.nowCpu = [];
 			this.nowMemory = [];
-			this.$axios.get(this.getApiUrl('','pods'))
+			this.$axios.get(this.getApiUrl('','pods','','','fieldSelector=spec.nodeName=' + this.metadata.name))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el => {
-							if(el.spec.nodeName === this.metadata.name) {
 								childPod.push({
 									name: el.metadata.name,
 									namespace: el.metadata.namespace,
@@ -352,7 +351,6 @@ export default {
 									idx: idx,
 								})
 								idx++;
-							}
 						})
 					})
 			return childPod

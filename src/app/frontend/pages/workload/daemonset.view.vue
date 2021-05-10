@@ -225,8 +225,8 @@ export default {
 		onSync(data) {
 			this.totalCpu = 0; this.totalMemory = 0; this.cpus = {};
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
-			this.childPod = this.getChildPod(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
+			this.childPod = this.getChildPod(data.spec.selector.matchLabels);
 		},
 		getInfo(data) {
 			let tolerations = [];
@@ -266,7 +266,8 @@ export default {
 				isToleration: isToleration,
 			}
 		},
-		getChildPod(uid) {
+		getChildPod(label) {
+			label = this.stringifyLabels(label)
 			let childPod = [];
 			this.nowMemory = [];
 			this.nowCpu = [];
@@ -284,12 +285,10 @@ export default {
 			this.isPods = false;
 			this.isCpu = false;
 			this.isMemory = false;
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=' + label))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							if (el.metadata.ownerReferences) {
-								if (el.metadata.ownerReferences[0].uid === uid) {
 									this.isPods = true;
 									childPod.push({
 										name: el.metadata.name,
@@ -302,8 +301,6 @@ export default {
 										idx: idx,
 									})
 									idx++;
-								}
-							}
 						})
 					})
 			return childPod

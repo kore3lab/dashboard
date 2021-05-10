@@ -298,7 +298,7 @@ export default {
 	methods: {
 		onSync(data) {
 			this.raw = data;
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.volumes = this.getVolumes(data.spec.volumes) || {};
 			this.containers = this.getContainers(data) || {};
 			this.status = this.toStatus(data.metadata.deletionTimestamp, data.status);

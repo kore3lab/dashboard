@@ -121,7 +121,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.ingress = this.getIngress(data.spec.ingress);
 			this.egress = this.getEgress(data.spec.egress);

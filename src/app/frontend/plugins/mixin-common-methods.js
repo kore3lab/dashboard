@@ -141,18 +141,18 @@ Vue.mixin({
 
 			return Math.floor(seconds) + " seconds";
 		},
-		getEvents(uid) {
+		getEvents(uid,query) {
 			let events = [];
-			this.$axios.get(this.getApiUrl('events.k8s.io','events',''))
+			this.$axios.get(this.getApiUrl('','events','', '',query))
 				.then( resp => {
 					for(let i=0; i<resp.data.items.length; i++) {
-						if(resp.data.items[i].regarding.uid === uid) {
+						if(resp.data.items[i].involvedObject.uid === uid) {
 							events.unshift({
-								name: resp.data.items[i].note || "-",
-								source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
-								count: resp.data.items[i].deprecatedCount || "-",
-								subObject: resp.data.items[i].regarding.fieldPath || "-",
-								lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
+								name: resp.data.items[i].message || "-",
+								source: resp.data.items[i].source.host || resp.data.items[i].source.component || "undefined",
+								count: resp.data.items[i].count || "-",
+								subObject: resp.data.items[i].involvedObject.fieldPath || "-",
+								lastSeen: resp.data.items[i].lastTimestamp || "-",
 								type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
 							})
 						}
@@ -229,7 +229,7 @@ Vue.mixin({
 				return { g: '', k: k}
 			}
 		},
-		getApiUrl(group, rscName, namespace, name) {
+		getApiUrl(group, rscName, namespace, name, query) {
 			if(!namespace) namespace = ''
 			let resource = this.resources()[group][rscName];
 			if (resource) {
@@ -239,7 +239,7 @@ Vue.mixin({
 				}else {
 					url = `/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.name}`;
 				}
-				return name ? `${url}/${name}` : url;
+				return name ? `${url}/${name}${query ? '?' + query : ''}` : url+ (query ? '?' + query : '');
 			} else {
 				return "#";
 			}

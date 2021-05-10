@@ -111,7 +111,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.connection = this.getConnection(data);
 			this.endpoints = this.getEndpoints(data);
@@ -134,20 +134,21 @@ export default {
 			}
 		},
 		getEndpoints(data) {
+			let list =[];
 			this.$axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
-			.then(resp => {
-				let list =[];
-				this.isEndpoint = true;
-				list.push({
-					name: resp.data.metadata.name,
-					namespace: resp.data.metadata.namespace,
-					selfLink: resp.data.metadata.selfLink,
-					endpoints: this.onEndpoints(resp.data)
-				})
-				this.endpoints = list
-				return list
-			})
-			.catch(error => this.isEndpoint = false)
+					.then(resp => {
+						this.isEndpoint = true;
+						list.push({
+							name: resp.data.metadata.name,
+							namespace: resp.data.metadata.namespace,
+							selfLink: resp.data.metadata.selfLink,
+							endpoints: this.onEndpoints(resp.data)
+						})
+						this.endpoints = list
+						return list
+					})
+					.catch(_ => this.isEndpoint = false)
+			return list
 		},
 		toEndpointList(p,type) {
 			let list = [];
