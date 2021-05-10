@@ -228,7 +228,7 @@ export default {
 			this.controller = this.getController(data.metadata.ownerReferences)
 			this.info = this.getInfo(data);
 			this.event = this.getEvents(data.metadata.uid);
-			this.childPod = this.getChildPod(data.metadata.uid);
+			this.childPod = this.getChildPod(data.status.currentRevision);
 		},
 		getInfo(data) {
 			let tolerations = [];
@@ -267,7 +267,7 @@ export default {
 				isToleration: isToleration,
 			}
 		},
-		getChildPod(uid) {
+		getChildPod(currentRevision) {
 			let childPod = [];
 			this.nowMemory = [];
 			this.nowCpu = [];
@@ -285,26 +285,22 @@ export default {
 			this.isPods = false;
 			this.isCpu = false;
 			this.isMemory = false;
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=controller-revision-hash=' + currentRevision))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							if (el.metadata.ownerReferences) {
-								if (el.metadata.ownerReferences[0].uid === uid) {
-									this.isPods = true;
-									childPod.push({
-										name: el.metadata.name,
-										namespace: el.metadata.namespace,
-										ready: this.toReady(el.status,el.spec),
-										nowMemory: this.onMemory(el,idx),
-										nowCpu: this.onCpu(el,idx),
-										status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-										countStatus: this.countStatus(el.status),
-										idx: idx,
-									})
-									idx++;
-								}
-							}
+							this.isPods = true;
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								nowMemory: this.onMemory(el,idx),
+								nowCpu: this.onCpu(el,idx),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								countStatus: this.countStatus(el.status),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

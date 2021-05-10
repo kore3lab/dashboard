@@ -215,7 +215,7 @@ export default {
 		onSync(data) {
 			this.totalCpu = 0; this.totalMemory = 0; this.cpus = {};
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod(data.spec.template.metadata.labels);
 		},
 		getInfo(data) {
@@ -276,30 +276,20 @@ export default {
 			this.cpuLimits = 0
 			this.memoryRequests = 0
 			this.memoryLimits = 0
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=' + label))
 					.then( resp => {
-						let childLabel
-						let count = 0, idx = 0;
+						let idx = 0;
 						resp.data.items.forEach(el =>{
-							childLabel= this.stringifyLabels(el.metadata.labels)
-							label.forEach(e => {
-								if(childLabel.indexOf(e) === -1) {
-									count++;
-								}
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								nowMemory: this.onMemory(el,idx),
+								nowCpu: this.onCpu(el,idx),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								idx: idx,
 							})
-							if(count === 0) {
-								childPod.push({
-									name: el.metadata.name,
-									namespace: el.metadata.namespace,
-									ready: this.toReady(el.status,el.spec),
-									nowMemory: this.onMemory(el,idx),
-									nowCpu: this.onCpu(el,idx),
-									status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-									idx: idx,
-								})
-								idx++;
-							}
-							count = 0;
+							idx++;
 						})
 					})
 			return childPod

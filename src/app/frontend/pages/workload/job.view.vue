@@ -116,7 +116,7 @@ export default {
 		onSync(data) {
 			this.controller = this.getController(data.metadata.ownerReferences)
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod(data.metadata.uid);
 		},
 		getInfo(data) {
@@ -151,26 +151,22 @@ export default {
 			this.cs = [];
 			this.isStatus = false;
 			this.isPods = false;
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=controller-uid=' + uid))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							if (el.metadata.ownerReferences) {
-								if (el.metadata.ownerReferences[0].uid === uid) {
-									this.isPods = true;
-									childPod.push({
-										name: el.metadata.name,
-										namespace: el.metadata.namespace,
-										ready: this.toReady(el.status,el.spec),
-										nowMemory: this.onMemory(el,idx),
-										nowCpu: this.onCpu(el,idx),
-										status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-										countStatus: this.countStatus(el.status),
-										idx: idx,
-									})
-									idx++;
-								}
-							}
+							this.isPods = true;
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								nowMemory: this.onMemory(el,idx),
+								nowCpu: this.onCpu(el,idx),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								countStatus: this.countStatus(el.status),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

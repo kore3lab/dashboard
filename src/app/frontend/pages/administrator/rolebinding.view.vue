@@ -137,7 +137,7 @@ export default {
 			this.controller = this.getController(data.metadata.ownerReferences);
 			this.ref = this.getRef(data.roleRef)
 			this.bindings = this.getBindings(data.subjects)
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 		},
 		getRef(roleRef) {
 			if(!roleRef) return

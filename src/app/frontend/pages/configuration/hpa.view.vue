@@ -72,7 +72,7 @@ export default {
 		onSync(data) {
 			this.info = this.getInfo(data)
 			this.ref = this.getRef(data.spec.scaleTargetRef)
-			this.event = this.getEvents(data.metadata.uid)
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name)
 		},
 		getInfo(data) {
 			return {
