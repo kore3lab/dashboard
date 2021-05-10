@@ -35,7 +35,7 @@ gulp.task(
       [
         "build",
         // Install dependencies to speed up subsequent compilations.
-        "-i",
+        // "-i",
         // for debugging backend
         '-gcflags="all=-N -l"',
         "-o",

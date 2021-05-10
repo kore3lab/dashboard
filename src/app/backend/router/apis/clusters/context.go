@@ -14,7 +14,7 @@ import (
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	cmd "k8s.io/client-go/tools/clientcmd"
@@ -285,7 +285,7 @@ func reloadConfigMetricsScraper() {
 	client := resty.New()
 	_, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		Patch(fmt.Sprintf("%s/api/v1/config", *config.Value.MetricsScraperUrl))
+		Patch(fmt.Sprintf("%s/api/v1/config", config.Value.MetricsScraperUrl))
 
 	if err != nil {
 		log.Errorf("Unable to metrics scraper config reload (cause=%v)", err)
