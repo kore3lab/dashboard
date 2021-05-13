@@ -11,13 +11,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -55,7 +55,7 @@
 					<div v-show="isEndpoint" class="card-body p-2 overflow-auto">
 						<b-table striped hover small :items="endpoints" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
+								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.value }}</a>
 							</template>
 							<template v-slot:cell(endpoints)="data">
 								<span v-for="(val, idx) in data.item.endpoints" v-bind:key="idx">{{ val }} </span>
@@ -141,7 +141,6 @@ export default {
 						list.push({
 							name: resp.data.metadata.name,
 							namespace: resp.data.metadata.namespace,
-							selfLink: resp.data.metadata.selfLink,
 							endpoints: this.onEndpoints(resp.data)
 						})
 						this.endpoints = list

@@ -11,33 +11,33 @@
 							<dt class="col-sm-3">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt v-if="containerLimit" class="col-sm-4 text-truncate">Container Limits</dt>
 							<dd v-if="containerLimit" class="col-sm-8">
 								<dl v-for="(val, idx) in Object.keys(containerLimit)" v-bind:key="idx" class="row mb-0">
-									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in containerLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v }}</span></dd>
+									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in containerLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v | comma }}</span></dd>
 								</dl>
 								<hr>
 							</dd>
 							<dt v-if="podLimit" class="col-sm-4 text-truncate">Pod Limits</dt>
 							<dd v-if="podLimit" class="col-sm-8">
 								<dl v-for="(val, idx) in Object.keys(podLimit)" v-bind:key="idx" class="row mb-0">
-									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in podLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v }}</span></dd>
+									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in podLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v | comma }}</span></dd>
 								</dl>
 								<hr>
 							</dd>
 							<dt v-if="pvcLimit" class="col-sm-4 text-truncate">Persistent Volume Claim Limits</dt>
 							<dd v-if="pvcLimit" class="col-sm-8">
 								<dl v-for="(val, idx) in Object.keys(pvcLimit)" v-bind:key="idx" class="row mb-0">
-									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in pvcLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v }}</span></dd>
+									<dt class="col-sm-3">{{ val }}</dt><dd class="col-sm-9"><span v-for="(v,i) in pvcLimit[val]" v-bind:key="i" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ v | comma }}</span></dd>
 								</dl>
 							</dd>
 						</dl>
@@ -65,6 +65,13 @@ export default {
 			this.onSync(data)
 		});
 		this.$nuxt.$emit("onCreated",'')
+	},
+	filters: {
+		comma(value) {
+			if(value === 0) return value
+			let regexp = /\B(?=(\d{3})+(?!\d))/g;
+			return value.toString().replace(regexp, ',');
+		},
 	},
 	methods: {
 		onSync(data) {

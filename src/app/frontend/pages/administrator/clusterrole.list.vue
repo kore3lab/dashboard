@@ -46,7 +46,7 @@
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
@@ -143,7 +143,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								labels: el.metadata.labels,
+								labels: this.stringifyLabels(el.metadata.labels),
 								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 							});
 						});

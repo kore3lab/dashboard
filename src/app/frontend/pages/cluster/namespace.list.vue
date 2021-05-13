@@ -52,7 +52,7 @@
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(phase)="data">
@@ -160,23 +160,30 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
+			let c = false
+			let sel = this.selectNamespace()
 			this.$axios.get(this.getApiUrl("","namespaces"))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								labels: el.metadata.labels,
-								phase: this.onPhase(el.status.phase),
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					let nsList = [{ value: "", text: "All Namespaces" }];
+					resp.data.items.forEach(el => {
+						nsList.push({ value: el.metadata.name, text: el.metadata.name });
+						if(el.metadata.name === sel) c = true
+						this.items.push({
+							name: el.metadata.name,
+							labels: el.metadata.labels,
+							phase: this.onPhase(el.status.phase),
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.origin = this.items;
-						this.onFiltered(this.items);
-						this.onChangePhase()
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					if(!c) this.selectNamespace(nsList[0].value)
+					this.namespaces(nsList);
+					this.origin = this.items;
+					this.onFiltered(this.items);
+					this.onChangePhase()
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		selectedClear() {
 			this.selectedPhase = [];
@@ -210,7 +217,7 @@ export default {
 					"style" : "text-secondary"
 				}
 			}
-		}
+		},
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
