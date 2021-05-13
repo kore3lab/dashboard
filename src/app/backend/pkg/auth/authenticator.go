@@ -190,8 +190,8 @@ func getValidateFunc(conf *AuthConfig, c *rest.Config) (ValidateFunc, error) {
 		return nil, fmt.Errorf("cannot found '%s' secret provider", ty)
 	}
 
-	scheme := conf.GetScheme()
-	if scheme == "user" {
+	schema := conf.GetSchema()
+	if schema == "user" {
 		//username, password
 		return func(params map[string]string) error {
 			if params["username"] == "" {
@@ -204,7 +204,7 @@ func getValidateFunc(conf *AuthConfig, c *rest.Config) (ValidateFunc, error) {
 			}
 		}, nil
 
-	} else if scheme == "token" {
+	} else if schema == "token" {
 		//token
 		return func(params map[string]string) error {
 			if params["token"] == "" {
