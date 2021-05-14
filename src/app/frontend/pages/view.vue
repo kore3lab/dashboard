@@ -94,10 +94,10 @@
 				</div>
 				<!-- 3. delete overlay -->
 				<template #overlay>
-					<div v-if="deleteOverlay.processing" class="text-center">
+					<div v-if="deleteOverlay.processing" class="text-center floating">
 						<b-spinner small class="mr-2" label="please wait"></b-spinner><span>Watching DELETE status...</span>
 					</div>
-					<div v-else class="text-center">
+					<div v-else class="text-center floating">
 						<p>Are you sure DELETE it?</p>
 						<div class="text-center">
 							<b-button variant="outline-danger" size="sm" class="mr-1" @click="deleteOverlay.visible = false">Cancel</b-button>
@@ -130,6 +130,7 @@ export default {
 			raw: { metadata: {}, spec: {} },
 			containers: [],
 			containerCount: 0,
+			deleteLink: '',
 			isYaml: false,
 			isJSON: false,
 			isTerminal: false,
@@ -289,6 +290,7 @@ export default {
 					.catch(e => {this.msghttp(e);});
 		},
 		onDelete() {
+			this.deleteLink = this.raw.metadata.selfLink
 			this.deleteOverlay.processing = true;
 			this.$axios.delete(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
 					.then( _ => {
@@ -297,22 +299,33 @@ export default {
 					.catch(e => {this.msghttp(e);});
 		},
 		watch() {
-			this.$axios.get(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
+			if(this.raw.metadata.selfLink !== this.deleteLink) {
+				this.deleteOverlay.visible = false
+				this.deleteOverlay.processing = false
+			} else {
+				this.deleteOverlay.visible = true
+				this.deleteOverlay.processing = true
+			}
+			this.$axios.get(`/raw/clusters/${this.currentContext()}${this.deleteLink}`)
 					.then( resp => {
 						if (resp.status === 404) {
-							this.deleteOverlay.visible = false;
-							this.deleteOverlay.processing = false;
-							this.$emit("delete");
-							this.$emit("close");
+							if(this.raw.metadata.selfLink === this.deleteLink) {
+								this.deleteOverlay.visible = false;
+								this.deleteOverlay.processing = false;
+								this.$emit("delete");
+								this.$emit("close");
+							} else this.toast('delete Successful')
 						} else {
 							setTimeout(() => { this.watch(); }, 2000);
 						}
 					}).catch( error => {
 				if(error.response && error.response.status === 404) {
-					this.deleteOverlay.visible = false;
-					this.deleteOverlay.processing = false;
-					this.$emit("delete");
-					this.$emit("close");
+					if(this.raw.metadata.selfLink === this.deleteLink) {
+						this.deleteOverlay.visible = false;
+						this.deleteOverlay.processing = false;
+						this.$emit("delete");
+						this.$emit("close");
+					} else this.toast('delete Successful')
 				} else {
 					this.msghttp(error);
 				}
@@ -335,3 +348,12 @@ export default {
 }
 
 </script>
+<style scoped>
+.floating {
+	position: fixed;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+	top: 5%;
+}
+</style>

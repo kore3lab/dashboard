@@ -33,13 +33,17 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Subsets</h3></div>
 					<div v-if="isSubset" class="card-body p-2">
 						<div class="col-sm-12 m-1"><h3 class="text-lg">Addresses</h3></div>
-						<b-table striped hover small :items="address" :fields="adressesFields">
-							<template v-slot:cell(target)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', data.item.targetKind, data.item.targetNamespace, data.item.targetName))">{{ data.item.targetName }}</a>
-							</template>
-						</b-table>
+						<div class="overflow-auto">
+							<b-table striped hover small :items="address" :fields="adressesFields" class="text-truncate">
+								<template v-slot:cell(target)="data">
+									<a href="#" @click="$emit('navigate', getViewLink('', data.item.targetKind, data.item.targetNamespace, data.item.targetName))">{{ data.item.targetName }}</a>
+								</template>
+							</b-table>
+						</div>
 						<div class="col-sm-12 m-1"><h3 class="text-lg">Ports</h3></div>
-						<b-table striped hover small :items="ports" :fields="portsFields"></b-table>
+						<div class="overflow-auto">
+							<b-table striped hover small :items="ports" :fields="portsFields" class="text-truncate"></b-table>
+						</div>
 					</div>
 				</div>
 			</div>

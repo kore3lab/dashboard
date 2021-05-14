@@ -80,8 +80,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Pods</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="childPod" :fields="fields">
+					<div class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="childPod" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
 								<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
 							</template>
@@ -196,6 +196,13 @@ export default {
 						}
 					},
 					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return (data.yLabel).toFixed(2) + "Mi"
+								}
+							}
+						},
 						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],

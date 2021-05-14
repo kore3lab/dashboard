@@ -1,5 +1,5 @@
 <template>
-	<div class="card-body p-2">
+	<div>
 		<div class="row">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
@@ -52,8 +52,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Endpoint</h3></div>
-					<div v-show="isEndpoint" class="card-body p-2">
-						<b-table striped hover small :items="endpoints" :fields="fields">
+					<div v-show="isEndpoint" class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="endpoints" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
 								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
 							</template>

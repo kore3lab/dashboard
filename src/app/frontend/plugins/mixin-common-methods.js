@@ -222,6 +222,7 @@ Vue.mixin({
 			let k;
 			if(or.kind[len-1] === 's') k = (or.kind).toLowerCase() + 'es'
 			else k = (or.kind).toLowerCase() + 's'
+			if(!or.apiVersion) return {g: '', k: k}
 			let g = (or.apiVersion).split('/')
 			if (g.length === 2) {
 				return { g: g[0], k: k }
