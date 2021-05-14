@@ -53,8 +53,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Persistent Volumes</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="pvList" :fields="fields">
+					<div class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="pvList" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
 								<a href="#" @click="$emit('navigate', getViewLink('', 'persistentvolumes','', data.item.name))">{{ data.item.name }}</a>
 							</template>

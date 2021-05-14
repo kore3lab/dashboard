@@ -22,7 +22,7 @@ func GetAuth(c *gin.Context) {
 
 	g.Send(http.StatusOK, map[string]string{
 		"strategy": config.Value.AuthConfig.Strategy,
-		"scheme":   config.Value.AuthConfig.GetScheme(),
+		"schema":   config.Value.AuthConfig.GetSchema(),
 		"provider": config.Value.AuthConfig.Secret["type"],
 	})
 
@@ -92,11 +92,11 @@ func RefreshToken(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	scheme := config.Value.AuthConfig.GetScheme()
+	schema := config.Value.AuthConfig.GetSchema()
 
 	user := &user{}
 
-	if scheme == "user" {
+	if schema == "user" {
 		user.Username = config.Value.AuthConfig.Secret["username"]
 	} else {
 		user.Username = "admin"

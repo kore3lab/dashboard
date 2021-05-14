@@ -35,18 +35,18 @@ type AuthConfig struct {
 	Secret   map[string]string `json:"secret"`   //user validation secret provider
 }
 
-// auth scheme (user, token)
-func (me *AuthConfig) GetScheme() string {
+// auth schema (user, token)
+func (me *AuthConfig) GetSchema() string {
 
-	scheme := "user"
+	schema := "user"
 
 	if me.Secret == nil {
-		scheme = ""
+		schema = ""
 	} else if strings.Contains(me.Secret["type"], "token") {
-		scheme = "token"
+		schema = "token"
 	}
 
-	return scheme
+	return schema
 
 }
 

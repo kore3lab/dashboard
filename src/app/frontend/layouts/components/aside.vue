@@ -20,6 +20,7 @@
 								<li class="nav-item small"><nuxt-link to="/cluster/node.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>odes</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/cluster/topology"  class="nav-link"><i class="nav-icon text-sm mr-0">T</i><p>opology</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/cluster/namespace.list"  class="nav-link"><i class="nav-icon text-sm mr-0">N</i><p>amespaces</p></nuxt-link></li>
+								<li class="nav-item small"><nuxt-link to="/cluster/event.list"  class="nav-link"><i class="nav-icon text-sm mr-0">E</i><p>vents</p></nuxt-link></li>
 							</ul>
 						</b-collapse>
 					</li>

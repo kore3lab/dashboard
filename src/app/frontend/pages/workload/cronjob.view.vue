@@ -1,5 +1,5 @@
 <template>
-	<div class="card-body p-2">
+	<div>
 		<div class="row">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">

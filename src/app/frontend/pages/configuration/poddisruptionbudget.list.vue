@@ -86,7 +86,7 @@ export default {
 			],
 			isBusy: false,
 			items: [],
-			currentitems:[],
+			currentItems:[],
 			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
@@ -113,14 +113,14 @@ export default {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
 					this.viewModel = this.getViewLink('policy', 'poddisruptionbudgets', items[0].namespace, items[0].name)
-					if(this.currentitems.length ===0) this.currentitems = Object.assign({},this.viewModel)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					if(this.currentitems.title !== this.viewModel.title) {
-						if(this.currentitems.length ===0) this.isShowSidebar = false
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
 						else {
-							this.viewModel = Object.assign({},this.currentitems)
-							this.currentitems = []
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
 							this.isShowSidebar = true
 							this.$refs.selectableTable.selectRow(this.selectIndex)
 						}
@@ -130,7 +130,7 @@ export default {
 					}
 				}
 			} else {
-				this.currentitems = []
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}

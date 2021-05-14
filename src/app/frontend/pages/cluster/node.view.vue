@@ -76,10 +76,10 @@
 								<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
 							</template>
 							<template v-slot:cell(nowCpu)="data">
-								<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? (data.item.nowCpu[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
+								<span v-if="data.value[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
 							</template>
 							<template v-slot:cell(nowMemory)="data">
-								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? (data.item.nowMemory[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
+								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
 							</template>
 						</b-table>
 					</div>
@@ -170,6 +170,13 @@ export default {
 						}
 					},
 					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return (data.yLabel).toFixed(2) + "Mi"
+								}
+							}
+						},
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
@@ -341,16 +348,16 @@ export default {
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el => {
-								childPod.push({
-									name: el.metadata.name,
-									namespace: el.metadata.namespace,
-									ready: this.toReady(el.status,el.spec),
-									status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-									nowCpu: this.getPodCpu(el,idx),
-									nowMemory: this.getPodMemory(el,idx),
-									idx: idx,
-								})
-								idx++;
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								nowCpu: this.getPodCpu(el,idx),
+								nowMemory: this.getPodMemory(el,idx),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

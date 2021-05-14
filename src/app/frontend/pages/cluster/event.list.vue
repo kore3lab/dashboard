@@ -2,10 +2,10 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Configuration"></c-navigator>
+				<c-navigator group="Administrator"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">L</span>Limit Ranges</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">E</span>Events</h1></div>
 					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -15,7 +15,7 @@
 					</div>
 					<!-- button -->
 					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=LimitRange`)">Create</b-button>
+						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=ResourceQuota`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -25,7 +25,8 @@
 			<div class="container-fluid">
 				<!-- count -->
 				<div class="row mb-2">
-					<div class="col-12 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+					<div class="col-12 text-right "><span class="text-sm align-middle"><i class="fas fa-question-circle" id="limitMark"></i> Total : {{ totalItems }}</span></div>
+					<b-tooltip target="limitMark" placement="left" boundary="window" boundary-padding="0">limited to 1000</b-tooltip>
 				</div>
 				<!-- GRID-->
 				<div class="row">
@@ -42,16 +43,17 @@
 									<template #empty="scope">
 										<h4 class="text-center">does not exist.</h4>
 									</template>
-									<template v-slot:cell(name)="data">
-										{{ data.value }}
+									<template v-slot:cell(message)="data">
+										<span v-bind:class="data.item.style">{{ data.value }}</span>
 									</template>
-									<template v-slot:cell(cpu)="data">
-										<ul class="list-unstyled mb-0" v-for="(value, name) in data.item.cpu" v-bind:key="name">
-											<li v-if="value"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
-										</ul>
+									<template v-slot:cell(involvedObj)="data">
+										<a href="#" @click="viewModel=getViewLink(data.item.controllers.g, data.item.controllers.k, data.value.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}: {{ data.value.name }}</a>
 									</template>
-									<template v-slot:cell(type)="data">
-										<span v-for="(value, idx) in data.item.type" v-bind:key="idx">{{ value }} </span>
+									<template v-slot:cell(source)="data">
+										<span v-for="(val, idx) in data.value" v-bind:key="idx" >{{ val }} </span>
+									</template>
+									<template v-slot:cell(lastSeen)="data">
+										{{ data.value.str }}
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
@@ -82,11 +84,15 @@ export default {
 		return {
 			selectedNamespace: "",
 			keyword: "",
-			filterOn: ["name"],
+			filterOn: ["involvedObj"],
 			fields: [
-				{ key: "name", label: "Name", sortable: true },
-				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "type", label: "Limit Types", sortable: true },
+				{ key: "type", label: "Type", sortable: true },
+				{ key: "message", label: "Message", sortable: true },
+				{ key: "namespace", label: "Namespace", sortable: true },
+				{ key: "involvedObj", label: "Involved Object" },
+				{ key: "source", label: "Source" },
+				{ key: "count", label: "Count", sortable: true },
+				{ key: "lastSeen", label: "Last Seen", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
@@ -117,7 +123,7 @@ export default {
 					for(let i=0;i<this.$config.itemsPerPage;i++) {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
-					this.viewModel = this.getViewLink('', 'limitranges', items[0].namespace, items[0].name)
+					this.viewModel = this.getViewLink('', 'events', items[0].namespace, items[0].name)
 					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
@@ -143,15 +149,22 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			this.$axios.get(this.getApiUrl("","limitranges",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","events",this.selectedNamespace,'','limit=1000'))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
+								type: el.type,
+								message: el.message,
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								type: this.getTypes(el.spec.limits),
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
+								involvedObj: el.involvedObject,
+								controllers: this.getController(el.involvedObject),
+								source: Object.entries(el.source).map(([_, value]) => `${value}`),
+								count: el.count,
+								lastSeen: this.getElapsedTime(el.lastTimestamp),
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
+								style: el.type === 'Warning' ? 'text-danger' : '',
 							});
 						});
 						this.onFiltered(this.items);
@@ -163,13 +176,6 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getTypes(limit) {
-			let list = [];
-			for (let i =0;i<limit.length;i++) {
-				list.push(limit[i].type)
-			}
-			return list
-		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
