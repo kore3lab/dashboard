@@ -23,40 +23,38 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/watch"
-
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/rest"
 	// "encoding/json"
 )
 
 // type resourceVerber struct {
 type DynamicClient struct {
-	config       *restclient.Config
+	config       *rest.Config
 	resource     schema.GroupVersionResource
 	namespace    string
 	namespaceSet bool
 }
 
 // RestfulClient 리턴
-func NewDynamicClient(config *restclient.Config) DynamicClient {
-	return DynamicClient{
+func NewDynamicClient(config *rest.Config) *DynamicClient {
+	return &DynamicClient{
 		config:       config,
 		namespaceSet: false,
 	}
 }
 
 // RestfulClient 리턴
-func NewDynamicClientSchema(config *restclient.Config, group string, version string, resource string) DynamicClient {
+func NewDynamicClientSchema(config *rest.Config, group string, version string, resource string) *DynamicClient {
 	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
-	return DynamicClient{
+	return &DynamicClient{
 		config:       config,
 		resource:     schema.GroupVersionResource{Group: group, Version: version, Resource: resource},
 		namespaceSet: false,
@@ -70,7 +68,7 @@ func (self *DynamicClient) SetNamespace(namespace string) {
 }
 
 // List
-func (self *DynamicClient) List(opts metaV1.ListOptions) (r *unstructured.UnstructuredList, err error) {
+func (self *DynamicClient) List(opts v1.ListOptions) (r *unstructured.UnstructuredList, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -90,7 +88,7 @@ func (self *DynamicClient) List(opts metaV1.ListOptions) (r *unstructured.Unstru
 }
 
 // GET
-func (self *DynamicClient) GET(name string, opts metaV1.GetOptions) (r *unstructured.Unstructured, err error) {
+func (self *DynamicClient) GET(name string, opts v1.GetOptions) (r *unstructured.Unstructured, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -110,7 +108,7 @@ func (self *DynamicClient) GET(name string, opts metaV1.GetOptions) (r *unstruct
 }
 
 // Watch
-func (self *DynamicClient) Watch(opts metaV1.ListOptions) (output watch.Interface, err error) {
+func (self *DynamicClient) Watch(opts v1.ListOptions) (output watch.Interface, err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -131,7 +129,7 @@ func (self *DynamicClient) Watch(opts metaV1.ListOptions) (output watch.Interfac
 }
 
 // DELETE
-func (self *DynamicClient) DELETE(name string, opts metaV1.DeleteOptions) (err error) {
+func (self *DynamicClient) DELETE(name string, opts v1.DeleteOptions) (err error) {
 
 	// 실행
 	dynamicClient, err := dynamic.NewForConfig(self.config)
@@ -184,7 +182,7 @@ func (self *DynamicClient) POST(payload io.Reader, isUpdate bool) (output *unstr
 		}
 		apiResources := apiResourceList.APIResources
 
-		var resource *metaV1.APIResource
+		var resource *v1.APIResource
 		for _, apiResource := range apiResources {
 			if apiResource.Kind == kind && !strings.Contains(apiResource.Name, "/") {
 				resource = &apiResource
@@ -207,21 +205,21 @@ func (self *DynamicClient) POST(payload io.Reader, isUpdate bool) (output *unstr
 
 		// update 인 경우 resourceVersion 을 조회 & 수정
 		if isUpdate {
-			r, err := dynamicClient.Resource(self.resource).Namespace(self.namespace).Get(context.TODO(), data.GetName(), metaV1.GetOptions{})
+			r, err := dynamicClient.Resource(self.resource).Namespace(self.namespace).Get(context.TODO(), data.GetName(), v1.GetOptions{})
 			if err != nil {
 				return output, err
 			}
 			data.SetResourceVersion(r.GetResourceVersion())
 			if resource.Namespaced {
-				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Update(context.TODO(), data, metaV1.UpdateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Update(context.TODO(), data, v1.UpdateOptions{})
 			} else {
-				output, err = dynamicClient.Resource(self.resource).Update(context.TODO(), data, metaV1.UpdateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Update(context.TODO(), data, v1.UpdateOptions{})
 			}
 		} else {
 			if resource.Namespaced {
-				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Create(context.TODO(), data, metaV1.CreateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Namespace(self.namespace).Create(context.TODO(), data, v1.CreateOptions{})
 			} else {
-				output, err = dynamicClient.Resource(self.resource).Create(context.TODO(), data, metaV1.CreateOptions{})
+				output, err = dynamicClient.Resource(self.resource).Create(context.TODO(), data, v1.CreateOptions{})
 			}
 		}
 
@@ -232,7 +230,7 @@ func (self *DynamicClient) POST(payload io.Reader, isUpdate bool) (output *unstr
 }
 
 // Patch
-func (self *DynamicClient) PATCH(name string, patchType types.PatchType, payload io.Reader, opts metaV1.PatchOptions) (output *unstructured.Unstructured, err error) {
+func (self *DynamicClient) PATCH(name string, patchType types.PatchType, payload io.Reader, opts v1.PatchOptions) (output *unstructured.Unstructured, err error) {
 
 	data, err := ioutil.ReadAll(payload)
 	if err != nil {

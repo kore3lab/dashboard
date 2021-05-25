@@ -3,13 +3,9 @@ package model
 import (
 	"context"
 	"fmt"
-	_ "time"
 
 	"github.com/acornsoftlab/dashboard/pkg/config"
-	"k8s.io/client-go/kubernetes"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	_ "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Topology struct {
@@ -46,14 +42,13 @@ func NewTopology(contextName string) Topology {
 
 func (self *Topology) Get(namespace string) error {
 
-	// kubeconfig
-	conf, err := config.KubeConfigs(self.context)
+	// api-client
+	client, err := config.Cluster.Client(self.context)
 	if err != nil {
 		return err
 	}
 
-	// api-client
-	api, err := kubernetes.NewForConfig(conf)
+	api, err := client.NewKubernetesClient()
 	if err != nil {
 		return err
 	}
@@ -62,7 +57,7 @@ func (self *Topology) Get(namespace string) error {
 	// namespace := ""
 
 	// pod
-	podList, err := api.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	podList, err := api.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -123,7 +118,7 @@ func (self *Topology) Get(namespace string) error {
 		})
 
 	//nodes
-	nodeList, err := api.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	nodeList, err := api.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		return err
 	}

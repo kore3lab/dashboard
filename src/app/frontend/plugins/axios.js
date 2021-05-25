@@ -1,11 +1,10 @@
-export default function ({ $axios, $config, app, route, redirect }) {
+export default function ({ $axios, $config, app, store, route, redirect }) {
 
 	if ($config.nodeEnv === "development") {
 		$axios.defaults.baseURL = `${location.protocol}//${location.hostname}:${$config.backendPort}`;
 	}
 
 	$axios.onError(err => {
-
 		if(route.fullPath === "/login") {
 			return Promise.reject(err);
 		} else {

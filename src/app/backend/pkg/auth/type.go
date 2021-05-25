@@ -18,31 +18,30 @@ auth-info USE-CASES
 	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "service-account-token"} }
 */
 const (
-	Realm                = "Kore-Board"
-	DefaultAuthenticator = `{"strategy":"cookie", "secret": {"type": "static-token", "token": "acornsoft"} }`
-
-	StrategyCookie                  = "cookie"
-	StrategyLocal                   = "local"
-	ProviderTypeStaticUser          = "static-user"
-	ProviderTypeBasicAuth           = "basic-auth"
-	ProviderTypeStaticToken         = "static-token"
-	ProviderTypeServiceAccountToken = "service-account-token"
+	Realm                     = "Kore-Board"
+	StrategyCookie            = "cookie"
+	StrategyLocal             = "local"
+	SecretStaticUser          = "static-user"
+	SecretBasicAuth           = "basic-auth"
+	SecretStaticToken         = "static-token"
+	SecretServiceAccountToken = "service-account-token"
 )
 
 type AuthConfig struct {
-	Strategy string            `json:"strategy"` //nuxt-auth strategy
-	Key      map[string]string `json:"key"`      //if auth='local' , access&refresh token secret
-	Secret   map[string]string `json:"secret"`   //user validation secret provider
+	Strategy   string //nuxt-auth strategy
+	Secret     string //static-user, static-token , service-account-token
+	AccessKey  string //local access-token-key
+	RefreshKey string //local refresh-token-key
+	Data       map[string]string
 }
 
-// auth schema (user, token)
+// auth scheme (user, token)
 func (me *AuthConfig) GetSchema() string {
 
 	schema := "user"
-
-	if me.Secret == nil {
+	if me.Secret == "" {
 		schema = ""
-	} else if strings.Contains(me.Secret["type"], "token") {
+	} else if strings.Contains(me.Secret, "token") {
 		schema = "token"
 	}
 

@@ -22,6 +22,7 @@ Vue.mixin({
 				this.toast(error.message, "danger");
 			}
 		},
+	
 		/**
 		 * timestamp를 day,hour,minute,second로 구분 봔환함
 		 *
@@ -269,6 +270,11 @@ Vue.mixin({
 			if(_ === "") this.$store.commit("setSelectNamespace", _);
 			if (_) this.$store.commit("setSelectNamespace", _);
 			else return this.$store.getters["getSelectNamespace"];
+		},
+		statusbar(_) {
+			if(_ === "") this.$store.commit("setStatusbar", _);
+			if (_) this.$store.commit("setStatusbar", _);
+			else return this.$store.getters["getStatusbar"];
 		},
 	},
 });

@@ -1,60 +1,41 @@
 package config
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
+	"flag"
 	"os"
-
-	log "github.com/sirupsen/logrus"
-	flag "github.com/spf13/pflag"
+	"strings"
 
 	"github.com/acornsoftlab/dashboard/pkg/auth"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
-
-	"k8s.io/client-go/kubernetes"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var Value = &conf{}
-
-var kubeconfig *string
-var secretTokenPath *string
-var loader clientcmd.ClientConfigLoader
-
-func NewKubeClient(ctx string) (*kubernetes.Clientset, error) {
-	conf, err := KubeConfigs(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return kubernetes.NewForConfig(conf)
-
-}
-
-func KubeConfigs(ctx string) (*rest.Config, error) {
-	if lang.ArrayContains(Value.Contexts, ctx) {
-		return Value.kubeConfigs[ctx], nil
-	} else {
-		return nil, errors.New(fmt.Sprintf("cannot found context=%s", ctx))
-	}
-}
+var Authenticator *auth.Authenticator // authentication/authroization config
+var Cluster *kubeCluster
 
 func init() {
 
-	// arguments
-	kubeconfig = flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets (defaults to in-cluster config)")
-	flag.StringVar(&Value.MetricsScraperUrl, "metrics-scraper-url", "http://localhost:8000", "The address of the Metrics-scraper Apiserver")
-	logLevel := flag.String("log-level", "debug", "The log level")
-	authconfig := flag.String("auth", auth.DefaultAuthenticator, fmt.Sprintf("The authenticator (default=%s)", auth.DefaultAuthenticator))
+	// startup parameters
+	logLevel := flag.String("log-level", os.Getenv("LOG_LEVEL"), "The log level")
+	flag.StringVar(&Value.MetricsScraperUrl, "metrics-scraper-url", os.Getenv("METRICS_SCRAPER_URL"), "The address of the metrics-scraper rest-api URL")
+	kubeconfig := flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets")
+	authconfig := flag.String("auth", os.Getenv("AUTH"), "The authenticate options")
 
-	//logger
-	err := flag.Set("logtostderr", "true")
-	if err != nil {
-		log.Warnf("error cannot set logtostderr: %s", err.Error())
-	}
+	//k8s.io client-go logs
+	flag.Set("logtostderr", "ture")
+	flag.Set("stderrthreshold", "FATAL")
+
 	flag.Parse()
 
+	//set default
+	//*kubeconfig = "strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config"
+	*authconfig = lang.NVL(*authconfig, "strategy=cookie,secret=static-token,token=acornsoft")
+	Value.MetricsScraperUrl = lang.NVL(Value.MetricsScraperUrl, "http://localhost:8000")
+	*logLevel = lang.NVL(*logLevel, "debug")
+
+	//logger
 	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stderr)
 
@@ -63,24 +44,49 @@ func init() {
 		log.Fatal(err)
 	} else {
 		log.SetLevel(level)
+		log.Infof("Log level is '%s'", *logLevel)
 	}
 
-	// KUBECONFIG 로드
-	//  1순위. "--kubeconfig" 옵션에서 로드한다.
-	//  2순위. env "KUBECONFIG" 값으로 로드한다.
-	//  3순위."~/.kube/config" 에서 로드한다.
-	//  4순위. in-cluster-config 로드한다.
-	if *kubeconfig != "" { // load from --kubeconfig
-		Value.ConfigLoadingRules = &clientcmd.ClientConfigLoadingRules{ExplicitPath: *kubeconfig}
+	// print startup parameters
+	log.Infof("Startup parameter 'metrics-scraper-url' is '%s'", Value.MetricsScraperUrl)
+	log.Infof("Startup parameter 'kubeconfig' is '%s'", *kubeconfig)
+	log.Infof("Startup parameter 'auth' is '%s'", *authconfig)
+
+	// unmarshall kubeconfig
+	Value.KubeConfig = &kubeConfig{}
+	Value.KubeConfig.Data = make(map[string]string)
+	if *kubeconfig == "" || !strings.Contains(*kubeconfig, "strategy=") {
+		Value.KubeConfig.Strategy = "file"
+		Value.KubeConfig.Data["path"] = *kubeconfig
 	} else {
-		Value.ConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
+		for _, e := range strings.Split(*kubeconfig, ",") {
+			parts := strings.Split(e, "=")
+			if parts[0] == "strategy" {
+				Value.KubeConfig.Strategy = parts[1]
+			} else {
+				Value.KubeConfig.Data[parts[0]] = parts[1]
+			}
+		}
 	}
 
-	// definition "authenticator"
-	log.Infof("auth-config %v", *authconfig)
-	if err = json.Unmarshal([]byte(*authconfig), &Value.AuthConfig); err != nil {
-		log.Errorf("invalid auth parameter (cause=%s)", err.Error())
+	// unmarshall auth-config
+	Value.AuthConfig = &auth.AuthConfig{}
+	Value.AuthConfig.Data = make(map[string]string)
+	for _, e := range strings.Split(*authconfig, ",") {
+		parts := strings.Split(e, "=")
+		if parts[0] == "strategy" {
+			Value.AuthConfig.Strategy = parts[1]
+		} else if parts[0] == "secret" {
+			Value.AuthConfig.Secret = parts[1]
+		} else if parts[0] == "access-key" {
+			Value.AuthConfig.AccessKey = parts[1]
+		} else if parts[0] == "refresh-key" {
+			Value.AuthConfig.RefreshKey = parts[1]
+		} else {
+			Value.AuthConfig.Data[parts[0]] = parts[1]
+		}
 	}
+
 }
 
 // 재로딩 가능한  config 정의
@@ -88,67 +94,32 @@ func Setup() {
 	var err error
 
 	// kubeconfig 파일 로드
-	Value.kubeConfigs = map[string]*rest.Config{}
-	Value.Contexts = []string{}
-
-	// in-cluster
-	Value.InClusterConfig, err = rest.InClusterConfig()
-	if err != nil {
-		log.Warnln("cannot load kubeconfig in-cluster")
-	}
-
-	// kubeconfig 파일 로드
-	Value.KubeConfig, err = Value.ConfigLoadingRules.Load()
-	if err != nil {
-		log.Warnf("cannot load kubeconfig: %s (cause=%v)", *kubeconfig, err)
+	if Cluster, err = newKubeCluster(*Value.KubeConfig); err != nil {
+		log.Errorf("can't create kubernetes clusters (cause=%s)", err.Error())
 	} else {
-		for key := range Value.KubeConfig.Contexts {
-			contextCfg, err := clientcmd.NewNonInteractiveClientConfig(*Value.KubeConfig, key, &clientcmd.ConfigOverrides{}, loader).ClientConfig()
-			if err == nil {
-				Value.Contexts = append(Value.Contexts, key)
-				Value.kubeConfigs[key] = contextCfg
-			}
+		Cluster.IsRunningInCluster = (len(Cluster.ClusterNames) == 1 && Cluster.InCluster != nil)
+		if len(Cluster.ClusterNames) == 0 {
+			log.Warnf("Initialized empty clusters (kubeconfig=none, in-cluster=none, running-in-cluster=none)")
+		} else {
+			log.Infof("Initialized clusters (kubeconfig-strategy=%s, in-cluster=%t, running-in-cluster=%t, contexts=%s, default-context=%s)", Value.KubeConfig.Strategy, (Cluster.InCluster != nil), Cluster.IsRunningInCluster, Cluster.ClusterNames, Cluster.DefaultContext)
 		}
-		Value.DefaultContext = Value.KubeConfig.CurrentContext
-	}
-
-	// 로드된 context가 없다면 in-cluster
-	Value.IsRunningInCluster = (len(Value.Contexts) == 0 && Value.InClusterConfig != nil)
-	if Value.IsRunningInCluster {
-		Value.kubeConfigs[IN_CLUSTER_NAME] = Value.InClusterConfig
-		Value.Contexts = []string{IN_CLUSTER_NAME}
-	}
-
-	// print infomation
-	if Value.InClusterConfig == nil {
-		log.Infof("contexts %v , non-in-cluster", Value.Contexts)
-	} else {
-		log.Infof("contexts %v , in-cluster OK", Value.Contexts)
-	}
-
-	// default context (1:in-cluster > 2: first context)
-	if Value.IsRunningInCluster {
-		Value.DefaultContext = IN_CLUSTER_NAME
-	} else if len(Value.Contexts) > 0 {
-		Value.DefaultContext = Value.Contexts[0]
-	}
-	if Value.DefaultContext == "" {
-		log.Warnln("there is no default context")
-	} else {
-		log.Infof("default context is \"%s\"", Value.DefaultContext)
 	}
 
 	// definition "authenticator"
-	if Value.AuthConfig != nil {
-		if Value.Authenticator, err = auth.CreateAuthenticator(Value.AuthConfig, Value.kubeConfigs[Value.DefaultContext]); err != nil {
-			log.Errorf("invalid authenticator (cause=%s)", err.Error())
+	if Cluster.DefaultContext != "" && Value.AuthConfig != nil {
+		var restConfig *rest.Config
+		if Cluster.InCluster != nil {
+			restConfig = Cluster.InCluster.RESTConfig
+		}
+		if Authenticator, err = auth.CreateAuthenticator(Value.AuthConfig, restConfig); err != nil {
+			log.Errorf("Invalid authenticator (cause=%s)", err.Error())
 		}
 	}
-	if Value.Authenticator == nil {
-		Value.Authenticator = auth.DummyAuthenticator()
-		log.Warnln("initialized dummy authenticator")
+	if Authenticator == nil {
+		Authenticator = auth.DummyAuthenticator()
+		log.Warnln("Initialized dummy authenticator")
 	} else {
-		log.Infof("initialized authenticator (strategy=%s, provider=%s)", Value.AuthConfig.Strategy, Value.AuthConfig.Secret["type"])
+		log.Infof("Initialized authenticator (strategy=%s, provider=%s)", Value.AuthConfig.Strategy, Value.AuthConfig.Secret)
 	}
 
 }

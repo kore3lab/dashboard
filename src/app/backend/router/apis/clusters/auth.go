@@ -23,7 +23,7 @@ func GetAuth(c *gin.Context) {
 	g.Send(http.StatusOK, map[string]string{
 		"strategy": config.Value.AuthConfig.Strategy,
 		"schema":   config.Value.AuthConfig.GetSchema(),
-		"provider": config.Value.AuthConfig.Secret["type"],
+		"provider": config.Value.AuthConfig.Secret,
 	})
 
 }
@@ -41,12 +41,12 @@ func Login(c *gin.Context) {
 	}
 
 	//validation
-	if err := config.Value.Authenticator.Validate(body); err != nil {
+	if err := config.Authenticator.Validate(body); err != nil {
 		g.SendMessage(http.StatusUnauthorized, err.Error(), err)
 	} else {
 		// login evnet 실행
-		if config.Value.Authenticator.LoginHandler != nil {
-			if resp, err := config.Value.Authenticator.LoginHandler(body); err != nil {
+		if config.Authenticator.LoginHandler != nil {
+			if resp, err := config.Authenticator.LoginHandler(body); err != nil {
 				g.SendMessage(http.StatusUnauthorized, err.Error(), err)
 			} else {
 				g.Send(http.StatusOK, resp)
@@ -76,8 +76,8 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	// on refresh
-	if config.Value.Authenticator.RefreshHandler != nil {
-		if resp, err := config.Value.Authenticator.RefreshHandler(body); err != nil {
+	if config.Authenticator.RefreshHandler != nil {
+		if resp, err := config.Authenticator.RefreshHandler(body); err != nil {
 			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
 		} else {
 			g.Send(http.StatusOK, resp)
@@ -92,12 +92,12 @@ func RefreshToken(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	schema := config.Value.AuthConfig.GetSchema()
+	scheme := config.Value.AuthConfig.GetSchema()
 
 	user := &user{}
 
-	if schema == "user" {
-		user.Username = config.Value.AuthConfig.Secret["username"]
+	if scheme == "user" {
+		user.Username = config.Value.AuthConfig.Data["username"]
 	} else {
 		user.Username = "admin"
 	}

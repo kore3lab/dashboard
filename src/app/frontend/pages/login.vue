@@ -116,11 +116,13 @@ export default {
 		},
 		doLogin() {
 			this.$auth.loginWith(this.auth.strategy, { data: this.form })
-					.catch(error => {
-						if ( error.response && error.response.data && error.response.data.message) {
-							this.message = error.response.data.message;
-						}
-					});
+				.then(() => {
+					this.$router.push("/");
+				}).catch(error => {
+					if ( error.response && error.response.data && error.response.data.message) {
+						this.message = error.response.data.message;
+					}
+				});
 		},
 		moveFocus() {
 			this.$refs.password.focus();

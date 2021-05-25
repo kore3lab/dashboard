@@ -38,7 +38,7 @@ func CreateAuthenticator(conf *AuthConfig, c *rest.Config) (*Authenticator, erro
 	if conf.Strategy == StrategyCookie {
 		authenticator = CookieAuthenticator(validator)
 	} else if conf.Strategy == StrategyLocal {
-		authenticator = LocalAuthenticator(conf.Key, validator)
+		authenticator = LocalAuthenticator(conf.AccessKey, conf.RefreshKey, validator)
 	} else {
 		return nil, fmt.Errorf("not supported '%s' strategy yet", conf.Strategy)
 	}
@@ -78,7 +78,7 @@ func CookieAuthenticator(validateFunc ValidateFunc) *Authenticator {
 
 }
 
-func LocalAuthenticator(secrets map[string]string, validateFunc ValidateFunc) *Authenticator {
+func LocalAuthenticator(accessKey string, refreshKey string, validateFunc ValidateFunc) *Authenticator {
 
 	h := &Authenticator{}
 	h.Validate = validateFunc
@@ -93,7 +93,7 @@ func LocalAuthenticator(secrets map[string]string, validateFunc ValidateFunc) *A
 				c.AbortWithStatus(http.StatusUnauthorized)
 				return
 			}
-			if expired, err := ValidateSessionToken(secrets["access"], accessToken); err != nil {
+			if expired, err := ValidateSessionToken(accessKey, accessToken); err != nil {
 				log.Warnf("validate token (%s) failed  (cause=%s, expired=%v)", accessToken, err.Error(), expired)
 				c.AbortWithStatus(http.StatusUnauthorized)
 				return
@@ -110,17 +110,17 @@ func LocalAuthenticator(secrets map[string]string, validateFunc ValidateFunc) *A
 
 	//login, refresh, logout callback
 	h.LoginHandler = func(params map[string]string) (interface{}, error) {
-		return newJWTToken(secrets["access"], secrets["refresh"])
+		return newJWTToken(accessKey, refreshKey)
 	}
 	h.RefreshHandler = func(params map[string]string) (interface{}, error) {
 		// validating refresh-token
-		if expired, err := ValidateSessionToken(secrets["refresh"], params["refreshToken"]); err != nil {
+		if expired, err := ValidateSessionToken(refreshKey, params["refreshToken"]); err != nil {
 			return nil, fmt.Errorf("invalid refresh token (cause=%s)", err.Error())
 		} else if expired {
 			return nil, errors.New("refresh token expired")
 		} else {
 			// new access, refresh token
-			return newJWTToken(secrets["access"], secrets["refresh"])
+			return newJWTToken(refreshKey, refreshKey)
 		}
 	}
 
@@ -176,15 +176,20 @@ func getValidateFunc(conf *AuthConfig, c *rest.Config) (ValidateFunc, error) {
 	var secret SecretProvider
 
 	// choice provider
-	ty := conf.Secret["type"]
-	if ty == ProviderTypeBasicAuth {
-		secret = UserFileSecretProvider(conf.Secret["dir"])
-	} else if ty == ProviderTypeStaticUser {
-		secret = StaticUserSecretProvider(conf.Secret["username"], conf.Secret["password"])
-	} else if ty == ProviderTypeStaticToken {
-		secret = StaticTokenSecretProvider(conf.Secret["token"])
-	} else if ty == ProviderTypeServiceAccountToken {
-		secret = ServiceAccountTokenSecretProvider(c)
+	ty := conf.Secret
+	if ty == SecretBasicAuth {
+		secret = UserFileSecretProvider(conf.Data["dir"])
+	} else if ty == SecretStaticUser {
+		secret = StaticUserSecretProvider(conf.Data["username"], conf.Data["password"])
+	} else if ty == SecretStaticToken {
+		secret = StaticTokenSecretProvider(conf.Data["token"])
+	} else if ty == SecretServiceAccountToken {
+		if c == nil {
+			return nil, fmt.Errorf("can't initialized becuase connection cluster is empty")
+		} else {
+			secret = ServiceAccountTokenSecretProvider(c)
+		}
+
 	} else if ty == "" {
 	} else {
 		return nil, fmt.Errorf("cannot found '%s' secret provider", ty)
