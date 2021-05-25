@@ -13,7 +13,7 @@ import (
 func Topology(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
 	namespace := c.Param("NAMESPACE")
 
 	topology := model.NewTopology(cluster)
@@ -28,7 +28,7 @@ func Topology(c *gin.Context) {
 func Dashboard(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
 
 	dashboard := model.NewDashboard(cluster)
 	if err := dashboard.Get(); err != nil {

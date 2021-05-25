@@ -11,7 +11,8 @@ services:
 
   backend:
     image: ghcr.io/acornsoftlab/kore-board.backend:latest
-    command: --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --log-level=info
+    command: >-
+      --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --log-level=info --auth='{"strategy":"cookie", "secret": {"type": "static-user", "username": "admin", "password": "acornsoft"} }'
     volumes:
       - "${KUBECONFIG}:/app/.kube/config"
     links:

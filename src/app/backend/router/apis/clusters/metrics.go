@@ -16,7 +16,7 @@ import (
 func GetNodeMetrics(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
 
 	// invoke metrics-scraper api
 	client := resty.New()
@@ -35,7 +35,7 @@ func GetNodeMetrics(c *gin.Context) {
 func GetPodMetrics(c *gin.Context) {
 	g := app.Gin{C: c}
 
-	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Value.DefaultContext)
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
 
 	// invoke metrics-scraper api
 	client := resty.New()

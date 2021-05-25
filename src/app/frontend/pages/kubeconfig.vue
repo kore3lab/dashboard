@@ -1,5 +1,6 @@
 <template>
 	<div class="content-wrapper overflow-hidden">
+	<b-overlay :show="showOverlay" rounded="sm">
 		<div class="row pt-5">
 			<div class="col-md-3"></div>
 			<div class="col-md-6 m-3">
@@ -30,6 +31,7 @@
 			</div>
 			<div class="col-md-3"></div>
 		</div>
+		</b-overlay>
 	</div>
 </template>
 <script>
@@ -39,6 +41,7 @@ export default {
 	},
 	data() {
 		return {
+			showOverlay: false,
 			kubeconfig: "",
 			yamlFile: null,
 			yamlText: "",
@@ -95,7 +98,8 @@ export default {
 				let cluster = this.kubeconfig.clusters.find(el=> el.name === this.selected.context["cluster"]);
 				let user = this.kubeconfig.users.find(el=> el.name === this.selected.context["user"]);
 
-				this.$axios.post(`/api/clusters/${clusterName}`,{
+				this.showOverlay = true;
+				this.$axios.post(`/api/contexts/${clusterName}`,{
 					"cluster": Object.assign({}, cluster.cluster),
 					"user": Object.assign({}, user.user)
 				}).then( resp => {
@@ -110,7 +114,7 @@ export default {
 						this.toast("Add a cluster.. OK", "success");
 					}
 
-				}).catch(e => { this.msghttp(e) } );
+				}).catch(e => { this.msghttp(e) } ).finally( () => { this.showOverlay = false; } );
 			} catch (ex) {
 				this.toast(`Add a cluster failed ${ex}`,"danger") 
 			}

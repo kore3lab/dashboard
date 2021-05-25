@@ -16,7 +16,7 @@
 				<div class="row">
 					<div class="col-lg-3 col-6">
 						<div class="small-box bg-warning">
-							<div class="inner"><h3>{{ summary.nodes.usage }}</h3><p>Nodes</p></div>
+							<div class="inner"><h3>{{ summary.nodes.usage ? summary.nodes.usage: "NaN"}}</h3><p>Nodes</p></div>
 							<div class="icon"><i class="fas fa-server"></i></div>
 						</div>
 					</div>
