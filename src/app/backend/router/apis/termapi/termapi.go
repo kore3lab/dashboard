@@ -105,7 +105,7 @@ func ProcCluster(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Cluster.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.termtype = "cluster"
 	getContext(g, termreq)
@@ -116,7 +116,7 @@ func ProcPod(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Cluster.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.pod = lang.NVL(c.Param("POD"), "")
 	termreq.termtype = "pod"
@@ -128,7 +128,7 @@ func ProcContainer(c *gin.Context) {
 	g := app.Gin{C: c}
 	//API요청 파라미터 파싱
 	termreq := &termRequest{}
-	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Value.DefaultContext)
+	termreq.cluster = lang.NVL(c.Param("CLUSTER"), config.Cluster.DefaultContext)
 	termreq.namespace = lang.NVL(c.Param("NAMESPACE"), "")
 	termreq.pod = lang.NVL(c.Param("POD"), "")
 	termreq.container = lang.NVL(c.Param("CONTAINER"), "")
@@ -299,11 +299,11 @@ func processWSConn(ctx context.Context, conn *websocket.Conn) error {
 //기존 client-go kubeconfig 정보사용
 func getContext(g app.Gin, req *termRequest) {
 
-	conf := config.Value.KubeConfig
+	conf := config.Cluster.KubeConfig
 
-	if config.Value.IsRunningInCluster { //In cluster mode
-		req.kubeconfig = config.Value.InClusterConfig.Host
-		req.kubetoken = config.Value.InClusterConfig.BearerToken
+	if config.Cluster.IsRunningInCluster { //In cluster mode
+		req.kubeconfig = config.Cluster.InCluster.RESTConfig.Host
+		req.kubetoken = config.Cluster.InCluster.RESTConfig.BearerToken
 		req.inclustermode = "true"
 	} else {
 		var context *clientcmdapi.Context
