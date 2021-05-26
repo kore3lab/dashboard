@@ -126,7 +126,6 @@ export default {
 				{ key: "status", label: "Status", sortable: true  },
 			],
 			isBusy: false,
-			metricsItems: [],
 			origin: [],
 			items: [],
 			currentItems:[],
@@ -140,7 +139,7 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+		this.$nuxt.$on("navbar-context-selected", (_) => {
 			this.selectedNamespace = this.selectNamespace()
 			this.selectedClear()
 		});
@@ -194,7 +193,6 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			this.loadMetrics();
 			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
@@ -205,7 +203,7 @@ export default {
 								ready: this.toReady(el.status, el.spec),
 								containers: this.toContainers(el.status),
 								restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
-								controller: this.getController(el),
+								controller: this.getPodsController(el),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
 								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								node: this.getNode(el),
@@ -230,7 +228,7 @@ export default {
 				"rs" : "nodes"
 			}
 		},
-		getController(el) {
+		getPodsController(el) {
 			let version
 			let group
 			let gr = ""
@@ -301,13 +299,6 @@ export default {
 				"initContainerStatuses": initContainerStatuses,
 				"containerStatuses": containerStatuses,
 			}
-		},
-		// load pod's Metrics
-		async loadMetrics() {
-			this.metricsItems = [];
-			let resp = await this.$axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
-			if (!resp) return
-			this.metricsItems = resp.data.items
 		},
 		onFiltered(filteredItems) {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }

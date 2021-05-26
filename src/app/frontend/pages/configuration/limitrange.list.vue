@@ -45,11 +45,6 @@
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
 									</template>
-									<template v-slot:cell(cpu)="data">
-										<ul class="list-unstyled mb-0" v-for="(value, name) in data.item.cpu" v-bind:key="name">
-											<li v-if="value"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
-										</ul>
-									</template>
 									<template v-slot:cell(type)="data">
 										<span v-for="(value, idx) in data.item.type" v-bind:key="idx">{{ value }} </span>
 									</template>

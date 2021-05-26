@@ -3,7 +3,7 @@
 		<div class="card card-primary m-0 layer" v-bind:class="{ 'min-vh-100' : errorcheck}">
 			<!-- card-header -->
 			<div class="card-header pt-2 pb-2 position-sticky fixed-top">
-				<h3 class="card-title text-truncate">{{ title }} / {{ name }}</h3>
+				<h3 class="card-title text-truncate">{{ title }} / {{ (name && name.length >60) ? name.substring(0,60)+'...' : name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
 						<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
@@ -41,13 +41,13 @@
 										<dt class="col-sm-2 text-truncate">Annotations</dt>
 										<dd class="col-sm-10 text-truncate">
 											<ul class="list-unstyled mb-0">
-												<li v-for="(value, name) in raw.metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+												<li v-for="(value, name) in raw.metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 											</ul>
 										</dd>
 										<dt class="col-sm-2 text-truncate">Labels</dt>
 										<dd class="col-sm-10">
 											<ul class="list-unstyled mb-0">
-												<li v-for="(value, name) in raw.metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+												<li v-for="(value, name) in raw.metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 											</ul>
 										</dd>
 										<dt class="col-sm-2 text-truncate">UID</dt><dd class="col-sm-10">{{ raw.metadata.uid }}</dd>
@@ -147,6 +147,7 @@ export default {
 			isCreated: false,
 			delay: 0,
 			disabled: false,
+			selfLink: "",
 		}
 	},
 	computed: {
@@ -181,13 +182,13 @@ export default {
 				this.isJSON = true;
 				if(this.loader) {
 					this.loader()
-							.then(() => {
-								this.component = () => this.loader();
-								this.isJSON = false;
-							})
-							.catch((ex) => {
-								console.error(ex)
-							})
+						.then(() => {
+							this.component = () => this.loader();
+							this.isJSON = false;
+						})
+						.catch((ex) => {
+							console.error(ex)
+						})
 				}
 				this.localSrc = newVal;
 			}
@@ -238,33 +239,40 @@ export default {
 		},
 		// 조회
 		onSync() {
+			this.deleteOverlay.visible = false;
 			this.isYaml = false;
 			if (this.delay === 1) return;
 			this.delay++;
 			this.$axios.get(this.localUrl)
-					.then(resp => {
-						this.errorcheck = false;
-						this.origin = Object.assign({}, resp.data);
-						this.raw = resp.data;
-						if(this.title === "ConfigMap" || this.title === "Secret") this.raw.spec = resp.data.data || {};
-						else if(this.title === "StorageClass") this.raw.spec = {}; // 무시
-						else if(this.title === "Role" || this.title === "ClusterRole") this.raw.spec = resp.data.rules || {};
-						else if(this.title === "RoleBinding" || this.title === "ClusterRoleBinding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} || {} ;
-						else if(this.title === "ServiceAccount") this.raw.spec = resp.data.secrets || {};
-						else if(this.title === "Endpoints") this.raw.spec = resp.data.subsets || {};
-						else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
-						else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
-						else this.raw.spec = resp.data.spec || {};
-						this.isTerminal = this.title === 'Pod';
-						if (this.isCreated) {
-							this.$nuxt.$emit("onReadCompleted", this.origin);
-							this.$nuxt.$emit('resetHistory',this.raw);
-						}
-						this.delay = 0;
-					})
-					.catch(e => {
-						this.isError(e);
-					});
+				.then(resp => {
+					this.errorcheck = false;
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
+					this.selfLink = this.getSelfLink(this.raw)
+					if(this.title === "ConfigMap" || this.title === "Secret") this.raw.spec = resp.data.data || {};
+					else if(this.title === "StorageClass") this.raw.spec = {}; // 무시
+					else if(this.title === "Role" || this.title === "ClusterRole") this.raw.spec = resp.data.rules || {};
+					else if(this.title === "RoleBinding" || this.title === "ClusterRoleBinding") this.raw.spec = { subjects: resp.data.subjects, roleRef: resp.data.roleRef} || {} ;
+					else if(this.title === "ServiceAccount") this.raw.spec = resp.data.secrets || {};
+					else if(this.title === "Endpoints") this.raw.spec = resp.data.subsets || {};
+					else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
+					else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
+					else this.raw.spec = resp.data.spec || {};
+					this.isTerminal = this.title === 'Pod';
+					if (this.isCreated) {
+						this.$nuxt.$emit("onReadCompleted", this.origin);
+						this.$nuxt.$emit('resetHistory',this.raw);
+					}
+					this.delay = 0;
+				})
+				.catch(e => {
+					this.isError(e);
+				});
+		},
+		getSelfLink(data) {
+			let v = this.getController(data)
+			let url = this.getApiUrl(v.g,v.k,data.metadata.namespace,data.metadata.name)
+			return url
 		},
 		isError(e) {
 			this.errorcheck = true;
@@ -279,48 +287,48 @@ export default {
 				return this.disabled = false
 			}
 			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.raw)
-					.then( resp => {
-						if(!resp.data) {
-							return this.toast('Invalid modification.','warning')
-						}
-						this.origin = Object.assign({}, resp.data);
-						this.raw = resp.data;
-						this.toast('Patch Successful')
-					})
-					.catch(e => {this.msghttp(e);});
+				.then( resp => {
+					if(!resp.data) {
+						return this.toast('Invalid modification.','warning')
+					}
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
+					this.toast('Patch Successful')
+				})
+				.catch(e => {this.msghttp(e);});
 		},
 		onDelete() {
-			this.deleteLink = this.raw.metadata.selfLink
+			this.deleteLink = this.selfLink
 			this.deleteOverlay.processing = true;
-			this.$axios.delete(`/raw/clusters/${this.currentContext()}${this.raw.metadata.selfLink}`)
-					.then( _ => {
-						this.watch();
-					})
-					.catch(e => {this.msghttp(e);});
+			this.$axios.delete(this.selfLink)
+				.then( _ => {
+					this.watch();
+				})
+				.catch(e => {this.msghttp(e);});
 		},
 		watch() {
-			if(this.raw.metadata.selfLink !== this.deleteLink) {
+			if(this.selfLink !== this.deleteLink) {
 				this.deleteOverlay.visible = false
 				this.deleteOverlay.processing = false
 			} else {
 				this.deleteOverlay.visible = true
 				this.deleteOverlay.processing = true
 			}
-			this.$axios.get(`/raw/clusters/${this.currentContext()}${this.deleteLink}`)
-					.then( resp => {
-						if (resp.status === 404) {
-							if(this.raw.metadata.selfLink === this.deleteLink) {
-								this.deleteOverlay.visible = false;
-								this.deleteOverlay.processing = false;
-								this.$emit("delete");
-								this.$emit("close");
-							} else this.toast('delete Successful')
-						} else {
-							setTimeout(() => { this.watch(); }, 2000);
-						}
-					}).catch( error => {
+			this.$axios.get(this.deleteLink)
+				.then( resp => {
+					if (resp.status === 404) {
+						if(this.selfLink === this.deleteLink) {
+							this.deleteOverlay.visible = false;
+							this.deleteOverlay.processing = false;
+							this.$emit("delete");
+							this.$emit("close");
+						} else this.toast('delete Successful')
+					} else {
+						setTimeout(() => { this.watch(); }, 2000);
+					}
+				}).catch( error => {
 				if(error.response && error.response.status === 404) {
-					if(this.raw.metadata.selfLink === this.deleteLink) {
+					if(this.selfLink === this.deleteLink) {
 						this.deleteOverlay.visible = false;
 						this.deleteOverlay.processing = false;
 						this.$emit("delete");

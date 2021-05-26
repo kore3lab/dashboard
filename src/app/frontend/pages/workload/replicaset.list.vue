@@ -47,7 +47,7 @@
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(images)="data">
@@ -148,22 +148,22 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apps","replicasets",this.selectedNamespace))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								desired: el.spec.replicas || 0,
-								current: el.status.availableReplicas || 0,
-								ready: el.status.readyReplicas || 0,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							desired: el.spec.replicas || 0,
+							current: el.status.availableReplicas || 0,
+							ready: el.status.readyReplicas || 0,
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

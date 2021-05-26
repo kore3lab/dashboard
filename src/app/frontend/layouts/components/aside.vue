@@ -28,6 +28,7 @@
 						<a href="#" class="nav-link" v-on:click="isVisible.workload=!isVisible.workload"><i class="nav-icon fas fa-server"></i><p>Workload<i v-bind:class="isVisible.workload?'fa-angle-left':'fa-angle-up'" class="right fas"></i></p></a>
 						<b-collapse v-model="isVisible.workload">
 							<ul class="nav d-block nav-treeview">
+<!--								<li class="nav-item small"><nuxt-link to="/workload/overview"  class="nav-link"><i class="nav-icon text-sm mr-0">O</i><p>verview</p></nuxt-link></li>-->
 								<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/workload/deployment.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>eployments</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/workload/statefulset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>tateful Sets</p></nuxt-link></li>

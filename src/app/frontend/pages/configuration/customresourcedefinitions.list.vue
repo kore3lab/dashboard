@@ -39,11 +39,11 @@
 										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
-										{{ data.value.name }}
+										<nuxt-link :to="{path: '/configuration/customresource.list', query: {group: data.item.group, plural:data.item.plural, kind: data.value.name}}" class="mr-2">{{ data.value.name }}</nuxt-link>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
@@ -148,23 +148,24 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: this.getName(el.spec.names.kind,el.metadata.name),
-								group: el.spec.group,
-								version: this.getVersion(el.spec.versions),
-								scope: el.spec.scope,
-								groups: this.setGroup(el.spec.group),
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: this.getName(el.spec.names.kind,el.metadata.name),
+							group: el.spec.group,
+							version: this.getVersion(el.spec.versions),
+							scope: el.spec.scope,
+							plural: el.spec.names.plural,
+							groups: this.setGroup(el.spec.group),
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.origin = this.items;
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.origin = this.items;
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

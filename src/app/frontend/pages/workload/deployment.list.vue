@@ -100,7 +100,7 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+		this.$nuxt.$on("navbar-context-selected", (_) => {
 			this.selectedNamespace = this.selectNamespace()
 			this.query_All()
 		});
@@ -143,26 +143,26 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apps","deployments",this.selectedNamespace))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								pods: this.toPods(el.status),
-								replicas: el.status.replicas ? el.status.replicas : 0,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
-								status: this.toStatus(el.status.conditions),
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							pods: this.toPods(el.status),
+							replicas: el.status.replicas ? el.status.replicas : 0,
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
+							status: this.toStatus(el.status.conditions),
 						});
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		toPods(status) {
-			var podsReady = 0
-			var podsLength = 0
+			let podsReady = 0
+			let podsLength = 0
 			if ( status.readyReplicas ) podsReady = status.readyReplicas
 			if ( status.availableReplicas ) podsLength = status.availableReplicas
 			return `${podsReady}/${podsLength}`
