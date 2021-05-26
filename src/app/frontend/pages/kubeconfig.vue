@@ -55,7 +55,7 @@ export default {
 	layout: "default",
 	methods: {
 		onActiveTab(idx) {
-			if (idx==0) this.onFileSelected()
+			if (idx===0) this.onFileSelected()
 			else this.onTextChange()
 		},
 		onFileSelected() {
@@ -108,7 +108,7 @@ export default {
 						// context 목록에서 현재 context 가 존재하지 않는다면
 						// context 선택 이벤트 발생
 						let cur = this.currentContext();
-						if( !resp.data.contexts.find(e=> {return e==cur }) ) {
+						if( !resp.data.contexts.find(e=> {return e===cur }) ) {
 							this.$nuxt.$emit("navbar-set-context-selected", clusterName);
 						}
 						this.toast("Add a cluster.. OK", "success");

@@ -10,13 +10,13 @@
 							<dt class="col-sm-3">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt v-if="metadata.finalizers" class="col-sm-3">Finalizers</dt><dd v-if="metadata.finalizers" class="col-sm-9"><span v-for="(val, idx) in metadata.finalizers" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val }}</span></dd>
@@ -24,8 +24,8 @@
 							<dt v-if="metadata.ownerReferences" class="col-sm-3 text-truncate">Controlled By</dt>
 							<dd v-if="metadata.ownerReferences" class="col-sm-9">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
 							<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="status.style">{{ status.type }}</dd>
-							<dt v-if="isQuota" class="col-sm-3">Resource Quotas</dt><dd v-if="isQuota" class="col-sm-9"><span v-for="(val, idx) in quotas" v-bind:key="idx"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
-							<dt v-if="isLimit" class="col-sm-3">Limit Ranges</dt><dd v-if="isLimit" class="col-sm-9"><span v-for="(val, idx) in limits" v-bind:key="idx"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
+							<dt v-if="isQuota" class="col-sm-3">Resource Quotas</dt><dd v-if="isQuota" class="col-sm-9"><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
+							<dt v-if="isLimit" class="col-sm-3">Limit Ranges</dt><dd v-if="isLimit" class="col-sm-9"><span v-for="(val, idx) in limits" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
 						</dl>
 					</div>
 				</div>

@@ -19,8 +19,7 @@ export default {
 	methods: {
 		logout() {
 			this.$auth.logout().catch(e => { this.msghttp(e);})
-
-		}
+		},
 	}
 }
 </script>

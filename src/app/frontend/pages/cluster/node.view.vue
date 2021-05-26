@@ -47,13 +47,13 @@
 							<dt class="col-sm-3 text-truncate">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt v-if="info.taints" class="col-sm-3 text-truncate">Taints</dt><dd v-if="info.taints" class="col-sm-9"><span v-for="(val, idx) in info.taints" v-bind:key="idx" v-bind:class="val.style" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val.key }}: {{ val.effect }} ({{ val.value }})</span></dd>
@@ -212,8 +212,9 @@ export default {
 			this.childPod = this.getChildPod();
 		},
 		getInfo(data) {
-			let capacity = `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024*1024)).toFixed(2)}Mi, Pods: ${data.status.capacity.pods}`
-			let allocatable = `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024*1024)).toFixed(2)}Mi, Pods: ${data.status.allocatable.pods}`
+			let regexp = /\B(?=(\d{3})+(?!\d))/g;
+			let capacity = `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.capacity.pods}`
+			let allocatable = `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.allocatable.pods}`
 			let addresses = this.getAddress(data.status.addresses);
 			let conditions = this.getConditions(data.status.conditions);
 			let taints = this.getTaints(data.spec.taints);

@@ -61,6 +61,11 @@ export default {
 			let filename = this.crd.toLowerCase().replaceAll(" ", "");
 			this.template = require(`~/assets/template/${filename}.json`);
 			this.raw = Object.assign({}, this.template);
+			if(this.raw.metadata.namespace) {
+				console.log(this.selectNamespace())
+				if(this.selectNamespace() === '') this.raw.metadata.namespace = 'default'
+				else this.raw.metadata.namespace = this.selectNamespace()
+			}
 		} catch (ex) {
 			console.log(`can't find "${this.crd}" template on ~/assets/template`);
 		}
@@ -70,17 +75,36 @@ export default {
 	},
 	methods: {
 		onCreate() {
+			if(!this.raw.metadata.namespace) this.raw.metadata.namespace = 'default'
 			this.$axios.post(`/raw/clusters/${this.currentContext()}`, this.raw)
-					.then( resp => {
-						this.origin = Object.assign({}, resp.data);
-						this.raw = resp.data;
-						this.toast("Apply OK", "info");
-						this.$router.go(-1);
-					})
-					.catch(e => { this.msghttp(e);});
+				.then( resp => {
+					this.origin = Object.assign({}, resp.data);
+					this.raw = resp.data;
+					this.toast("Apply OK", "info");
+					this.$router.go(-1);
+				})
+				.finally(_ => {this.checkNs()})
+				.catch(e => { this.msghttp(e);});
 		},
 		onError(error) {
 			this.toast(error.message, "danger");
+		},
+		checkNs() {
+			if(this.crd === 'Namespace') {
+				this.$axios.get(`/api/clusters?ctx=${this.currentContext()}`)
+					.then((resp)=>{
+						let nsList = [{ value: "", text: "All Namespaces" }];
+						if (resp.data.currentContext.namespaces) {
+							resp.data.currentContext.namespaces.forEach(el => {
+								nsList.push({ value: el, text: el });
+							});
+						}
+						this.namespaces(nsList);
+
+					}).catch(error=> {
+					this.toast(error.message, "danger");
+				})
+			}
 		},
 	}
 }

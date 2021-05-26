@@ -35,13 +35,13 @@
 							<dt class="col-sm-2 text-truncate">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2 text-truncate">Labels</dt>
 							<dd class="col-sm-10">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2 text-truncate">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -78,7 +78,7 @@
 								</ul>
 							</dd>
 							<dt v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-2">CPU</dt><dd v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-10"><span v-show="cpuRequests !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ cpuRequests }}</span><span v-show="cpuLimits !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ cpuLimits }}</span></dd>
-							<dt v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-2">Memory</dt><dd v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-10"><span v-show="memoryRequests !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ memoryRequests }}Mi</span><span v-show="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ memoryLimits }}Mi</span></dd>
+							<dt v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-2">Memory</dt><dd v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-10"><span v-show="memoryRequests !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ memoryRequests | comma }}Mi</span><span v-show="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ memoryLimits | comma }}Mi</span></dd>
 						</dl>
 					</div>
 				</div>
@@ -99,7 +99,7 @@
 									<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
 								</ul>
 							</dd>
-							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10">{{ val.image }}</dd>
+							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10"><span class="badge badge-secondary font-weight-light text-sm" id="copyTextInit">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('init')"><i class="fas fa-copy"></i></button></dd>
 							<dt v-if="val.ports" class="col-sm-2 text-truncate">Ports</dt>
 							<dd v-if="val.ports" class="col-sm-10">
 								<ul class="list-unstyled mb-0">
@@ -141,7 +141,7 @@
 									<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
 								</ul>
 							</dd>
-							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10">{{ val.image }}</dd>
+							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10"><span class="badge badge-secondary font-weight-light text-sm" id="copyTextCon">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('con')"><i class="fas fa-copy"></i></button></dd>
 							<dt v-if="val.ports" class="col-sm-2 text-truncate">Ports</dt>
 							<dd v-if="val.ports" class="col-sm-10">
 								<ul class="list-unstyled mb-0">
@@ -291,6 +291,13 @@ export default {
 				data: { cpu: {}, memory: {}}
 			},
 		}
+	},
+	filters: {
+		comma(value) {
+			if(value === 0) return value
+			let regexp = /\B(?=(\d{3})+(?!\d))/g;
+			return value.toString().replace(regexp, ',');
+		},
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
@@ -593,6 +600,20 @@ export default {
 			} else if(statusCon) {
 				return statusCon
 			} else return false
+		},
+		copy(type) {
+			let copyText
+			if(type === 'con') {
+				copyText = document.getElementById("copyTextCon").textContent;
+			} else {
+				copyText = document.getElementById("copyTextInit").textContent;
+			}
+			const textArea = document.createElement('textarea');
+			textArea.textContent = 'docker pull '+ copyText;
+			document.body.append(textArea);
+			textArea.select();
+			document.execCommand("copy")
+			textArea.remove()
 		},
 		getEnv(env) {
 			let list = []

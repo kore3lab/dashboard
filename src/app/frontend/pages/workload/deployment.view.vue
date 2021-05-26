@@ -34,13 +34,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -64,9 +64,9 @@
 							<span v-if="cpuLimits !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Limits : {{ cpuLimits.toFixed(2) }}</span>
 							<span v-if="totalCpu === 0 && cpuRequests === 0 && cpuLimits === 0">-</span></dd>
 							<dt class="col-sm-2">Memory</dt><dd class="col-sm-10">
-							<span v-if="totalMemory !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalMemory }} Mi</span>
-							<span v-if="memoryRequests !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Requests : {{ memoryRequests.toFixed(1) }} Mi</span>
-							<span v-if="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Limits : {{ memoryLimits.toFixed(1) }} Mi</span>
+							<span v-if="totalMemory !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Usage : {{ totalMemory | comma }} Mi</span>
+							<span v-if="memoryRequests !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Requests : {{ memoryRequests.toFixed(1) | comma }} Mi</span>
+							<span v-if="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mb-1">Limits : {{ memoryLimits.toFixed(1) | comma }} Mi</span>
 							<span v-if="totalMemory === 0 && memoryRequests === 0 && memoryLimits === 0">-</span></dd>
 						</dl>
 					</div>
@@ -89,7 +89,7 @@
 								<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? data.item.nowCpu[data.item.idx].val : '' }}</span>
 							</template>
 							<template v-slot:cell(nowMemory)="data">
-								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? data.item.nowMemory[data.item.idx].val+'Mi' : ''}}</span>
+								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? data.item.nowMemory[data.item.idx].val+'Mi' : '' }}</span>
 							</template>
 						</b-table>
 					</div>
@@ -217,6 +217,13 @@ export default {
 			this.onSync(data)
 		});
 		this.$nuxt.$emit("onCreated",'')
+	},
+	filters: {
+		comma(value) {
+			if(value === 0) return value
+			let regexp = /\B(?=(\d{3})+(?!\d))/g;
+			return value.toString().replace(regexp, ',');
+		},
 	},
 	methods: {
 		onSync(data) {

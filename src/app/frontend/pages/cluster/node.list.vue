@@ -206,13 +206,19 @@ export default {
 					}).finally(()=> { this.query_All()} )
 		},
 		getCpu(name) {
+			if(!this.metrics[name]) return
+
 			return this.metrics[name].usage.cpu.percent
 
 		},
 		getMemory(name) {
+			if(!this.metrics[name]) return
+
 			return this.metrics[name].usage.memory.percent
 		},
 		getDisk(name) {
+			if(!this.metrics[name]) return
+
 			return this.metrics[name].usage.storage.percent
 		}
 	},
