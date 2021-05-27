@@ -46,7 +46,7 @@
     "cookie-universal-nuxt": "^2.1.4",
     "expose-loader": "^0.7.5",
     "gulp": "4.0.2",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "js-yaml": "^3.14.1",
     "libapps": "github:yudai/libapps#release-hterm-1.70",
     "nuxt": "^2.14.11",
