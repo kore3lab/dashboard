@@ -50,7 +50,7 @@ export default {
 			home: "/"			//User will be redirected to this path after login. (rewriteRedirects will rewrite this path)
 		},
 		localStorage: {
-			prefix: "auth."
+			prefix: false		// false or "auth."
 		},
 		cookie: {
 			prefix: "auth."
