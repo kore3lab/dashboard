@@ -175,14 +175,9 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
-            - mountPath: /app/.kube
-              name: kubeconfig
             - mountPath: /tmp
               name: tmp-volume
       volumes:
-        - name: kubeconfig
-          configMap:
-            name: kore-board-kubeconfig
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: kore-board
