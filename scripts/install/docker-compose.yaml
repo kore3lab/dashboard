@@ -6,15 +6,16 @@ services:
     image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
     command: --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db --log-level=info
     volumes:
-      - "${KUBECONFIG}:/app/.kube/config"
+      - kubeconfig:/app/.kube
       - data:/app/data
 
   backend:
     image: ghcr.io/acornsoftlab/kore-board.backend:latest
+    privileged: true
     command: >-
-      --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --log-level=info --auth='{"strategy":"cookie", "secret": {"type": "static-user", "username": "admin", "password": "acornsoft"} }'
+      --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --log-level=info
     volumes:
-      - "${KUBECONFIG}:/app/.kube/config"
+      - kubeconfig:/app/.kube
     links:
       - metrics-scraper
 
@@ -22,12 +23,9 @@ services:
     image: ghcr.io/acornsoftlab/kore-board.frontend:latest
     ports:
       - 3000:80
-    volumes:
-      - data:/tmp
-      - ./default.conf:/etc/nginx/conf.d/default.conf
-      - ./nginx.conf:/etc/nginx/nginx.conf
     links:
       - backend
 
 volumes:
   data: {}
+  kubeconfig: {}

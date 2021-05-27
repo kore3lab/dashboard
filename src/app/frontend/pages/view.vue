@@ -10,7 +10,9 @@
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
-						<button id="terminal" class="btn btn-tool" v-show="isTerminal"  @click="openTerminal()"><i class="fas fa-terminal"></i></button>
+						<nuxt-link :to="{path: '/terminal', query: {termtype: 'pod',pod: name, namespace: raw.metadata.namespace, cluster: currentContext()}}" v-show="isTerminal" target="_blank">
+							<button id="terminal" class="btn btn-tool" v-show="isTerminal"><i class="fas fa-terminal"></i></button>
+						</nuxt-link>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
 					</span>
 					<button type="button" class="btn btn-tool" @click="$emit('close')"><i class="fas fa-times"></i></button>
@@ -19,7 +21,11 @@
 			<b-popover triggers="hover" target="terminal" placement="bottomleft" boundary="window" boundary-padding="0">
 				<ul class="list-unstyled m-0">
 					<li v-for="(val,idx) in containers" v-bind:key="idx" class="mb-1">
-						<span v-if="val.status.value === 'running'" class="text-truncate"><button type="button" class="btn btn-tool" @click="openTerminal(val)"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</button></span>
+						<span v-if="val.status.value === 'running'" class="text-truncate">
+							<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: name, namespace: raw.metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
+							<button type="button" class="btn btn-tool"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</button>
+							</nuxt-link>
+						</span>
 					</li>
 				</ul>
 			</b-popover>
@@ -224,13 +230,13 @@ export default {
 		el[0].style.removeProperty('height')
 	},
 	methods: {
-		openTerminal(val) {
-			let routeData
-			if(val) {
-				routeData = this.$router.resolve({path: '/terminal', query: {termtype: "container",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),container:val.name}});
-			} else routeData = this.$router.resolve({path: '/terminal', query: {termtype: "pod",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),}});
-			window.open("about:blank").location.href = routeData.href
-		},
+		//openTerminal(val) {
+		//	let routeData
+		//	if(val) {
+		//		routeData = this.$router.resolve({path: '/terminal', query: {termtype: "container",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),container:val.name}});
+		//	} else routeData = this.$router.resolve({path: '/terminal', query: {termtype: "pod",pod: this.name, namespace: this.raw.metadata.namespace, cluster: this.currentContext(),}});
+		//	window.open("about:blank").location.href = routeData.href
+		//},
 		navigate(loc) {
 			this.value.name = loc.name;
 			this.value.title = loc.title;

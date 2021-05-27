@@ -13,6 +13,7 @@ aside a.brand-link img {width: 1.7em; height:1.7em;}
 body:not(.layout-top-nav) .content-wrapper {margin-left:0}
 .wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));}
 label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
+.brand-link .brand-image {margin-left: .5rem}
 
 @media (max-width: 992px) {
 	body:not(.sidebar-open) .main-sidebar, .main-sidebar::before { margin-left: -17rem;}
