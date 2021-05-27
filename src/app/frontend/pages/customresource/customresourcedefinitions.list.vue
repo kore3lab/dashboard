@@ -2,7 +2,7 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Configuration"></c-navigator>
+				<c-navigator group="Custom Resource"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
@@ -39,7 +39,7 @@
 										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
-										<nuxt-link :to="{path: '/configuration/customresource.list', query: {group: data.item.group, plural:data.item.plural, kind: data.value.name}}" class="mr-2">{{ data.value.name }}</nuxt-link>
+										<nuxt-link :to="{path: '/customresource/customresource.list', query: {group: data.item.group, plural:data.item.plural, kind: data.value.name, columnsName: data.item.printerColumns? data.item.printerColumns.name : '', columnsPath: data.item.printerColumns? data.item.printerColumns.path : '', scope: data.item.scope }}" class="mr-2">{{ data.value.name }}</nuxt-link>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -48,6 +48,18 @@
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
+									</template>
+									<template #head(button)>
+										<div class="text-right">
+											<a id="colOpt" class="nav-link" href="#"><i class="fas fa-ellipsis-v"></i></a>
+										</div>
+										<b-popover triggers="focus" ref="popover" target="colOpt" placement="bottomleft">
+											<b-form-group>
+												<b-form-checkbox v-for="option in columnOpt" v-model="selected" :key="option.key" :value="option.label" name="flavour-3a">
+													{{ option.label }}
+												</b-form-checkbox>
+											</b-form-group>
+										</b-popover>
 									</template>
 								</b-table>
 							</div>
@@ -82,6 +94,8 @@ export default {
 				{ key: "scope", label: "Scope", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
+			columnOpt: [],
+			selected: [],
 			isBusy: false,
 			origin: [],
 			items: [],
@@ -96,8 +110,30 @@ export default {
 		}
 	},
 	layout: "default",
+	watch: {
+		selected() {
+			this.fields = []
+			this.columnOpt.forEach(el => {
+				this.selected.forEach(e => {
+					if(el.label === e) {
+						this.fields.push(el)
+					}
+				})
+			})
+			this.fields.push({ key: "button", label: "button", thClass: "wt10"})
+			localStorage.setItem('columns_crd',this.selected)
+		}
+	},
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+		this.columnOpt = Object.assign([],this.fields)
+		this.$nuxt.$on("navbar-context-selected", (_) => {
+			if(localStorage.getItem('columns_crd')) {
+				this.selected = (localStorage.getItem('columns_crd')).split(',')
+			} else {
+				this.fields.forEach(el => {
+					this.selected.push(el.label)
+				})
+			}
 			this.query_All()
 		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
@@ -146,19 +182,21 @@ export default {
 		},
 		// 조회
 		query_All() {
+			this.groupList = [{value: "", text: "All Groups"}]
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
+						this.setGroup(el.spec.group)
 						this.items.push({
 							name: this.getName(el.spec.names.kind,el.metadata.name),
 							group: el.spec.group,
 							version: this.getVersion(el.spec.versions),
 							scope: el.spec.scope,
 							plural: el.spec.names.plural,
-							groups: this.setGroup(el.spec.group),
-							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
+							printerColumns: this.conv(this.getPrinterColumns(el.spec))
 						});
 					});
 					this.origin = this.items;
@@ -194,6 +232,30 @@ export default {
 				value: gr,
 				text: gr
 			})
+		},
+		getPrinterColumns(spec) {
+			const columns = spec.versions.find(a => this.getColumnsVersion(spec) === a.name)?.additionalPrinterColumns ??
+				spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath})) ?? [];
+			return columns
+				.filter(column => column.name !== 'Age')
+				.filter(column => column.jsonPath ? true : !column.priority );
+		},
+		conv(col) {
+			if(col.length === 0) return
+
+			let name = []
+			let path = []
+			col.forEach(el => {
+				name.push(el.name)
+				path.push(el.jsonPath)
+			})
+			return {
+				name: name.join(','),
+				path: path.join(','),
+			}
+		},
+		getColumnsVersion(spec) {
+			return spec.versions[0]?.name ?? spec.version
 		},
 	},
 	beforeDestroy(){

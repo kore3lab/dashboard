@@ -534,6 +534,7 @@ export default {
 			this.onTols = !this.onTols
 		},
 		onAffi() {
+			this.info.affinities = Object.assign({},this.info.affinities)
 			this.onAffis = !this.onAffis
 		},
 	},
