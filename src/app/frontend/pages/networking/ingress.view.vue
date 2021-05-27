@@ -11,13 +11,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -36,8 +36,8 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Rules</h3></div>
 					<dl v-for="(val, idx) in rules" v-bind:key="idx" class="row mb-0 card-body p-2">
 						<dt class="col-sm-12"><h3 class="text-md text-bold">Host: {{ val.host }}</h3></dt>
-						<dd class="col-sm-12">
-							<b-table striped hover small :items="val.value" :fields="ruleFields"></b-table>
+						<dd class="col-sm-12 overflow-auto">
+							<b-table striped hover small :items="val.value" :fields="ruleFields" class="text-truncate"></b-table>
 						</dd>
 					</dl>
 				</div>
@@ -48,8 +48,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Load-Balancer Ingress Points</h3></div>
-					<div v-if="isLb" class="card-body p-2">
-						<b-table striped hover small :items="lbIp" :fields="lbFields"></b-table>
+					<div v-if="isLb" class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="lbIp" :fields="lbFields" class="text-truncate"></b-table>
 					</div>
 				</div>
 			</div>
@@ -105,7 +105,7 @@ export default {
 	methods: {
 		onSync(data) {
 			this.rules = [];
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.getRules(data.spec.rules);
 			this.lbIp = this.getLb(data.status.loadBalancer);

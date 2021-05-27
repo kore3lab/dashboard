@@ -46,7 +46,7 @@
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(bindings)="data">
@@ -89,6 +89,8 @@ export default {
 			],
 			isBusy: false,
 			items: [],
+			currentItems:[],
+			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
@@ -97,7 +99,9 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			this.query_All()
+		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -107,13 +111,28 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
+					for(let i=0;i<this.$config.itemsPerPage;i++) {
+						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
+					}
 					this.viewModel = this.getViewLink('rbac.authorization.k8s.io', 'clusterrolebindings', items[0].namespace, items[0].name)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					this.isShowSidebar = false
-					this.$refs.selectableTable.clearSelected()
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
+						else {
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
+							this.isShowSidebar = true
+							this.$refs.selectableTable.selectRow(this.selectIndex)
+						}
+					} else {
+						this.isShowSidebar = false
+						this.$refs.selectableTable.clearSelected()
+					}
 				}
 			} else {
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}

@@ -22,6 +22,7 @@ const CUSTOM_VIEWS	= {
 	services: "networking/service.view",
 
 	//Cluster
+	events: "cluster/event.view",
 	nodes: "cluster/node.view",
 	namespaces: "cluster/namespace.view",
 

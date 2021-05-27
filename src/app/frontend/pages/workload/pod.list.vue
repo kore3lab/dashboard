@@ -6,7 +6,7 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Pods</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
@@ -126,9 +126,10 @@ export default {
 				{ key: "status", label: "Status", sortable: true  },
 			],
 			isBusy: false,
-			metricsItems: [],
 			origin: [],
 			items: [],
+			currentItems:[],
+			selectIndex: 0,
 			containerStatuses: [],
 			currentPage: 1,
 			totalItems: 0,
@@ -138,7 +139,10 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.selectedClear() );
+		this.$nuxt.$on("navbar-context-selected", (_) => {
+			this.selectedNamespace = this.selectNamespace()
+			this.selectedClear()
+		});
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -148,13 +152,28 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
+					for(let i=0;i<this.$config.itemsPerPage;i++) {
+						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
+					}
 					this.viewModel = this.getViewLink('', 'pods', items[0].namespace, items[0].name)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					this.isShowSidebar = false
-					this.$refs.selectableTable.clearSelected()
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
+						else {
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
+							this.isShowSidebar = true
+							this.$refs.selectableTable.selectRow(this.selectIndex)
+						}
+					} else {
+						this.isShowSidebar = false
+						this.$refs.selectableTable.clearSelected()
+					}
 				}
 			} else {
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}
@@ -174,7 +193,6 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			this.loadMetrics();
 			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
@@ -185,7 +203,7 @@ export default {
 								ready: this.toReady(el.status, el.spec),
 								containers: this.toContainers(el.status),
 								restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
-								controller: this.getController(el),
+								controller: this.getPodsController(el),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
 								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 								node: this.getNode(el),
@@ -210,7 +228,7 @@ export default {
 				"rs" : "nodes"
 			}
 		},
-		getController(el) {
+		getPodsController(el) {
 			let version
 			let group
 			let gr = ""
@@ -281,13 +299,6 @@ export default {
 				"initContainerStatuses": initContainerStatuses,
 				"containerStatuses": containerStatuses,
 			}
-		},
-		// load pod's Metrics
-		async loadMetrics() {
-			this.metricsItems = [];
-			let resp = await this.$axios.get(this.getApiUrl("metrics.k8s.io","pods",this.selectedNamespace))
-			if (!resp) return
-			this.metricsItems = resp.data.items
 		},
 		onFiltered(filteredItems) {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }

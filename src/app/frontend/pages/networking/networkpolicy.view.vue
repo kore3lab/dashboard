@@ -11,13 +11,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -121,7 +121,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.ingress = this.getIngress(data.spec.ingress);
 			this.egress = this.getEgress(data.spec.egress);

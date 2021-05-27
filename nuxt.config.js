@@ -22,7 +22,7 @@ export default {
 		"~/assets/css/app.css",
 	],
 	router: {
-		middleware: ["authenticated"]
+		middleware: ["auth"]
 	},
 	plugins: [
 		{ src: "~/plugins/mixin-common-methods", mode: "client" },
@@ -31,7 +31,7 @@ export default {
 		{ src: '~/plugins/axios', mode: "client" }
 	],
 	buildModules: ["@nuxt/typescript-build"],
-	modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios", "cookie-universal-nuxt"],
+	modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios", "cookie-universal-nuxt","@nuxtjs/auth-next"],
 	bootstrapVue: {
 		bootstrapCSS: false, 
 		icons: true,
@@ -43,10 +43,58 @@ export default {
 			common: { "Accept": "application/json"}
 		}
 	},
+	auth: {
+		redirect: {
+			login: "/login",	//User will be redirected to this path if login is required.
+			logout: "/login",	//User will be redirected to this path if after logout, current route is protected.
+			home: "/"			//User will be redirected to this path after login. (rewriteRedirects will rewrite this path)
+		},
+		localStorage: {
+			prefix: false		// false or "auth."
+		},
+		cookie: {
+			prefix: "auth."
+		},
+		strategies: {
+			cookie: {
+				user: {
+					property: "user"
+				},
+				endpoints: {
+					login:	{ url: "/api/auth/login", method: "POST" },
+					logout:	{ url: "/api/auth/logout", method: "GET" },
+					user:	{ url: '/api/auth/user', method: "GET" },
+				}
+			},
+			local: {
+				scheme: "refresh",
+				token: {
+					property: 'token',
+					maxAge: 60 * 15,
+					type: false
+				},
+				refreshToken: {
+					property: 'refreshToken',
+					data: 'refreshToken',
+					maxAge: 60 * 60 * 24 * 7
+				},
+				user: {
+					property: 'user'
+				},
+				endpoints: {
+					login:		{ url: "/api/auth/login", method: "POST" },
+					logout:		{ url: "/api/auth/logout", method: "GET" },
+					refresh:	{ url: '/api/auth/token/refresh', method: "POST" },
+					user:		{ url: '/api/auth/user', method: "GET" },
+				}
+			}
+		}
+	},
 	publicRuntimeConfig: {
 		nodeEnv: process.env.NODE_ENV,						// production or development
 		backendPort: process.env.BACKEND_PORT || "3001",	// only development mode
-		itemsPerPage: process.env.ITEMS_PER_PAGE || "10"
+		itemsPerPage: process.env.ITEMS_PER_PAGE || "10",
+		version: JSON.stringify(require('./package.json').version)
 	},
 	build: {
 		extend(config, ctx) {},

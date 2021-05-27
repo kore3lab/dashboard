@@ -47,13 +47,13 @@
 							<dt class="col-sm-3 text-truncate">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt v-if="info.taints" class="col-sm-3 text-truncate">Taints</dt><dd v-if="info.taints" class="col-sm-9"><span v-for="(val, idx) in info.taints" v-bind:key="idx" v-bind:class="val.style" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val.key }}: {{ val.effect }} ({{ val.value }})</span></dd>
@@ -76,10 +76,10 @@
 								<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
 							</template>
 							<template v-slot:cell(nowCpu)="data">
-								<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? (data.item.nowCpu[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
+								<span v-if="data.value[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
 							</template>
 							<template v-slot:cell(nowMemory)="data">
-								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? (data.item.nowMemory[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
+								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
 							</template>
 						</b-table>
 					</div>
@@ -108,6 +108,7 @@
 <script>
 import VueJsonTree from "@/components/jsontree";
 import VueChartJs from "vue-chartjs";
+import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	components: {
@@ -169,10 +170,21 @@ export default {
 						}
 					},
 					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return (data.yLabel).toFixed(2) + "Mi"
+								}
+							}
+						},
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
@@ -196,12 +208,13 @@ export default {
 			this.maxCpu = data.status.capacity.cpu;
 			this.maxMemory = this.tranMemory(data.status.capacity.memory)/(1024);
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod();
 		},
 		getInfo(data) {
-			let capacity = `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024*1024)).toFixed(2)}Mi, Pods: ${data.status.capacity.pods}`
-			let allocatable = `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024*1024)).toFixed(2)}Mi, Pods: ${data.status.allocatable.pods}`
+			let regexp = /\B(?=(\d{3})+(?!\d))/g;
+			let capacity = `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.capacity.pods}`
+			let allocatable = `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.allocatable.pods}`
 			let addresses = this.getAddress(data.status.addresses);
 			let conditions = this.getConditions(data.status.conditions);
 			let taints = this.getTaints(data.spec.taints);
@@ -235,7 +248,7 @@ export default {
 							this.$data.chart.data.cpu = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(119,149,233,0.9)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.cpu,data: da}
 								]
 							};
 						} else {
@@ -260,7 +273,7 @@ export default {
 							this.$data.chart.data.memory = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(179,145,208,1)",data: da}
+									{ backgroundColor : CHART_BG_COLOR.memory,data: da}
 								]
 							};
 						} else {
@@ -332,22 +345,20 @@ export default {
 			let childPod = [];
 			this.nowCpu = [];
 			this.nowMemory = [];
-			this.$axios.get(this.getApiUrl('','pods'))
+			this.$axios.get(this.getApiUrl('','pods','','','fieldSelector=spec.nodeName=' + this.metadata.name))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el => {
-							if(el.spec.nodeName === this.metadata.name) {
-								childPod.push({
-									name: el.metadata.name,
-									namespace: el.metadata.namespace,
-									ready: this.toReady(el.status,el.spec),
-									status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-									nowCpu: this.getPodCpu(el,idx),
-									nowMemory: this.getPodMemory(el,idx),
-									idx: idx,
-								})
-								idx++;
-							}
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								nowCpu: this.getPodCpu(el,idx),
+								nowMemory: this.getPodMemory(el,idx),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

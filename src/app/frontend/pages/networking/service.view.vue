@@ -1,5 +1,5 @@
 <template>
-	<div class="card-body p-2">
+	<div>
 		<div class="row">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
@@ -11,13 +11,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -52,10 +52,10 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Endpoint</h3></div>
-					<div v-show="isEndpoint" class="card-body p-2">
-						<b-table striped hover small :items="endpoints" :fields="fields">
+					<div v-show="isEndpoint" class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="endpoints" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
+								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.value }}</a>
 							</template>
 							<template v-slot:cell(endpoints)="data">
 								<span v-for="(val, idx) in data.item.endpoints" v-bind:key="idx">{{ val }} </span>
@@ -111,7 +111,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.connection = this.getConnection(data);
 			this.endpoints = this.getEndpoints(data);
@@ -134,20 +134,20 @@ export default {
 			}
 		},
 		getEndpoints(data) {
+			let list =[];
 			this.$axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
-			.then(resp => {
-				let list =[];
-				this.isEndpoint = true;
-				list.push({
-					name: resp.data.metadata.name,
-					namespace: resp.data.metadata.namespace,
-					selfLink: resp.data.metadata.selfLink,
-					endpoints: this.onEndpoints(resp.data)
-				})
-				this.endpoints = list
-				return list
-			})
-			.catch(error => this.isEndpoint = false)
+					.then(resp => {
+						this.isEndpoint = true;
+						list.push({
+							name: resp.data.metadata.name,
+							namespace: resp.data.metadata.namespace,
+							endpoints: this.onEndpoints(resp.data)
+						})
+						this.endpoints = list
+						return list
+					})
+					.catch(_ => this.isEndpoint = false)
+			return list
 		},
 		toEndpointList(p,type) {
 			let list = [];

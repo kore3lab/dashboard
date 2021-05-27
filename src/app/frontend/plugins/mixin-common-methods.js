@@ -22,12 +22,13 @@ Vue.mixin({
 				this.toast(error.message, "danger");
 			}
 		},
+	
 		/**
-		* timestamp를 day,hour,minute,second로 구분 봔환함
-		*
-		* @param {date} timestamp 변환할 date 값
-		* @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
-		*/
+		 * timestamp를 day,hour,minute,second로 구분 봔환함
+		 *
+		 * @param {date} timestamp 변환할 date 값
+		 * @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
+		 */
 		getElapsedTime(timestamp) {
 			const dt = Date.parse(timestamp);
 			const elapsedTime = new Date() - dt;
@@ -64,8 +65,8 @@ Vue.mixin({
 				str += `${second}s`;
 			}
 			return {elapsedTime,str};
-			},
-			unitsToBytes(value) {
+		},
+		unitsToBytes(value) {
 			const base = 1024;
 			const suffixes = ["K", "M", "G", "T", "P", "E"];
 
@@ -141,21 +142,21 @@ Vue.mixin({
 
 			return Math.floor(seconds) + " seconds";
 		},
-		getEvents(uid) {
+		getEvents(uid,query) {
 			let events = [];
-			this.$axios.get(this.getApiUrl('events.k8s.io','events',''))
+			this.$axios.get(this.getApiUrl('','events','', '',query))
 				.then( resp => {
 					for(let i=0; i<resp.data.items.length; i++) {
-					if(resp.data.items[i].regarding.uid === uid) {
-						events.unshift({
-						name: resp.data.items[i].note || "-",
-						source: resp.data.items[i].deprecatedSource.host || resp.data.items[i].deprecatedSource.component || "undefined",
-						count: resp.data.items[i].deprecatedCount || "-",
-						subObject: resp.data.items[i].regarding.fieldPath || "-",
-						lastSeen: resp.data.items[i].deprecatedLastTimestamp || "-",
-						type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
-						})
-					}
+						if(resp.data.items[i].involvedObject.uid === uid) {
+							events.unshift({
+								name: resp.data.items[i].message || "-",
+								source: resp.data.items[i].source.host || resp.data.items[i].source.component || "undefined",
+								count: resp.data.items[i].count || "-",
+								subObject: resp.data.items[i].involvedObject.fieldPath || "-",
+								lastSeen: resp.data.items[i].lastTimestamp || "-",
+								type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
+							})
+						}
 					}
 				})
 			return events
@@ -200,7 +201,7 @@ Vue.mixin({
 				let temp = [];
 				for (let i = 0; i < val.length; i++) {
 					for (let j = 0; j < val.length; j++) {
-							if (val[i].idx < val[j].idx) {
+						if (val[i].idx < val[j].idx) {
 							temp = val[i]
 							val[i] = val[j]
 							val[j] = temp
@@ -222,6 +223,7 @@ Vue.mixin({
 			let k;
 			if(or.kind[len-1] === 's') k = (or.kind).toLowerCase() + 'es'
 			else k = (or.kind).toLowerCase() + 's'
+			if(!or.apiVersion) return {g: '', k: k}
 			let g = (or.apiVersion).split('/')
 			if (g.length === 2) {
 				return { g: g[0], k: k }
@@ -229,7 +231,7 @@ Vue.mixin({
 				return { g: '', k: k}
 			}
 		},
-		getApiUrl(group, rscName, namespace, name) {
+		getApiUrl(group, rscName, namespace, name, query) {
 			if(!namespace) namespace = ''
 			let resource = this.resources()[group][rscName];
 			if (resource) {
@@ -239,7 +241,7 @@ Vue.mixin({
 				}else {
 					url = `/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.name}`;
 				}
-				return name ? `${url}/${name}` : url;
+				return name ? `${url}/${name}${query ? '?' + query : ''}` : url+ (query ? '?' + query : '');
 			} else {
 				return "#";
 			}
@@ -263,6 +265,16 @@ Vue.mixin({
 		currentContext(_) {
 			if (_) this.$store.commit("setCurrentContext", _);
 			else return this.$store.getters["getCurrentContext"];
+		},
+		selectNamespace(_) {
+			if(_ === "") this.$store.commit("setSelectNamespace", _);
+			if (_) this.$store.commit("setSelectNamespace", _);
+			else return this.$store.getters["getSelectNamespace"];
+		},
+		statusbar(_) {
+			if(_ === "") this.$store.commit("setStatusbar", _);
+			if (_) this.$store.commit("setStatusbar", _);
+			else return this.$store.getters["getStatusbar"];
 		},
 	},
 });

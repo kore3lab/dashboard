@@ -12,13 +12,13 @@
 								<dt class="col-sm-2">Annotations</dt>
 								<dd class="col-sm-10 text-truncate">
 									<ul class="list-unstyled mb-0">
-										<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 									</ul>
 								</dd>
 								<dt class="col-sm-2">Labels</dt>
 								<dd class="col-sm-10 text-truncate">
 									<ul class="list-unstyled mb-0">
-										<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 									</ul>
 								</dd>
 							</dl>
@@ -42,25 +42,23 @@
 				<div class="col-md-12">
 					<div class="card card-secondary card-outline">
 						<div class="card-header p-2"><h3 class="card-title text-md">Bindings</h3></div>
-						<div class="card-body p-2">
-							<div v-if="bindings">
-								<b-table hover small selectable select-mode="multi" ref="selectableTable" responsive="sm" @row-selected="onRowSelected" :items="bindings" :fields="bindFields">
-									<template v-slot:cell(selected)="{ rowSelected }">
-										<template v-if="rowSelected">
-											<span aria-hidden="true">&check;</span>
-											<span class="sr-only">Selected</span>
-										</template>
-										<template v-else>
-											<span aria-hidden="true">&nbsp;</span>
-											<span class="sr-only">Not Selected</span>
-										</template>
+						<div class="card-body p-2" v-if="bindings">
+							<b-table hover small selectable select-mode="multi" ref="selectableTable" responsive="sm" @row-selected="onRowSelected" :items="bindings" :fields="bindFields">
+								<template v-slot:cell(selected)="{ rowSelected }">
+									<template v-if="rowSelected">
+										<span aria-hidden="true">&check;</span>
+										<span class="sr-only">Selected</span>
 									</template>
-									<template v-slot:cell(namespace)="data">
-										{{ data.value? data.value : '-'}}
+									<template v-else>
+										<span aria-hidden="true">&nbsp;</span>
+										<span class="sr-only">Not Selected</span>
 									</template>
-								</b-table>
-								<b-button v-show="selected.length !== 0" variant="primary" size="sm" class="mb-1 ml-2" @click="deleteOverlay = true">Delete</b-button>
-							</div>
+								</template>
+								<template v-slot:cell(namespace)="data">
+									{{ data.value? data.value : '-'}}
+								</template>
+							</b-table>
+							<b-button v-show="selected.length !== 0" variant="primary" size="sm" class="mb-1 ml-2" @click="deleteOverlay = true">Delete</b-button>
 						</div>
 					</div>
 				</div>
@@ -136,7 +134,7 @@ export default {
 			this.controller = this.getController(data.metadata.ownerReferences);
 			this.ref = this.getRef(data.roleRef)
 			this.bindings = this.getBindings(data.subjects)
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 		},
 		getRef(roleRef) {
 			if(!roleRef) return
@@ -176,13 +174,13 @@ export default {
 			})
 			this.origin.subjects = list
 			this.$axios.put(`/raw/clusters/${this.currentContext()}`, this.origin)
-			.then( _ => {
-				this.onSync(this.origin)
-			})
-			.catch(e => {
-				this.origin = temp
-				this.msghttp(e);
-			});
+				.then( _ => {
+					this.onSync(this.origin)
+				})
+				.catch(e => {
+					this.origin = temp
+					this.msghttp(e);
+				});
 			this.deleteOverlay = false;
 
 		},

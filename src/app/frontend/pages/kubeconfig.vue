@@ -1,5 +1,6 @@
 <template>
 	<div class="content-wrapper overflow-hidden">
+	<b-overlay :show="showOverlay" rounded="sm">
 		<div class="row pt-5">
 			<div class="col-md-3"></div>
 			<div class="col-md-6 m-3">
@@ -30,6 +31,7 @@
 			</div>
 			<div class="col-md-3"></div>
 		</div>
+		</b-overlay>
 	</div>
 </template>
 <script>
@@ -39,6 +41,7 @@ export default {
 	},
 	data() {
 		return {
+			showOverlay: false,
 			kubeconfig: "",
 			yamlFile: null,
 			yamlText: "",
@@ -52,7 +55,7 @@ export default {
 	layout: "default",
 	methods: {
 		onActiveTab(idx) {
-			if (idx==0) this.onFileSelected()
+			if (idx===0) this.onFileSelected()
 			else this.onTextChange()
 		},
 		onFileSelected() {
@@ -95,7 +98,8 @@ export default {
 				let cluster = this.kubeconfig.clusters.find(el=> el.name === this.selected.context["cluster"]);
 				let user = this.kubeconfig.users.find(el=> el.name === this.selected.context["user"]);
 
-				this.$axios.post(`/api/clusters/${clusterName}`,{
+				this.showOverlay = true;
+				this.$axios.post(`/api/contexts/${clusterName}`,{
 					"cluster": Object.assign({}, cluster.cluster),
 					"user": Object.assign({}, user.user)
 				}).then( resp => {
@@ -104,13 +108,13 @@ export default {
 						// context 목록에서 현재 context 가 존재하지 않는다면
 						// context 선택 이벤트 발생
 						let cur = this.currentContext();
-						if( !resp.data.contexts.find(e=> {return e==cur }) ) {
+						if( !resp.data.contexts.find(e=> {return e===cur }) ) {
 							this.$nuxt.$emit("navbar-set-context-selected", clusterName);
 						}
 						this.toast("Add a cluster.. OK", "success");
 					}
 
-				}).catch(e => { this.msghttp(e) } );
+				}).catch(e => { this.msghttp(e) } ).finally( () => { this.showOverlay = false; } );
 			} catch (ex) {
 				this.toast(`Add a cluster failed ${ex}`,"danger") 
 			}

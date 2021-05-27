@@ -13,13 +13,13 @@
 								<dt class="col-sm-2">Annotations</dt>
 								<dd class="col-sm-10 text-truncate">
 									<ul class="list-unstyled mb-0">
-										<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 									</ul>
 								</dd>
 								<dt class="col-sm-2">Labels</dt>
 								<dd class="col-sm-10 text-truncate">
 									<ul class="list-unstyled mb-0">
-										<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+										<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 									</ul>
 								</dd>
 							</dl>
@@ -137,7 +137,7 @@ export default {
 			this.controller = this.getController(data.metadata.ownerReferences);
 			this.ref = this.getRef(data.roleRef)
 			this.bindings = this.getBindings(data.subjects)
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 		},
 		getRef(roleRef) {
 			if(!roleRef) return

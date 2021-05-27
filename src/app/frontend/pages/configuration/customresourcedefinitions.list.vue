@@ -39,11 +39,11 @@
 										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
-										{{ data.value.name }}
+										<nuxt-link :to="{path: '/configuration/customresource.list', query: {group: data.item.group, plural:data.item.plural, kind: data.value.name}}" class="mr-2">{{ data.value.name }}</nuxt-link>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
@@ -85,6 +85,8 @@ export default {
 			isBusy: false,
 			origin: [],
 			items: [],
+			currentItems:[],
+			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
 			groupList: [{value: "", text: "All Groups"}],
@@ -95,7 +97,9 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.query_All() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			this.query_All()
+		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -105,13 +109,28 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
+					for(let i=0;i<this.$config.itemsPerPage;i++) {
+						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
+					}
 					this.viewModel = this.getViewLink('apiextensions.k8s.io', 'customresourcedefinitions', items[0].namespace, items[0].name.origin)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					this.isShowSidebar = false
-					this.$refs.selectableTable.clearSelected()
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
+						else {
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
+							this.isShowSidebar = true
+							this.$refs.selectableTable.selectRow(this.selectIndex)
+						}
+					} else {
+						this.isShowSidebar = false
+						this.$refs.selectableTable.clearSelected()
+					}
 				}
 			} else {
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}
@@ -129,23 +148,24 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: this.getName(el.spec.names.kind,el.metadata.name),
-								group: el.spec.group,
-								version: this.getVersion(el.spec.versions),
-								scope: el.spec.scope,
-								groups: this.setGroup(el.spec.group),
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: this.getName(el.spec.names.kind,el.metadata.name),
+							group: el.spec.group,
+							version: this.getVersion(el.spec.versions),
+							scope: el.spec.scope,
+							plural: el.spec.names.plural,
+							groups: this.setGroup(el.spec.group),
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.origin = this.items;
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.origin = this.items;
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

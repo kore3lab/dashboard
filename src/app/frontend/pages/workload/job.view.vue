@@ -11,13 +11,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
@@ -40,8 +40,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Pods</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="childPod" :fields="fields">
+					<div class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="childPod" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
 								<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
 							</template>
@@ -116,7 +116,7 @@ export default {
 		onSync(data) {
 			this.controller = this.getController(data.metadata.ownerReferences)
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod(data.metadata.uid);
 		},
 		getInfo(data) {
@@ -151,26 +151,22 @@ export default {
 			this.cs = [];
 			this.isStatus = false;
 			this.isPods = false;
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace))
+			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=controller-uid=' + uid))
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							if (el.metadata.ownerReferences) {
-								if (el.metadata.ownerReferences[0].uid === uid) {
-									this.isPods = true;
-									childPod.push({
-										name: el.metadata.name,
-										namespace: el.metadata.namespace,
-										ready: this.toReady(el.status,el.spec),
-										nowMemory: this.onMemory(el,idx),
-										nowCpu: this.onCpu(el,idx),
-										status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-										countStatus: this.countStatus(el.status),
-										idx: idx,
-									})
-									idx++;
-								}
-							}
+							this.isPods = true;
+							childPod.push({
+								name: el.metadata.name,
+								namespace: el.metadata.namespace,
+								ready: this.toReady(el.status,el.spec),
+								nowMemory: this.onMemory(el,idx),
+								nowCpu: this.onCpu(el,idx),
+								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+								countStatus: this.countStatus(el.status),
+								idx: idx,
+							})
+							idx++;
 						})
 					})
 			return childPod

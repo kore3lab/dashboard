@@ -10,13 +10,13 @@
 							<dt class="col-sm-3">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
@@ -42,7 +42,7 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Parameters</h3></div>
 					<div class="card-body p-2">
 						<dl v-for="(val, idx) in param" v-bind:key="idx" class="row mb-0">
-							<dt class="col-sm-2 text-truncate">{{ val.type? val.type[0].toUpperCase()+val.type.slice(1): '' }}</dt><dd class="col-sm-10">{{ val.val }}</dd>
+							<dt class="col-sm-3 text-truncate">{{ val.type? val.type[0].toUpperCase()+val.type.slice(1): '' }}</dt><dd class="col-sm-9">{{ val.val }}</dd>
 						</dl>
 					</div>
 				</div>
@@ -53,8 +53,8 @@
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Persistent Volumes</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="pvList" :fields="fields">
+					<div class="card-body p-2 overflow-auto">
+						<b-table striped hover small :items="pvList" :fields="fields" class="text-truncate">
 							<template v-slot:cell(name)="data">
 								<a href="#" @click="$emit('navigate', getViewLink('', 'persistentvolumes','', data.item.name))">{{ data.item.name }}</a>
 							</template>
@@ -115,7 +115,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.param = this.getParam(data.parameters);
 			this.pvList = this.getPv();

@@ -11,13 +11,13 @@
 							<dt class="col-sm-3">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
@@ -30,6 +30,7 @@
 							<dt class="col-sm-3">Access Modes</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.accessModes" v-bind:key="idx">{{ val }} </span></dd>
 							<dt class="col-sm-3">Storage Class Name</dt><dd class="col-sm-9">{{ info.storageClassName }}</dd>
 							<dt class="col-sm-3">Storage</dt><dd class="col-sm-9">{{ info.storage }}</dd>
+							<dt v-if="info.volumeName" class="col-sm-3">Binding Volume</dt><dd v-if="info.volumeName" class="col-sm-9"><a href="#" @click="$emit('navigate', getViewLink('', 'persistentvolumes','', info.volumeName ))">{{ info.volumeName }}</a></dd>
 							<dt class="col-sm-3">Pods</dt>
 							<dd class="col-sm-9">
 								<span v-for="(val, idx) in pods" v-bind:key="idx"><a href="#" @click="$emit('navigate', getViewLink('', 'pods', metadata.namespace, val ))">{{ val }}</a></span>
@@ -111,7 +112,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.pods = this.getPods()
 			this.selector = this.getSelector(data.spec.selector);
@@ -125,7 +126,8 @@ export default {
 				accessModes: data.spec.accessModes || '-',
 				storageClassName: data.spec.storageClassName || '-',
 				storage: storage,
-				status: data.status? data.status.phase : '-'
+				status: data.status? data.status.phase : '-',
+				volumeName: data.spec.volumeName,
 			}
 		},
 		getPods() {

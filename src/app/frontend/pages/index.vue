@@ -16,7 +16,7 @@
 				<div class="row">
 					<div class="col-lg-3 col-6">
 						<div class="small-box bg-warning">
-							<div class="inner"><h3>{{ summary.nodes.usage }}</h3><p>Nodes</p></div>
+							<div class="inner"><h3>{{ summary.nodes.usage ? summary.nodes.usage: "NaN"}}</h3><p>Nodes</p></div>
 							<div class="icon"><i class="fas fa-server"></i></div>
 						</div>
 					</div>
@@ -178,6 +178,7 @@
 <script>
 import "@/assets/css/hexagons.css"
 import VueChartJs	from "vue-chartjs"
+import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	data() {
@@ -195,10 +196,21 @@ export default {
 						}
 					},
 					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return (data.yLabel).toFixed(2) + "Mi"
+								}
+							}
+						},
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value + 'Mi'}} }]
+							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
+										if(value === 0) return value
+										let regexp = /\B(?=(\d{3})+(?!\d))/g;
+										return value.toString().replace(regexp, ',')+'Mi';}
+								}}]
 						}
 					}
 				},
@@ -255,7 +267,7 @@ export default {
 							this.$data.chart.data.cpu = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(60,141,188,0.9)", data: data }
+									{ backgroundColor : CHART_BG_COLOR.cpu, data: data }
 								]
 							};
 						}
@@ -270,7 +282,7 @@ export default {
 							this.$data.chart.data.memory = {
 								labels: labels,
 								datasets: [
-									{ backgroundColor : "rgba(210, 214, 222, 1)", data: data }
+									{ backgroundColor : CHART_BG_COLOR.memory, data: data }
 								]
 							};
 						}

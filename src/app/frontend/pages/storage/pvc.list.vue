@@ -6,7 +6,7 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Persistent Volume Claims</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All"></b-form-select></div>
+					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
@@ -49,7 +49,7 @@
 										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
 									</template>
 									<template v-slot:cell(pods)="data">
-										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d[2], d[1]); isShowSidebar=true;">{{ d[1] }} </a>
+										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d.podNamespace, d.podName); isShowSidebar=true;">{{ d.podName }} </a>
 									</template>
 									<template v-slot:cell(accessModes)="data">
 										<ul class="list-unstyled mb-0">
@@ -101,6 +101,8 @@ export default {
 			],
 			isBusy: false,
 			items: [],
+			currentItems:[],
+			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
 			pvcPod: [],
@@ -111,7 +113,10 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => this.getPods() );
+		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			this.selectedNamespace = this.selectNamespace()
+			this.getPods()
+		});
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
@@ -121,13 +126,28 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
+					for(let i=0;i<this.$config.itemsPerPage;i++) {
+						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
+					}
 					this.viewModel = this.getViewLink('', 'persistentvolumeclaims', items[0].namespace, items[0].name)
+					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
-					this.isShowSidebar = false
-					this.$refs.selectableTable.clearSelected()
+					if(this.currentItems.title !== this.viewModel.title) {
+						if(this.currentItems.length ===0) this.isShowSidebar = false
+						else {
+							this.viewModel = Object.assign({},this.currentItems)
+							this.currentItems = []
+							this.isShowSidebar = true
+							this.$refs.selectableTable.selectRow(this.selectIndex)
+						}
+					} else {
+						this.isShowSidebar = false
+						this.$refs.selectableTable.clearSelected()
+					}
 				}
 			} else {
+				this.currentItems = []
 				this.isShowSidebar = false
 				this.$refs.selectableTable.clearSelected()
 			}
@@ -182,7 +202,7 @@ export default {
 		getPvc(el) {
 			let list = []
 			for(let i=0;i<this.pvcPod.length;i++) {
-				if (el === this.pvcPod[i][0]) {
+				if (el === this.pvcPod[i].claimName) {
 					list.push(this.pvcPod[i])
 				}
 			}
@@ -190,14 +210,19 @@ export default {
 		},
 		getPodname(el) {
 			let pvclist = []
-			if (el.spec.volumes[0].persistentVolumeClaim !== undefined)
-			{
-				pvclist.push(el.spec.volumes[0].persistentVolumeClaim.claimName)
-				pvclist.push(el.metadata.name)
-				pvclist.push(el.metadata.namespace)
-			}
-			if (pvclist.length !== 0) {
-				this.pvcPod.push(pvclist)
+			if(el.spec.volumes) {
+				el.spec.volumes.filter(volume => {
+					if(volume.persistentVolumeClaim && volume.persistentVolumeClaim.claimName) {
+						pvclist = {
+							claimName : volume.persistentVolumeClaim.claimName,
+							podName : el.metadata.name,
+							podNamespace: el.metadata.namespace,
+						}
+					}
+				})
+				if (pvclist.length !== 0) {
+					this.pvcPod.push(pvclist)
+				}
 			}
 		},
 		// pvc 상태 체크

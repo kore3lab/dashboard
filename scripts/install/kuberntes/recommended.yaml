@@ -24,9 +24,9 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: ServiceAccount
-  name: kore-board
-  namespace: kore
+  - kind: ServiceAccount
+    name: kore-board
+    namespace: kore
 
 ---
 apiVersion: v1
@@ -85,7 +85,7 @@ spec:
           image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
           imagePullPolicy: Always
           args:
-            - --kubeconfig=/tmp/.kube/config
+            - --kubeconfig=/app/.kube/config
             - --log-level=info
             - --db-file=/app/data/metrics.db
           ports:
@@ -166,21 +166,18 @@ spec:
           image: ghcr.io/acornsoftlab/kore-board.backend:latest
           imagePullPolicy: Always
           args:
-            - --kubeconfig=/tmp/.kube/config
+            - --kubeconfig=strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config
             - --metrics-scraper-url=http://metrics-scraper:8000
             - --log-level=info
           ports:
             - containerPort: 3000
               protocol: TCP
+          securityContext:
+            privileged: true
           volumeMounts:
-            - mountPath: /tmp/.kube
-              name: kubeconfig
             - mountPath: /tmp
               name: tmp-volume
       volumes:
-        - name: kubeconfig
-          configMap:
-            name: kore-board-kubeconfig
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: kore-board
@@ -225,8 +222,8 @@ data:
         listen  [::]:80;
         server_name  localhost;
 
-        access_log /var/log/nginx/aaaccess.log main;
-        error_log /var/log/nginx/eeerror.log ;
+        access_log /var/log/nginx/access.log main;
+        error_log /var/log/nginx/error.log ;
 
         location / {
             location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2)$ {
@@ -236,7 +233,7 @@ data:
             }
             root   /usr/share/nginx/html;
             index  index.html index.htm;
-            try_files $uri $uri/ /index.html;
+            try_files $uri $uri/index.html $uri/ =404;
         }
 
         error_page   500 502 503 504   /50x.html;
@@ -246,6 +243,7 @@ data:
 
         location ~ ^/api/terminal/(.*)  {
             proxy_pass   http://backend:3001;
+            proxy_redirect              off;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection $connection_upgrade;
@@ -348,20 +346,20 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/kore-board.frontend:latest
+          image: ghcr.io/acornsoftlab/kore-board.frontend:v0.3.1.20210521
           imagePullPolicy: Always
           ports:
             - containerPort: 80
               protocol: TCP
           volumeMounts:
-          - mountPath: /tmp
-            name: tmp-volume
-          - mountPath: /etc/nginx/conf.d/default.conf
-            name: nginx-conf
-            subPath: default.conf
-          - mountPath: /etc/nginx/nginx.conf
-            name: nginx-conf
-            subPath: nginx.conf
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /etc/nginx/conf.d/default.conf
+              name: nginx-conf
+              subPath: default.conf
+            - mountPath: /etc/nginx/nginx.conf
+              name: nginx-conf
+              subPath: nginx.conf
       nodeSelector:
         "kubernetes.io/os": linux
       volumes:
@@ -371,7 +369,7 @@ spec:
           configMap:
             name: kore-board-nginx
             items:
-            - key: nginx.conf
-              path: nginx.conf
-            - key: default.conf
-              path: default.conf
+              - key: nginx.conf
+                path: nginx.conf
+              - key: default.conf
+                path: default.conf

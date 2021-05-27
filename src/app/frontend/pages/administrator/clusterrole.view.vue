@@ -10,13 +10,13 @@
 							<dt class="col-sm-2">Annotations</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-2">Labels</dt>
 							<dd class="col-sm-10 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 						</dl>
@@ -31,11 +31,11 @@
 					<div class="card-header p-2"><h3 class="card-title text-md">Rules</h3></div>
 					<div class="card-body p-2">
 						<div class="card card-secondary m-2 mb-3" v-for="(val, idx) in rules" v-bind:key="idx">
-							<dl class="row mb-0">
-								<dt v-if="val.resources" class="col-sm-3 text-right">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources }}</dd>
-								<dt v-if="val.verbs" class="col-sm-3 text-right">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs }}</dd>
-								<dt v-if="val.apiGroups" class="col-sm-3 text-right">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups }}</dd>
-								<dt v-if="val.resourceNames" class="col-sm-3 text-right">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames }}</dd>
+							<dl class="row mb-0 ml-1">
+								<dt v-if="val.resources" class="col-sm-3">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources }}</dd>
+								<dt v-if="val.verbs" class="col-sm-3 ">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs }}</dd>
+								<dt v-if="val.apiGroups" class="col-sm-3 ">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups }}</dd>
+								<dt v-if="val.resourceNames" class="col-sm-3 ">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames }}</dd>
 							</dl>
 						</div>
 					</div>
@@ -83,7 +83,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.rules = this.getRules(data.rules)
 		},
 		getRules(rules) {

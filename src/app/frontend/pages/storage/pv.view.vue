@@ -10,13 +10,13 @@
 							<dt class="col-sm-3">Annotations</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">Labels</dt>
 							<dd class="col-sm-9 text-truncate">
 								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}:{{ value }}</span></li>
+									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 								</ul>
 							</dd>
 							<dt class="col-sm-3">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
@@ -32,6 +32,20 @@
 							<dt class="col-sm-3">Reclaim Policy</dt><dd class="col-sm-9">{{ info.reclaimPolicy }}</dd>
 							<dt class="col-sm-3">Storage Class Name</dt><dd class="col-sm-9">{{ info.storageClassName }}</dd>
 							<dt class="col-sm-3">Status</dt><dd class="col-sm-9"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ info.status }}</span></dd>
+						</dl>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div v-if="hostPath" class="row">
+			<div class="col-md-12">
+				<div class="card card-secondary card-outline">
+					<div class="card-header p-2"><h3 class="card-title text-md">Host Path</h3></div>
+					<div class="card-body p-2">
+						<dl class="row mb-0">
+							<dt class="col-sm-2 text-truncate">Type</dt><dd class="col-sm-10">{{ hostPath.type ? hostPath.type : '-' }}</dd>
+							<dt class="col-sm-2 text-truncate">Path</dt><dd class="col-sm-10">{{ hostPath.path }}</dd>
 						</dl>
 					</div>
 				</div>
@@ -111,6 +125,7 @@ export default {
 			nfs: [],
 			claim: [],
 			flexVolume: [],
+			hostPath: [],
 		}
 	},
 	mounted() {
@@ -123,8 +138,9 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.event = this.getEvents(data.metadata.uid);
+			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
+			this.hostPath = this.getHP(data.spec.hostPath)
 			this.nfs = this.getNFS(data.spec.nfs);
 			this.claim = this.getClaim(data.spec.claimRef);
 			this.flexVolume = this.getFV(data.spec.flexVolume);
@@ -138,6 +154,14 @@ export default {
 				accessModes: data.spec.accessModes || '-',
 				storageClassName: data.spec.storageClassName || '-',
 				status: data.status? data.status.phase : '-'
+			}
+		},
+		getHP(hp) {
+			if(!hp) return
+
+			return {
+				type: hp.type,
+				path: hp.path,
 			}
 		},
 		getNFS(nfs) {

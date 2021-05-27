@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/acornsoftlab/dashboard/model"
 	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/acornsoftlab/dashboard/pkg/lang"
@@ -12,11 +14,8 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/kubernetes"
 	metricsapi "k8s.io/metrics/pkg/apis/metrics"
 	metricsV1beta1api "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
-	"strings"
 )
 
 type Dashboard struct {
@@ -67,17 +66,17 @@ func (self *Dashboard) Get() error {
 	allocateTotal := resource{} // self.Nodes.Address/Status/Roles 외 리소스 allocatable
 	usageTotal := resource{}    // self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
 
-	conf, err := config.KubeConfigs(self.context)
+	client, err := config.Cluster.Client(self.context)
 	if err != nil {
 		return err
 	}
 
-	apiClient, err := kubernetes.NewForConfig(conf)
+	apiClient, err := client.NewKubernetesClient()
 	if err != nil {
 		return err
 	}
 
-	metricsClient, err := metricsclientset.NewForConfig(conf)
+	metricsClient, err := client.NewMetricsClient()
 	if err != nil {
 		return err
 	}
@@ -234,11 +233,10 @@ func (self *Dashboard) Get() error {
 	parsePercentUsages(self.Summary)
 
 	// self.Metrics
-	client := resty.New()
-	_, err = client.R().
+	_, err = resty.New().R().
 		SetHeader("Content-Type", "application/json").
 		SetResult(&self.Metrics).
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s", *config.Value.MetricsScraperUrl, self.context))
+		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
 
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)
