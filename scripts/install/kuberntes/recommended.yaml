@@ -35,6 +35,7 @@ metadata:
   labels:
     app: kore-board
   name: kore-board-kubeconfig
+  namespace: kore
 data:
   config: |
 
@@ -168,12 +169,11 @@ spec:
           args:
             - --kubeconfig=strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config
             - --metrics-scraper-url=http://metrics-scraper:8000
+            - --terminal-url=http://terminal:3003
             - --log-level=info
           ports:
             - containerPort: 3000
               protocol: TCP
-          securityContext:
-            privileged: true
           volumeMounts:
             - mountPath: /tmp
               name: tmp-volume
@@ -241,13 +241,24 @@ data:
             root   /usr/share/nginx/html;
         }
 
-        location ~ ^/api/terminal/(.*)  {
-            proxy_pass   http://backend:3001;
-            proxy_redirect              off;
+        location ~ ^/api/terminal/ws(.*)  {
+            proxy_pass   http://terminal:3003;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
+            proxy_connect_timeout 1d;
+            proxy_send_timeout 1d;
+            proxy_read_timeout 1d;
+        }
+    
+        location ~ ^/api/terminal/(.*)  {
+            proxy_pass   http://terminal:3003;
+            proxy_redirect              off;
+            proxy_set_header            Host $host;
+            proxy_set_header            X-Real-IP $remote_addr;
+            proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+            # proxy_set_header            X-Custom-Referrer $x_custom_referrer;
         }
 
         location ~ ^/api/(.*)  {
@@ -346,7 +357,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/kore-board.frontend:v0.3.1.20210521
+          image: ghcr.io/acornsoftlab/kore-board.frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -373,3 +384,66 @@ spec:
                 path: nginx.conf
               - key: default.conf
                 path: default.conf
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kore-board
+    kore.board: terminal
+  name: terminal
+  namespace: kore
+spec:
+  ports:
+    - port: 3003
+      targetPort: 3003
+  selector:
+    app: kore-board
+    kore.board: terminal
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: kore-board
+    kore.board: terminal
+  name: terminal
+  namespace: kore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kore-board
+      kore.board: terminal
+  template:
+    metadata:
+      labels:
+        app: kore-board
+        kore.board: terminal
+    spec:
+      containers:
+        - name: terminal
+          image: ghcr.io/acornsoftlab/kore-board.terminal:latest
+          imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
+            - --log-level=info
+          ports:
+            - containerPort: 3003
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/.kube
+              name: kubeconfig
+          securityContext:
+            privileged: true
+      volumes:
+        - name: kubeconfig
+          configMap:
+            name: kore-board-kubeconfig
+      serviceAccountName: kore-board
+      nodeSelector:
+        "kubernetes.io/os": linux

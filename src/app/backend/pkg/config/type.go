@@ -18,6 +18,7 @@ const (
 
 type conf struct {
 	MetricsScraperUrl string           // metrics scraper
+	TerminalUrl       string           // terminal service Url
 	AuthConfig        *auth.AuthConfig // auth-config
 	KubeConfig        *kubeConfig      // kubeconfig file
 }

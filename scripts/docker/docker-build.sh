@@ -11,11 +11,13 @@ build() {
 	if [[ "${MODULE}" == *"frontend"* ]];			then docker build --tag ${FRONTEND}:${TAG} ${ROOT};							fi
 	if [[ "${MODULE}" == *"backend"* ]];			then docker build --tag ${BACKEND}:${TAG} ${ROOT}/src/app/backend;				fi
 	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker build --tag ${SCRAPER}:${TAG} ${ROOT}/src/app/metrics-scraper;	fi
+	if [[ "${MODULE}" == *"terminal"* ]];	        then docker build --tag ${TERMINAL}:${TAG} ${ROOT}/src/app/terminal;	fi
 }
 push() {
 	if [[ "${MODULE}" == *"frontend"* ]];			then docker push ${FRONTEND}:${TAG};	fi
 	if [[ "${MODULE}" == *"backend"* ]];			then docker push ${BACKEND}:${TAG};	fi
 	if [[ "${MODULE}" == *"metrics-scraper"* ]];	then docker push ${SCRAPER}:${TAG};		fi
+	if [[ "${MODULE}" == *"terminal"* ]];	        then docker push ${TERMINAL}:${TAG};		fi
 }
 
 MODULE="$1"
@@ -29,7 +31,7 @@ ROOT="$(pwd)"
 FRONTEND="${GROUP}/${PROJECT}.frontend"
 BACKEND="${GROUP}/${PROJECT}.backend"
 SCRAPER="${GROUP}/${PROJECT}.metrics-scraper"
-
+TERMINAL="${GROUP}/${PROJECT}.terminal"
 
 echo "Module  : ${MODULE}"
 echo "Command : ${COMMAND}"
