@@ -41,8 +41,9 @@ export class WebTTY {
                     connection.send(msgInput + input);
                 });
                 pingTimer = window.setInterval(() => {
+                    console.log("ping: " + new Date());
                     connection.send(msgPing);
-                }, 30 * 1000);
+                }, 10 * 1000);
             });
             connection.onReceive((data) => {
                 const payload = data.slice(1);
@@ -51,6 +52,7 @@ export class WebTTY {
                         this.term.output(atob(payload));
                         break;
                     case msgPong:
+                        console.log("pong: " + new Date());
                         break;
                     case msgSetWindowTitle:
                         this.term.setWindowTitle(payload);

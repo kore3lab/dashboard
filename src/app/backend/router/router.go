@@ -9,7 +9,6 @@ import (
 	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/acornsoftlab/dashboard/router/apis/_raw"
 	api "github.com/acornsoftlab/dashboard/router/apis/clusters"
-	"github.com/acornsoftlab/dashboard/router/apis/termapi"
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -65,13 +64,13 @@ func CreateUrlMappings() {
 		clustersAPI.GET("/topology", api.Topology)                                              // get cluster topology graph
 		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
 		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
-		//terminal API
-		clustersAPI.GET("/terminal", termapi.ProcCluster)
-		clustersAPI.GET("/namespaces/:NAMESPACE/pods/:POD/terminal", termapi.ProcPod)
-		clustersAPI.GET("/namespaces/:NAMESPACE/pods/:POD/containers/:CONTAINER/terminal", termapi.ProcContainer)
 	}
-	//for terminal websocket connect
-	Router.GET("/api/terminal/ws", termapi.GenerateHandleWS)
+	clustersAPI_ := Router.Group("/api", authenticate())
+	{
+		clustersAPI_.GET("/topology", api.Topology)
+		clustersAPI_.GET("/topology/namespaces/:NAMESPACE", api.Topology)
+		clustersAPI_.GET("/dashboard", api.Dashboard)
+	}
 
 	//// ROOT API
 	//API := Router.Group("/api", authenticate())
