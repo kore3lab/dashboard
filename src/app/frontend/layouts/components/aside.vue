@@ -85,18 +85,17 @@
 							</ul>
 						</b-collapse>
 					</li>
-					<li class="nav-item menu-open">
+					<li class="nav-item menu-open mw-100">
 						<a href="#" class="nav-link" v-on:click="isVisible.cr=!isVisible.cr"><i class="nav-icon fas fa-puzzle-piece"></i><p>Custom Resource<i v-bind:class="isVisible.cr?'fa-angle-left':'fa-angle-up'" class="right fas"></i></p></a>
 						<b-collapse v-model="isVisible.cr">
 							<ul class="nav d-block nav-treeview">
 								<li class="nav-item small" v-on:click="loads()"><nuxt-link to="/customresource/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>efinitions</p></nuxt-link></li>
-
 								<ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact" data-widget="treeview" role="menu" data-accordion="false">
-									<li v-for="(val, idx) in crList" v-bind:key="idx" class="nav-item">
-										<a href="#" class="nav-link" v-on:click="checkStatus(val)"><p>{{ (Object.keys(val)[0] && Object.keys(val)[0].length > 20) ? Object.keys(val)[0].substring(0,20)+'...' : Object.keys(val)[0] }}<i v-bind:class="getStatus(val) ? 'fa-angle-down':'fa-angle-left'" class="right fas"></i></p></a>
+									<li v-for="(val, idx) in crList" v-bind:key="idx" class="nav-item small mw-100">
+										<a href="#" class="nav-link" v-on:click="checkStatus(val)"><p class="text-truncate mw-100 pr-2">{{ Object.keys(val)[0] }} {{Object.keys(val)[0]}}<i v-bind:class="getStatus(val) ? 'fa-angle-down':'fa-angle-left'" class="right fas"></i></p></a>
 										<b-collapse v-model="crVisible[Object.keys(val)[0]]">
 											<ul v-for="(v, i) in val" v-bind:key="i" class="nav d-block nav-treeview">
-												<li v-for="(a, b) in v" class="nav-item small" v-on:click="sideCRD()"><nuxt-link :to="{path: '/customresource/customresource.list', query: { isSide: true, gV: a.groupVersion, k: a.kind, n: a.name, ns: a.namespaced}}"  class="nav-link"><i class="nav-icon text-sm mr-0"></i><p>{{ (b && b.length > 25) ? b.substring(0,25)+'...' : b }}</p></nuxt-link></li>
+												<li v-for="(a, b) in v" class="nav-item" v-bind:key="a.name" v-on:click="sideCRD()"><nuxt-link :to="{path: '/customresource/customresource.list', query: { isSide: true, gV: a.groupVersion, k: a.kind, n: a.name, ns: a.namespaced}}"  class="nav-link"><i class="nav-icon text-sm mr-0"></i><p>{{ (b && b.length > 25) ? b.substring(0,25)+'...' : b }}</p></nuxt-link></li>
 											</ul>
 										</b-collapse>
 									</li>

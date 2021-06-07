@@ -4,7 +4,7 @@
 
 		<!-- Content Header (Page header) -->
 		<div class="content-header">
-			<div class="container-flui">
+			<div class="container-fluid">
 				<c-navigator :group="group"></c-navigator>
 				<div class="row mb-2">
 					<div class="col-sm-10">
@@ -124,7 +124,7 @@ export default {
 					this.raw.apiVersion = list[0]
 					this.raw.kind = this.crd
 					resp.data.spec.versions.find(el => {
-						if(el.name === api[1]) {
+						if(el.name === api[1] && el.schema.openAPIV3Schema) {
 							this.raw.spec = el.schema.openAPIV3Schema.properties.spec.properties ? el.schema.openAPIV3Schema.properties.spec.properties : el.schema.openAPIV3Schema.properties.spec
 						}
 					})

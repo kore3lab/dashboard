@@ -34,7 +34,7 @@
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
-									<template #empty="scope">
+									<template #empty>
 										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
@@ -115,7 +115,6 @@ export default {
 			viewModel:{},
 		}
 	},
-	layout: "default",
 	watch: {
 		selected() {
 			this.fields = []
@@ -130,6 +129,7 @@ export default {
 			localStorage.setItem('columns_node',this.selected)
 		}
 	},
+	layout: "default",
 	created() {
 		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
@@ -151,7 +151,7 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
-					for(let i=0;i<this.$config.itemsPerPage;i++) {
+					for(let i=0;i<items.length;i++) {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
 					this.viewModel = this.getViewLink('', 'nodes', items[0].namespace, items[0].name)

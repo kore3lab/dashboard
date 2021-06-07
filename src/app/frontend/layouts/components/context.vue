@@ -38,9 +38,6 @@ export default {
 			// context 선택
 			let ctx = this.$route.query.context ? this.$route.query.context: "";
 			if (!ctx && localStorage.getItem("currentContext")!=null) ctx = localStorage.getItem("currentContext");
-			if(ctx) {
-				if( !this.contexts().find(el => el===ctx)) ctx = "";
-			}
 
 			// context list
 			let equals = (a, b) => {
@@ -112,7 +109,6 @@ export default {
 		},
 		// context select
 		onContextSelected(ctx) {
-
 			if (!ctx) return
 
 			this.showOverlay = ctx;
@@ -134,6 +130,7 @@ export default {
 						this.resources(resp.data.currentContext.resources);
 						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());
+						this.$nuxt.$emit("navbar-context-selected");
 					}
 			}).catch(error=> {
 				this.toast(error.message, "danger");
