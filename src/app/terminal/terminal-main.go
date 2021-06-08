@@ -56,6 +56,7 @@ func main() {
 
 	var kubeconfig *string
 	var logLevel *string
+	var corsonoff *string
 	log.SetFormatter(&log.TextFormatter{})
 
 	// Output to stdout instead of the default stderr
@@ -67,6 +68,7 @@ func main() {
 
 	kubeconfig = flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets (defaults to in-cluster config)")
 	logLevel = flag.String("log-level", "debug", "The log level")
+	corsonoff = flag.String("corsonoff", "on", "CORS(Cross-Origin Resource Sharing) on/off (defaults to on(blocked by CORS))")
 
 	flag.Parse()
 
@@ -97,14 +99,27 @@ func main() {
 
 	r := mux.NewRouter()
 
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"content-type"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+		handlers.AllowedMethods([]string{"POST, OPTIONS, GET, PUT, DELETE"}),
+	)
+
+	if *corsonoff != "on" {
+		r.Use(cors)
+	}
+
 	r.HandleFunc("/api/terminal/clusters/{CLUSTER}/termtype/{TERMTYPE}", ProcTerminal).Methods("GET")
 	r.HandleFunc("/api/terminal/clusters/{CLUSTER}/namespaces/{NAMESPACE}/pods/{POD}/termtype/{TERMTYPE}", ProcTerminal).Methods("GET")
 	r.HandleFunc("/api/terminal/clusters/{CLUSTER}/namespaces/{NAMESPACE}/pods/{POD}/containers/{CONTAINER}/termtype/{TERMTYPE}", ProcTerminal).Methods("GET")
 	r.HandleFunc("/api/terminal/ws", generateHandleWS)
 	r.HandleFunc("/api/v1/config", LoadConfig).Methods("PATCH")
+	r.HandleFunc("/healthy", healthy).Methods("GET") // healthy
 
 	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":3003", handlers.CombinedLoggingHandler(os.Stdout, r)))
+	//log.Fatal(http.ListenAndServe(":3003", handlers.CombinedLoggingHandler(os.Stdout, r)))
+	log.Fatal(http.ListenAndServe(":3003", r))
 
 	if err != nil {
 		log.Errorf("web terminal server create error (cause=%v)", err)
@@ -426,4 +441,10 @@ func processWSConn(ctx context.Context, conn *websocket.Conn) error {
 	err = tty.Run(ctx)
 
 	return err
+}
+
+func healthy(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("healthy")
 }

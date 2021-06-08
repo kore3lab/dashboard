@@ -93,6 +93,7 @@ export default {
 	publicRuntimeConfig: {
 		nodeEnv: process.env.NODE_ENV,						// production or development
 		backendPort: process.env.BACKEND_PORT || "3001",	// only development mode
+		terminalPort: process.env.TERMINAL_PORT || "3003",	// only development mode
 		itemsPerPage: process.env.ITEMS_PER_PAGE || "10",
 		version: JSON.stringify(require('./package.json').version)
 	},
