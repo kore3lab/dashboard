@@ -10,7 +10,7 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags kore-board.terminal -o kore-board.terminal -v main.go
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags kore-board.terminal -o kore-board.terminal -v terminal-main.go
 
 #-------------------------------------------
 # STEP 2 : terminal
@@ -38,10 +38,8 @@ RUN apt-get update && \
   chmod -R 755 /tmp && mkdir -p /opt/k3webterminal
 
 COPY /scripts/vimrc.local /etc/vim
-COPY /scripts/k3webterminal.sh /opt/k3webterminal/
 COPY /scripts/config-namespace.sh /opt/k3webterminal/
 COPY /scripts/config-filesystem.sh /opt/k3webterminal/
-COPY /scripts/entryshell.sh /opt/k3webterminal/
 RUN chmod -R 700 /opt/k3webterminal
 
 ENV SESSION_STORAGE_SIZE=10M

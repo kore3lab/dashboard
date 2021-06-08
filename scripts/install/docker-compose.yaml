@@ -29,6 +29,7 @@ services:
       - 3000:80
     links:
       - backend
+      - terminal
 
 volumes:
   data: {}

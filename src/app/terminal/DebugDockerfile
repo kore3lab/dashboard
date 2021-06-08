@@ -1,8 +1,7 @@
 #-------------------------------------------
 # STEP 1 : build executable binary
 #-------------------------------------------
-#FROM golang:1.15.3-alpine3.12 as builder
-FROM golang:1.16-alpine as builder
+FROM golang:1.15-alpine as builder
 
 # gcc
 RUN apk add --no-cache build-base
@@ -11,7 +10,7 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -gcflags "all=-N -l" -tags kore-board.terminal -o kore-board.terminal -v main.go
+RUN GOOS=linux CGO_ENABLED=0 go build -gcflags "all=-N -l" -tags kore-board.terminal -o kore-board.terminal -v terminal-main.go
 
 # delve 다운로드(debugger for container)
 RUN CGO_ENABLED=0 go get -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv
@@ -31,7 +30,7 @@ RUN rm -f /bin/sh && ln -s /bin/bash /bin/sh
 ENV KUBECTL_VERSION v1.20.2
 
 COPY --from=builder /usr/src/app/kore-board.terminal /app/
-COPY --from=builder /go/bin/dlv /usr/bin/
+COPY --from=builder /go/bin/dlv /app/
 
 ## start install WebTerminal addon
 RUN apt-get update && \
@@ -46,7 +45,6 @@ RUN apt-get update && \
   chmod -R 755 /tmp && mkdir -p /opt/k3webterminal
 
 COPY /scripts/vimrc.local /etc/vim
-COPY /scripts/k3webterminal.sh /opt/k3webterminal/
 COPY /scripts/config-namespace.sh /opt/k3webterminal/
 COPY /scripts/config-filesystem.sh /opt/k3webterminal/
 RUN chmod -R 700 /opt/k3webterminal
