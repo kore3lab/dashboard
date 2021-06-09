@@ -92,17 +92,17 @@ export default {
 	layout: "blank",
 	beforeCreate() {
 		this.$axios.get(`/api/auth/login`, {})
-				.then( d => {
-					this.auth = d.data;
-					if (this.auth.schema === "") {
-						setTimeout(this.doLogin, 1000)	//auto-singin
-					}
-				})
-				.catch(error => {
-					if ( error.response && error.response.data && error.response.data.message) {
-						this.message = error.response.data.message;
-					}
-				});
+			.then( d => {
+				this.auth = d.data;
+				if (this.auth.schema === "") {
+					setTimeout(this.doLogin, 1000)	//auto-signin
+				}
+			})
+			.catch(error => {
+				if ( error.response && error.response.data && error.response.data.message) {
+					this.message = error.response.data.message;
+				}
+			});
 	},
 	methods: {
 		copy() {
@@ -119,10 +119,10 @@ export default {
 				.then(() => {
 					this.$router.push("/");
 				}).catch(error => {
-					if ( error.response && error.response.data && error.response.data.message) {
-						this.message = error.response.data.message;
-					}
-				});
+				if ( error.response && error.response.data && error.response.data.message) {
+					this.message = error.response.data.message;
+				}
+			});
 		},
 		moveFocus() {
 			this.$refs.password.focus();

@@ -52,6 +52,18 @@
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
 									</template>
+									<template #head(button)>
+										<div class="text-right">
+											<a id="colOpt" class="nav-link" href="#"><i class="fas fa-ellipsis-v"></i></a>
+										</div>
+										<b-popover triggers="focus" ref="popover" target="colOpt" placement="bottomleft">
+											<b-form-group>
+												<b-form-checkbox v-for="option in columnOpt" v-model="selected" :key="option.key" :value="option.label" name="flavour-3a">
+													{{ option.label }}
+												</b-form-checkbox>
+											</b-form-group>
+										</b-popover>
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -86,6 +98,8 @@ export default {
 			isBusy: false,
 			items: [],
 			currentItems:[],
+			columnOpt: [],
+			selected: [],
 			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
@@ -94,8 +108,31 @@ export default {
 		}
 	},
 	layout: "default",
+	watch: {
+		selected() {
+			this.fields = []
+			this.columnOpt.forEach(el => {
+				this.selected.forEach(e => {
+					if(el.label === e) {
+						this.fields.push(el)
+					}
+				})
+			})
+			this.fields.push({ key: "button", label: "button", thClass: "wt10"})
+			localStorage.setItem('columns_clusterrole',this.selected)
+		}
+	},
 	created() {
+		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			this.columnOpt = Object.assign([],this.fields)
+			if(localStorage.getItem('columns_clusterrole')) {
+				this.selected = (localStorage.getItem('columns_clusterrole')).split(',')
+			} else {
+				this.fields.forEach(el => {
+					this.selected.push(el.label)
+				})
+			}
 			this.query_All()
 		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
@@ -137,20 +174,20 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("rbac.authorization.k8s.io","clusterroles"))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								labels: this.stringifyLabels(el.metadata.labels),
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							labels: this.stringifyLabels(el.metadata.labels),
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;

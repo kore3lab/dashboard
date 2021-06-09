@@ -52,7 +52,7 @@
 									</template>
 									<template v-slot:cell(externalEndpoints)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.externalEndpoints" v-bind:key="value">{{ value }}</li>
+											<li v-for="(val, idx) in data.value" v-bind:key="idx">{{ val }}</li>
 										</ul>
 									</template>
 									<template v-slot:cell(selector)="data">
@@ -67,6 +67,18 @@
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
+									</template>
+									<template #head(button)>
+										<div class="text-right">
+											<a id="colOpt" class="nav-link" href="#"><i class="fas fa-ellipsis-v"></i></a>
+										</div>
+										<b-popover triggers="focus" ref="popover" target="colOpt" placement="bottomleft">
+											<b-form-group>
+												<b-form-checkbox v-for="option in columnOpt" v-model="selected" :key="option.key" :value="option.label" name="flavour-3a">
+													{{ option.label }}
+												</b-form-checkbox>
+											</b-form-group>
+										</b-popover>
 									</template>
 								</b-table>
 							</div>
@@ -109,6 +121,8 @@ export default {
 			isBusy: false,
 			items: [],
 			currentItems:[],
+			columnOpt: [],
+			selected: [],
 			selectIndex: 0,
 			status: true,
 			currentPage: 1,
@@ -120,8 +134,30 @@ export default {
 		}
 	},
 	layout: "default",
+	watch: {
+		selected() {
+			this.fields = []
+			this.columnOpt.forEach(el => {
+				this.selected.forEach(e => {
+					if(el.label === e) {
+						this.fields.push(el)
+					}
+				})
+			})
+			this.fields.push({ key: "button", label: "button", thClass: "wt10"})
+			localStorage.setItem('columns_service',this.selected)
+		}
+	},
 	created() {
+		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			if(localStorage.getItem('columns_service')) {
+				this.selected = (localStorage.getItem('columns_service')).split(',')
+			} else {
+				this.fields.forEach(el => {
+					this.selected.push(el.label)
+				})
+			}
 			this.selectedNamespace = this.selectNamespace()
 			this.query_All()
 		});
@@ -204,8 +240,12 @@ export default {
 			return list;
 		},
 		externalEndpoint(el) {
+			let list = []
 			if (el.spec.type === 'LoadBalancer') {
 				return (el.status.loadBalancer.ingress !== undefined? el.status.loadBalancer : "-")
+			} else if(el.spec.type === 'ExternalName') {
+				list.push(el.spec.externalName)
+				return list
 			} else {
 				return (el.spec.externalIPs? el.spec.externalIPs : "-")
 			}
