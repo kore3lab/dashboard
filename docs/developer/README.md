@@ -72,16 +72,12 @@ $ curl http://localhost:3001/healthy
 
 # metrics scraper
 $ curl http://localhost:8000/api/v1
-
-# terminal
-$ curl http://localhost:3003/healthy
 ```
 
 ### Using ports
 * 3000 : front-end
 * 3001 : backend (restful-api)
 * 3002 : graph 개발
-* 3003 : terminal
 * 8000 : metrics scraper
 
 
@@ -94,7 +90,6 @@ $ npm run start                 # 실행 (backend, frontend, metrics-scraper)
 $ npm run start:frontend        # frontend 실행
 $ npm run start:backend         # backend 실행
 $ npm run start:metrics-scraper # metrics scraper 실행
-$ npm run start:terminal        # container 에서 terminal 실행 
 $ npm run start:graph           # graph 실행
 $ npm run start:graph:backend   # 그래프 개발 실행 (backend + graph)
 ```
@@ -104,7 +99,6 @@ $ npm run start:graph:backend   # 그래프 개발 실행 (backend + graph)
 $ npm run build:frontend      # frontend 빌드 (using on docker build)
 $ npm run build:graph         # 그래프 빌드 frontend 에 변경된 최신 그래프 적용시 사용
 $ npm run run                 # frontend container 에서 nuxt 실행 (docker image entrypoint) 
-$ npm run build:terminal      # terminal 빌드 (using on docker build)
 ```
 
 * Containerization
@@ -116,19 +110,16 @@ $ npm run build:terminal      # terminal 빌드 (using on docker build)
 $ npm run docker:build:frontend
 $ npm run docker:build:backend
 $ npm run docker:build:metrics-scraper
-$ npm run docker:build:terminal
 
 # docker push
 $ npm run docker:push:frontend    
 $ npm run docker:push:backend
 $ npm run docker:push:metrics-scraper
-$ npm run docker:push:terminal
 
 # docker build & push
 $ npm run docker:build:push:frontend    
 $ npm run docker:build:push:backend
 $ npm run docker:build:push:metrics-scraper
-$ npm run docker:build:push:terminal
 
 # all (frontend, backend)
 $ npm run docker:build        # build
@@ -173,7 +164,6 @@ $ export KUBECONFIG="$(pwd)/.tmp/config"
 * [frontend](../../src/app/frontend/README.md)
 * [metrics-scraper](../../src/app/metrics-scraper/README.md)
 * [graph](../../src/app/graph/README.md)
-* [terminal](../../src/app/terminal/README.md)
 
 
 ## Link

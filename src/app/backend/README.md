@@ -8,6 +8,12 @@
   * https://github.com/kubernetes/api/blob/master/core/v1/types.go
   * https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/meta.go
   * 리스트 조회: https://github.com/kubernetes/client-go/blob/master/listers/core/v1 
+* Web Terminal 주요 참고 소스
+  * https://github.com/fanux/fist/tree/master/terminal
+  * https://github.com/rancher: 소스 코드는 없는 듯. 
+  * https://github.com/du2016/web-terminal-in-go
+  * https://github.com/lf1029698952/kube-webshell 
+
 
 ## Run
 
@@ -30,6 +36,12 @@ $ npm run start:backend
 |이름       |기본값 |설명                 |
 |---        |---    |---                  |
 |KUBECONFIG |       |kubeconfig 파일 위치 |
+
+
+* 제약사항
+  * Web Terminal (context/pod/container 터미널접속) 기능은 linux OS의 unshare기능을 이용하기 때문에 backend가 container 환경일때 동작한다
+    아래 링크를 참조하여 container deploy 후 사용가능
+    [Deploy on Docker](#deploy-on-docker)
 
 
 ## API
@@ -243,6 +255,16 @@ $ kubectl  get ns/test-namespace -o jsonpath={.metadata.labels.istio-injection}
 # Delete
 $ curl -X DELETE -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/test-namespace
 
+
 # List
 $ curl -X GET -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces
 ```
+
+
+### Debugging for docker container environment
+* Dockerfile Build 
+  * 디버깅용 backend 이미지 빌드 
+    /src/app/backend/docker-compose -f dc-debug.yaml up --build
+  * vscode/golang 등 에디터 원격 디버깅 설정(remote port 5555)
+  * 참고링크 [컨테이너 내부 Go 애플리케이션 디버깅하기][https://mingrammer.com/debugging-containerized-go-app/]
+  

@@ -13,7 +13,7 @@ import (
 	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -147,7 +147,6 @@ func DeleteContext(c *gin.Context) {
 		} else {
 			config.Setup()
 			go reloadConfigMetricsScraper()
-			go reloadConfigTerminal()
 			ListContexts(c)
 		}
 	} else {
@@ -191,7 +190,6 @@ func CreateContexts(c *gin.Context) {
 		} else {
 			config.Setup()
 			go reloadConfigMetricsScraper()
-			go reloadConfigTerminal()
 			ListContexts(c)
 		}
 	}
@@ -218,7 +216,6 @@ func AddContext(c *gin.Context) {
 		} else {
 			config.Setup()
 			go reloadConfigMetricsScraper()
-			go reloadConfigTerminal()
 			ListContexts(c)
 		}
 	}
@@ -233,17 +230,5 @@ func reloadConfigMetricsScraper() {
 
 	if err != nil {
 		log.Errorf("Unable to metrics scraper config reload (cause=%v)", err)
-	}
-}
-
-// terminal config reload
-func reloadConfigTerminal() {
-	client := resty.New()
-	_, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		Patch(fmt.Sprintf("%s/api/v1/config", config.Value.TerminalUrl))
-
-	if err != nil {
-		log.Errorf("Unable to Terminal config reload (cause=%v)", err)
 	}
 }

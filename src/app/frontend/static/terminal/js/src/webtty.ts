@@ -95,9 +95,8 @@ export class WebTTY {
                 );
 
                 pingTimer = window.setInterval(() => {
-                    console.log("ping: " + new Date());
                     connection.send(msgPing)
-                }, 10 * 1000);
+                }, 30 * 1000);
 
             });
 
@@ -108,7 +107,6 @@ export class WebTTY {
                         this.term.output(atob(payload));
                         break;
                     case msgPong:
-                        console.log("pong: " + new Date());
                         break;
                     case msgSetWindowTitle:
                         this.term.setWindowTitle(payload);

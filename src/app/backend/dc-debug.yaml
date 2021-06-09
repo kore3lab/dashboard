@@ -1,0 +1,13 @@
+version: "3"
+services:
+  k3dashboard-debug:
+    privileged: true
+    build:
+      context: .
+      dockerfile: ./DebugDockerfile
+    ports:
+      - "3001:3001"
+      - "5555:5555"
+    command: "usr/bin/dlv --listen=:5555 --headless=true --api-version=2 --accept-multiclient exec --continue /app/acornsoft-dashboard.backend -- --kubeconfig=/app/.kube/config "
+    volumes:
+      - ~/.kube/config:/app/.kube/config

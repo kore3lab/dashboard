@@ -2,11 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"github.com/gorilla/handlers"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/gorilla/handlers"
 
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
@@ -22,9 +21,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
-	"github.com/spf13/viper"
 )
 
 func main() {
@@ -69,8 +66,6 @@ func main() {
 	//      customized by kore-board
 	config.SetKubeconfig(*kubeconfig)
 	config.Setup()
-	//ConfigMap update delay problem quick fix..
-	WatchConfig()
 
 	// Create the db "connection"
 	db, err := sql.Open("sqlite3", *dbFile)
@@ -184,18 +179,4 @@ func getEnv(key, fallback string) string {
 		value = fallback
 	}
 	return value
-}
-
-func WatchConfig() {
-	v := viper.New()
-	v.AutomaticEnv()
-	v.SetConfigType("yaml")
-	v.SetConfigFile(config.Value.ConfigLoadingRules.GetExplicitFile())
-
-	// monitor the changes in the config file
-	v.WatchConfig()
-	v.OnConfigChange(func(e fsnotify.Event) {
-		log.WithField("file", e.Name).Info("Config file changed")
-		config.Setup()
-	})
 }
