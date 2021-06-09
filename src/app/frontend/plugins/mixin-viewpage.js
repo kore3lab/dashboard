@@ -28,6 +28,7 @@ const CUSTOM_VIEWS	= {
 
 	//Configuration
 	configmaps: "configuration/configmap.view",
+	customresourcedefinitions: "configuration/customresourcedefinitions.view",
 	horizontalpodautoscalers: "configuration/hpa.view",
 	poddisruptionbudgets: "configuration/poddisruptionbudget.view",
 	secrets: "configuration/secret.view",
@@ -40,9 +41,6 @@ const CUSTOM_VIEWS	= {
 	roles: "administrator/role.view",
 	rolebindings: "administrator/rolebinding.view",
 	serviceaccounts: "administrator/serviceaccount.view",
-
-	//customresource
-	customresourcedefinitions: "customresource/customresourcedefinitions.view",
 }
 Vue.mixin({
 	methods: {

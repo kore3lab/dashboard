@@ -22,8 +22,6 @@
 							</dd>
 							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
 							<dt class="col-sm-2">Selector</dt><dd class="col-sm-10"><span v-for="(val, idx) in info.selector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val }}</span></dd>
-							<dt v-if="metadata.ownerReferences" class="col-sm-2 text-truncate">Controlled By</dt>
-							<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
 							<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ info.type }}</dd>
 							<dt class="col-sm-2">Session Affinity</dt><dd class="col-sm-10">{{ info.sessionAffinity }}</dd>
 						</dl>
@@ -96,7 +94,6 @@ export default {
 			info: [],
 			connection: [],
 			endpoints: [],
-			controller: [],
 			isEndpoint: false,
 			fields: [
 				{ key: "name", label: "Name" },
@@ -114,7 +111,6 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.controller = this.getController(data.metadata.ownerReferences);
 			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.connection = this.getConnection(data);
@@ -140,17 +136,17 @@ export default {
 		getEndpoints(data) {
 			let list =[];
 			this.$axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
-				.then(resp => {
-					this.isEndpoint = true;
-					list.push({
-						name: resp.data.metadata.name,
-						namespace: resp.data.metadata.namespace,
-						endpoints: this.onEndpoints(resp.data)
+					.then(resp => {
+						this.isEndpoint = true;
+						list.push({
+							name: resp.data.metadata.name,
+							namespace: resp.data.metadata.namespace,
+							endpoints: this.onEndpoints(resp.data)
+						})
+						this.endpoints = list
+						return list
 					})
-					this.endpoints = list
-					return list
-				})
-				.catch(_ => this.isEndpoint = false)
+					.catch(_ => this.isEndpoint = false)
 			return list
 		},
 		toEndpointList(p,type) {

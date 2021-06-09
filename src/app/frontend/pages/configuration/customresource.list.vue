@@ -2,20 +2,16 @@
 	<div class="content-wrapper">
 		<div class="content-header">
 			<div class="container-fluid">
-				<c-navigator group="Administrator"></c-navigator>
+				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
 					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">R</span>Roles</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ kind.charAt(0).toUpperCase() }}</span>{{ kind }}</h1></div>
 					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
 							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
 							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
-					</div>
-					<!-- button -->
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Administrator&crd=Role`)">Create</b-button>
 					</div>
 				</div>
 			</div>
@@ -34,9 +30,9 @@
 							<div class="card-body table-responsive p-0">
 								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
-										<div class="text-center text-success lh-vh-50">
+										<div class="text-center text-success" style="margin:150px 0">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
-											<span class="text-lg align-middle">Loading...</span>
+											<span class="align-middle text-lg">Loading...</span>
 										</div>
 									</template>
 									<template #empty="scope">
@@ -44,11 +40,6 @@
 									</template>
 									<template v-slot:cell(name)="data">
 										{{ data.value }}
-									</template>
-									<template v-slot:cell(labels)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-										</ul>
 									</template>
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
@@ -69,7 +60,6 @@
 <script>
 import VueNavigator from "@/components/navigator"
 import VueView from "@/pages/view";
-
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
@@ -82,11 +72,11 @@ export default {
 			filterOn: ["name"],
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
-				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "labels", label: "Labels", sortable: true  },
+				{ key: "namespace", label: "Namespace", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true },
 			],
 			isBusy: false,
+			origin: [],
 			items: [],
 			currentItems:[],
 			selectIndex: 0,
@@ -94,10 +84,16 @@ export default {
 			totalItems: 0,
 			isShowSidebar: false,
 			viewModel:{},
+			group: "",
+			plural: "",
+			kind: "",
 		}
 	},
 	layout: "default",
 	created() {
+		this.group = this.$route.query.group
+		this.plural = this.$route.query.plural
+		this.kind = this.$route.query.kind
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
 			this.selectedNamespace = this.selectNamespace()
 			this.query_All()
@@ -114,7 +110,7 @@ export default {
 					for(let i=0;i<this.$config.itemsPerPage;i++) {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
-					this.viewModel = this.getViewLink('rbac.authorization.k8s.io', 'roles', items[0].namespace, items[0].name)
+					this.viewModel = this.getViewLink(this.group, this.plural, items[0].namespace, items[0].name)
 					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
 					this.isShowSidebar = true
 				} else {
@@ -140,17 +136,17 @@ export default {
 		// 조회
 		query_All() {
 			this.isBusy = true;
-			this.$axios.get(this.getApiUrl("rbac.authorization.k8s.io","roles",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl(this.group,this.plural,this.selectedNamespace))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								labels: el.metadata.labels,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
 							});
 						});
+						this.origin = this.items;
 						this.onFiltered(this.items);
 					})
 					.catch(e => { this.msghttp(e);})
@@ -159,7 +155,7 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		}
+		},
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
