@@ -58,6 +58,18 @@
 									<template v-slot:cell(creationTimestamp)="data">
 										{{ data.value.str }}
 									</template>
+									<template #head(button)>
+										<div class="text-right">
+											<a id="colOpt" class="nav-link" href="#"><i class="fas fa-ellipsis-v"></i></a>
+										</div>
+										<b-popover triggers="focus" ref="popover" target="colOpt" placement="bottomleft">
+											<b-form-group>
+												<b-form-checkbox v-for="option in columnOpt" v-model="selected" :key="option.key" :value="option.label" name="flavour-3a">
+													{{ option.label }}
+												</b-form-checkbox>
+											</b-form-group>
+										</b-popover>
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -95,6 +107,8 @@ export default {
 			isBusy: false,
 			items: [],
 			currentItems:[],
+			columnOpt: [],
+			selected: [],
 			selectIndex: 0,
 			currentPage: 1,
 			totalItems: 0,
@@ -103,8 +117,30 @@ export default {
 		}
 	},
 	layout: "default",
+	watch: {
+		selected() {
+			this.fields = []
+			this.columnOpt.forEach(el => {
+				this.selected.forEach(e => {
+					if(el.label === e) {
+						this.fields.push(el)
+					}
+				})
+			})
+			this.fields.push({ key: "button", label: "button", thClass: "wt10"})
+			localStorage.setItem('columns_statefulset',this.selected)
+		}
+	},
 	created() {
+		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
+			if(localStorage.getItem('columns_statefulset')) {
+				this.selected = (localStorage.getItem('columns_statefulset')).split(',')
+			} else {
+				this.fields.forEach(el => {
+					this.selected.push(el.label)
+				})
+			}
 			this.selectedNamespace = this.selectNamespace()
 			this.query_All()
 		});
@@ -147,22 +183,22 @@ export default {
 		query_All() {
 			this.isBusy = true;
 			this.$axios.get(this.getApiUrl("apps","statefulsets",this.selectedNamespace))
-					.then((resp) => {
-						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								// images: el.containerImages,
-								pods: this.getPods(el.status),
-								replicas: el.spec.replicas,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
-							});
+				.then((resp) => {
+					this.items = [];
+					resp.data.items.forEach(el => {
+						this.items.push({
+							name: el.metadata.name,
+							namespace: el.metadata.namespace,
+							// images: el.containerImages,
+							pods: this.getPods(el.status),
+							replicas: el.spec.replicas,
+							creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
 						});
-						this.onFiltered(this.items);
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> { this.isBusy = false;});
+					});
+					this.onFiltered(this.items);
+				})
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
