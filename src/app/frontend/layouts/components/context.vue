@@ -2,7 +2,7 @@
 	<div id="aside-contexts" class="sidebar-contexts d-flex flex-column sidebar-dark-primary border-right border-secondary">
 		<div v-for="(ctx, index) in contexts()" :key="ctx" :value="ctx">
 			<b-overlay :show="showOverlay===ctx" rounded="sm">
-				<b-overlay :show="showErrorOverlay==ctx" rounded="sm" variant="white">
+				<b-overlay :show="showErrorOverlay===ctx" rounded="sm" variant="white">
 				<template #overlay><b-icon icon="exclamation-circle-fill" font-scale="2" variant="danger"></b-icon></template>
 				<b-button v-bind:id="'btn_aside_cluster_' + ctx" @click="onContextSelected(ctx)" v-bind:class="{active: ctx===currentContext()}" :value="ctx" class="w-100 text-uppercase">{{ ctx.substring(0,1) }}</b-button>
 				</b-overlay>
@@ -28,7 +28,8 @@ export default {
 	data() {
 		return {
 			showOverlay: "",
-			showErrorOverlay: ""
+			showErrorOverlay: "",
+			list: [],
 		}
 	},
 	async fetch() {
@@ -136,11 +137,34 @@ export default {
 					}
 			}).catch(error=> {
 				this.toast(error.message, "danger");
+			}).finally(() => { this.getCRD() });
+
+		},
+		getCRD() {
+			let crList = []
+			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
+			.then((resp) => {
+				resp.data.items.forEach(el => {
+					if(crList.find(e => e === el.spec.group)) {
+
+					}else {
+						crList.push(el.spec.group)
+					}
+				})
+			}).catch(error=> {
+				this.toast(error.message, "danger");
 			}).finally(() => {
+				this.drawList(crList)
 				this.showOverlay = "";
 				this.$nuxt.$emit("navbar-context-selected");
-			});
-
+			})
+		},
+		drawList(crList) {
+			this.list = []
+			crList.forEach(el => {
+				this.list.push({[el]:this.resources()[el]})
+			})
+			this.$nuxt.$emit("crList_up",this.list)
 		},
 		onContextDelete(ctx, index) {
 			this.confirm(`Delete a selected cluster "${ctx}" , Are you sure?`, yes => {
@@ -149,7 +173,7 @@ export default {
 					.then( resp => {
 						let contexts = []
 						this.contexts().forEach( d => {
-							if (d!=ctx) contexts.push(d) 
+							if (d!==ctx) contexts.push(d)
 						});
 						this.contexts(contexts);
 						this.toast("Delete a selected cluster...OK", "success");
