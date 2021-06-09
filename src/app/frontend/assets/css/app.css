@@ -2,7 +2,6 @@
 .main-sidebar, .main-sidebar::before { width: 17rem;}
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
 .sidebar {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
-.sidebar::-webkit-scrollbar{ display:none;}
 .brand-link { margin-left: 3.7rem;}
 .layout-fixed .brand-link { width: 13.2rem;}
 .main-footer {padding: .5rem 1rem; height: 2.5rem}
@@ -15,7 +14,6 @@ body:not(.layout-top-nav) .content-wrapper {margin-left:0}
 .wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));}
 label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 .brand-link .brand-image {margin-left: .5rem}
-.wt10 {width: 50px;}
 
 @media (max-width: 992px) {
 	body:not(.sidebar-open) .main-sidebar, .main-sidebar::before { margin-left: -17rem;}
