@@ -117,7 +117,7 @@ spec:
     - name: backend
       image: ghcr.io/acornsoftlab/kore-board.backend:latest
       args:
-        - --auth=strategy=<cookie/local>,access-key=<access-token-secret>,refresh-<refresh-token-secret>,secret=service-account-token
+        - --auth=strategy=<cookie/local>,access-key=<access-token-secret>,refresh=<refresh-token-secret>,secret=service-account-token
 ```
 
 * get a token-string (ex. query from serviceaccount `kore-board`)
