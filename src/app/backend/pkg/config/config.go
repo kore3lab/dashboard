@@ -20,6 +20,7 @@ func init() {
 	// startup parameters
 	logLevel := flag.String("log-level", os.Getenv("LOG_LEVEL"), "The log level")
 	flag.StringVar(&Value.MetricsScraperUrl, "metrics-scraper-url", os.Getenv("METRICS_SCRAPER_URL"), "The address of the metrics-scraper rest-api URL")
+	flag.StringVar(&Value.TerminalUrl, "terminal-url", "http://localhost:3003", "The address of the Terminal server")
 	kubeconfig := flag.String("kubeconfig", "", "The path to the kubeconfig used to connect to the Kubernetes API server and the Kubelets")
 	authconfig := flag.String("auth", os.Getenv("AUTH"), "The authenticate options")
 
@@ -33,6 +34,7 @@ func init() {
 	//*kubeconfig = "strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config"
 	*authconfig = lang.NVL(*authconfig, "strategy=cookie,secret=static-token,token=acornsoft")
 	Value.MetricsScraperUrl = lang.NVL(Value.MetricsScraperUrl, "http://localhost:8000")
+	Value.TerminalUrl = lang.NVL(Value.TerminalUrl, "http://localhost:3003")
 	*logLevel = lang.NVL(*logLevel, "debug")
 
 	//logger

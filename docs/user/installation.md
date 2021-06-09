@@ -84,6 +84,11 @@ $ docker-compose -f ./scripts/install/docker-compose.yaml down
 $ docker volume create data
 $ docker volume create kubeconfig
 
+$ docker run --rm -d --privileged -p 3003:3003 --name terminal \
+    -v "kubeconfig:/app/.kube"\
+    ghcr.io/acornsoftlab/kore-board.terminal:latest \
+    --kubeconfig=/app/.kube/config
+             
 $ docker run --rm -d --name metrics-scraper \
     -v "kubeconfig:/app/.kube"\
     -v "data:/app/data"\
@@ -92,18 +97,17 @@ $ docker run --rm -d --name metrics-scraper \
 $ docker run --rm -d --name backend \
     -v "kubeconfig:/app/.kube" \
     --link metrics-scraper:metrics-scraper \
-    --privileged \
-    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000
+    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003
 
 $ docker run --rm -d --name frontend\
     -p 3000:80\
-    --link backend:backend\
+    --link backend:backend --link terminal:terminal\
     ghcr.io/acornsoftlab/kore-board.frontend:latest
 ```
 
 * clean-up
 ```
-$ docker stop frontend backend metrics-scraper
+$ docker stop frontend backend metrics-scraper terminal
 $ docker volume rm data kubeconfig
 ```
 
