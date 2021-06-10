@@ -22,23 +22,29 @@
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- count -->
-				<div class="row mb-2">
-					<div class="col-12 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+				<!-- total count & items per page  -->
+				<div class="d-flex flex-row-reverse">
+					<div class="p-2">
+						<b-form inline>
+							<span class="text-sm align-middle">Rows : </span>
+							<b-form-select size="sm" class="ml-1 mr-2" :options="[10, 20, 30, 50, 100]" v-model="itemsPerPage"></b-form-select>
+							<span class="text-sm align-middle">Total : {{ totalItems }}</span>
+						</b-form>
+					</div>
 				</div>
 				<!-- GRID -->
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
-									<template #empty="scope">
+									<template #empty>
 										<h4 class="text-center">does not exist.</h4>
 									</template>
 									<template v-slot:cell(name)="data">
@@ -66,7 +72,7 @@
 									</template>
 								</b-table>
 							</div>
-							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
+							<b-pagination v-model="currentPage" :per-page="itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 						</div>
 					</div>
 				</div><!-- //GRID-->
@@ -101,14 +107,17 @@ export default {
 			columnOpt: [],
 			selected: [],
 			selectIndex: 0,
+			itemsPerPage: localStorage.getItem("itemsPerPage")? localStorage.getItem("itemsPerPage"): 10,
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
 			viewModel:{},
 		}
 	},
-	layout: "default",
 	watch: {
+		itemsPerPage(n) {
+			localStorage.setItem("itemsPerPage",n)
+		},
 		selected() {
 			this.fields = []
 			this.columnOpt.forEach(el => {
@@ -122,6 +131,7 @@ export default {
 			localStorage.setItem('columns_clusterrole',this.selected)
 		}
 	},
+	layout: "default",
 	created() {
 		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
@@ -144,7 +154,7 @@ export default {
 		onRowSelected(items) {
 			if(items) {
 				if(items.length) {
-					for(let i=0;i<this.$config.itemsPerPage;i++) {
+					for(let i=0;i<this.itemsPerPage;i++) {
 						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
 					}
 					this.viewModel = this.getViewLink('rbac.authorization.k8s.io', 'clusterroles', items[0].namespace, items[0].name)
