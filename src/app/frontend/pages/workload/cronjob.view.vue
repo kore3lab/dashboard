@@ -131,12 +131,9 @@ export default {
 				return list
 			}
 		},
-		getScheduleTime(time) {
-			let tran = this.getElapsedTime(time)
-			if (tran.str === ""){
-				return '-'
-			}
-			return tran.str
+		getScheduleTime(d) {
+			let tran = this.getElapsedTime(d)
+			return tran == "" ? "-": tran;
 		},
 	},
 	beforeDestroy(){

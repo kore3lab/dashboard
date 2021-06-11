@@ -131,37 +131,14 @@ export default {
 						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());
 						this.$nuxt.$emit("navbar-context-selected");
+						this.$nuxt.$emit("aside-context-selected");
 					}
-			}).catch(error=> {
-				this.toast(error.message, "danger");
-			}).finally(() => { this.getCRD() });
-
-		},
-		getCRD() {
-			let crList = []
-			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
-			.then((resp) => {
-				resp.data.items.forEach(el => {
-					if(crList.find(e => e === el.spec.group)) {
-
-					}else {
-						crList.push(el.spec.group)
-					}
-				})
 			}).catch(error=> {
 				this.toast(error.message, "danger");
 			}).finally(() => {
-				this.drawList(crList)
 				this.showOverlay = "";
-				this.$nuxt.$emit("navbar-context-selected");
-			})
-		},
-		drawList(crList) {
-			this.list = []
-			crList.forEach(el => {
-				this.list.push({[el]:this.resources()[el]})
-			})
-			this.$nuxt.$emit("crList_up",this.list)
+			});
+
 		},
 		onContextDelete(ctx, index) {
 			this.confirm(`Delete a selected cluster "${ctx}" , Are you sure?`, yes => {

@@ -17,19 +17,6 @@ $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/la
 
 ## Kubernetes
 
-* first, create a kubeconfig configmap `kore-board-kubeconfig`
-
-```
-$ kubectl create ns kore
-$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config -n kore
-```
-
-* if you modify it
-
-```
-$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n kore -f -
-```
-
 ### Installation using Yaml
 
 * Installation
@@ -61,6 +48,13 @@ $ helm list
 ```
 $ helm uninstall kore-board
 ```
+
+### if you want use existing kubeconfig file
+
+```
+$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config --dry-run -o yaml | kubectl apply  -n kore -f -
+```
+
 
 ## Docker
 
