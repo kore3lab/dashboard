@@ -23,10 +23,10 @@ See [Installation Guide](./docs/user/installation.md) page for more information
 2. On the sign-in page, enter "acornsoft" as a token string and sign in
 
 
-See [User Guide](./docs/user/README.md) page for more information
 
-## Documentation
+## [Documentation](./docs/README.md)
 
+See [User Guide](./docs/user/README.md) page.
 See [Developer Guide](./docs/developer/README.md) page.
 
 ## Contribution

@@ -4,8 +4,7 @@
 
 ### Metrics-Server
 
-* Install metrics-server on target clusters (add startup option `--kubelet-insecure-tls` )
-* https://github.com/kubernetes-sigs/metrics-server
+* Install metrics-server on target clusters
 
 ```
 # check for installation
@@ -14,6 +13,8 @@ $ kubectl get po  -n kube-system | grep metrics-server
 # installation
 $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
+
+* add startup option `--kubelet-insecure-tls` 
 
 ## Kubernetes
 
@@ -29,7 +30,7 @@ $ kubectl apply -f ./scripts/install/kuberntes/recommended.yaml
 $ kubectl delete -f ./scripts/install/kuberntes/recommended.yaml
 ```
 
-### Installation using Helm Chart
+### Installation using Helm-chart
 
 
 * Installation
@@ -58,7 +59,7 @@ $ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kub
 
 ## Docker
 
-### Installation using `docker-compose`
+### Installation using "docker-compose"
 
 * Installation
 ```
@@ -70,7 +71,7 @@ $ docker-compose -f ./scripts/install/docker-compose.yaml up -d
 $ docker-compose -f ./scripts/install/docker-compose.yaml down
 ```
 
-### Installation using `docker run`
+### Installation using "docker run"
 
 * Installation
 
@@ -78,11 +79,10 @@ $ docker-compose -f ./scripts/install/docker-compose.yaml down
 $ docker volume create data
 $ docker volume create kubeconfig
 
-$ docker run --rm -d --privileged -p 3003:3003 --name terminal \
+$ docker run --rm -d --privileged --name terminal \
     -v "kubeconfig:/app/.kube"\
-    ghcr.io/acornsoftlab/kore-board.terminal:latest \
-    --kubeconfig=/app/.kube/config
-             
+    ghcr.io/acornsoftlab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
+
 $ docker run --rm -d --name metrics-scraper \
     -v "kubeconfig:/app/.kube"\
     -v "data:/app/data"\
@@ -93,8 +93,7 @@ $ docker run --rm -d --name backend \
     --link metrics-scraper:metrics-scraper \
     ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003
 
-$ docker run --rm -d --name frontend\
-    -p 3000:80\
+$ docker run --rm -d -p 3000:80 --name frontend\
     --link backend:backend --link terminal:terminal\
     ghcr.io/acornsoftlab/kore-board.frontend:latest
 ```
