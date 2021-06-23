@@ -43,7 +43,7 @@
 					<div class="card card-secondary card-outline">
 						<div class="card-header p-2"><h3 class="card-title text-md">Bindings</h3></div>
 						<div class="card-body p-2" v-if="bindings">
-							<b-table hover small selectable select-mode="multi" ref="selectableTable" responsive="sm" @row-selected="onRowSelected" :items="bindings" :fields="bindFields">
+							<b-table hover small selectable select-mode="multi" responsive="sm" @row-selected="onRowSelected" :items="bindings" :fields="bindFields">
 								<template v-slot:cell(selected)="{ rowSelected }">
 									<template v-if="rowSelected">
 										<span aria-hidden="true">&check;</span>

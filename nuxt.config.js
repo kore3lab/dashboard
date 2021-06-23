@@ -28,7 +28,8 @@ export default {
 		{ src: "~/plugins/mixin-common-methods", mode: "client" },
 		{ src: "~/plugins/mixin-viewpage", mode: "client" },
 		{ src: "~/plugins/admin-lte", mode: "client" },
-		{ src: '~/plugins/axios', mode: "client" }
+		{ src: '~/plugins/axios', mode: "client" },
+		{ src: '~/plugins/storage', mode: "client" }
 	],
 	buildModules: ["@nuxt/typescript-build"],
 	modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios", "cookie-universal-nuxt","@nuxtjs/auth-next"],

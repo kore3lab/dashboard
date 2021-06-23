@@ -27,9 +27,10 @@
 				<div class="d-flex flex-row-reverse">
 					<div class="p-2">
 						<b-form inline>
-							<span class="text-sm align-middle">Rows : </span>
-							<b-form-select size="sm" class="ml-1 mr-2" :options="[10, 20, 30, 50, 100]" v-model="itemsPerPage"></b-form-select>
-							<span class="text-sm align-middle">Total : {{ totalItems }}</span>
+							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
+							<i class="text-secondary ml-2 mr-2">|</i>
+							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
+							<span class="text-sm align-middle ml-2">Total : {{ totalItems }}</span>
 						</b-form>
 					</div>
 				</div>
@@ -38,33 +39,12 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="currentPage=1" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
-									</template>
-									<template #empty>
-										<h4 class="text-center">does not exist.</h4>
-									</template>
-									<template v-slot:cell(name)="data">
-										{{ data.value }}
-									</template>
-									<template v-slot:cell(creationTimestamp)="data">
-										{{ data.value.str }}
-									</template>
-									<template #head(button)>
-										<div class="text-right">
-											<a id="colOpt" class="nav-link" href="#"><i class="fas fa-ellipsis-v"></i></a>
-										</div>
-										<b-popover triggers="focus" ref="popover" target="colOpt" placement="bottomleft">
-											<b-form-group>
-												<b-form-checkbox v-for="option in columnOpt" v-model="selected" :key="option.key" :value="option.label" name="flavour-3a">
-													{{ option.label }}
-												</b-form-checkbox>
-											</b-form-group>
-										</b-popover>
 									</template>
 								</b-table>
 							</div>
@@ -74,18 +54,20 @@
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" @hidden="$refs.grdSheet1.clearSelected()" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import VueNavigator from "@/components/navigator"
-import VueView from "@/pages/view";
+import VueNavigator			from "@/components/navigator"
+import VueColumsSelector	from "@/components/columnsSelector"
+import VueView				from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
+		"c-colums-selector": { extends: VueColumsSelector},
 		"c-view": { extends: VueView }
 	},
 	data() {
@@ -93,18 +75,15 @@ export default {
 			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
-			fields: [
+			fields: [],
+			fieldsAll: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			isBusy: false,
 			items: [],
-			currentItems:[],
-			columnOpt: [],
-			selected: [],
-			selectIndex: 0,
-			itemsPerPage: localStorage.getItem("itemsPerPage")? localStorage.getItem("itemsPerPage"): 10,
+			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
@@ -113,69 +92,21 @@ export default {
 	},
 	watch: {
 		itemsPerPage(n) {
-			localStorage.setItem("itemsPerPage",n)
-		},
-		selected() {
-			this.fields = []
-			this.columnOpt.forEach(el => {
-				this.selected.forEach(e => {
-					if(el.label === e) {
-						this.fields.push(el)
-					}
-				})
-			})
-			this.fields.push({ key: "button", label: "button", thClass: "wt10"})
-			localStorage.setItem('columns_resourcequota',this.selected)
+			this.$storage.global.set("itemsPerPage",n)
 		}
 	},
 	layout: "default",
 	created() {
-		this.columnOpt = Object.assign([],this.fields)
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			if(localStorage.getItem('columns_resourcequota')) {
-				this.selected = (localStorage.getItem('columns_resourcequota')).split(',')
-			} else {
-				this.fields.forEach(el => {
-					this.selected.push(el.label)
-				})
-			}
 			this.selectedNamespace = this.selectNamespace()
 			this.query_All()
 		});
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		onSortChanged() {
-			this.currentPage = 1
-		},
 		onRowSelected(items) {
-			if(items) {
-				if(items.length) {
-					for(let i=0;i<this.itemsPerPage;i++) {
-						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
-					}
-					this.viewModel = this.getViewLink('', 'resourcequotas', items[0].namespace, items[0].name)
-					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
-					this.isShowSidebar = true
-				} else {
-					if(this.currentItems.title !== this.viewModel.title) {
-						if(this.currentItems.length ===0) this.isShowSidebar = false
-						else {
-							this.viewModel = Object.assign({},this.currentItems)
-							this.currentItems = []
-							this.isShowSidebar = true
-							this.$refs.selectableTable.selectRow(this.selectIndex)
-						}
-					} else {
-						this.isShowSidebar = false
-						this.$refs.selectableTable.clearSelected()
-					}
-				}
-			} else {
-				this.currentItems = []
-				this.isShowSidebar = false
-				this.$refs.selectableTable.clearSelected()
-			}
+			this.isShowSidebar = (items && items.length > 0)
+			if (this.isShowSidebar) this.viewModel = this.getViewLink('', 'resourcequotas', items[0].namespace, items[0].name)
 		},
 		// 조회
 		query_All() {
@@ -187,7 +118,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp)
+								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
 						this.onFiltered(this.items);
