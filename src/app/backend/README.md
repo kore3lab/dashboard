@@ -13,6 +13,3 @@
   * https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/meta.go
   * https://github.com/kubernetes/client-go/blob/master/listers/core/v1 
 
-## Guides
-
-* [User Guide](../../../docs/user/app-backend.md)

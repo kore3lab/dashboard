@@ -10,5 +10,4 @@
 
 ## Guides
 
-* [Developer Guide](../../../docs/developer/app-terminal.md)
-* [User Guide](../../../docs/user/app-terminal.md)
+* See [Web-Terminal Developer Guide](../../../docs/developer/app-terminal.md) page.

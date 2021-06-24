@@ -7,8 +7,3 @@
 * References
   * https://github.com/kubernetes-sigs/dashboard-metrics-scraper
 
-## Guides
-
-* [User Guide](../../../docs/user/app-metrics-scraper.md)
-
-

@@ -1,7 +1,8 @@
 # Developer guide
 
 * [Getting started](./getting-started.md)
-* [Web-Terminal](./app-terminal.md)
-* [Graph](./app-graph.md)
-* [Helm-chart](./helm-chart.md)
+* [API Specification](./api-specification.md)
+* [Packaging Helm-chart](./helm-chart.md)
+* [Web-Terminal Developer Guide](./app-terminal.md)
+* [Graph Developer Guide](./app-graph.md)
 
