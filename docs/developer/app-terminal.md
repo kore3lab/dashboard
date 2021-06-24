@@ -1,4 +1,4 @@
-# Web-Terminal
+# Web-Terminal Developer Guide
 
 ## 개요
 
@@ -13,7 +13,7 @@
 * unshare `--mount-proc --mount` 옵션을 통해서 프로세스의 네임스페이스로 마운트될 파일 시스템 구성 (kubectl 등이 설치된 파일 시스템)
 
 
-## 개발
+## 서버 개발 
 
 * 개발 제약 사항
   * 리눅스 `unshare` 명령을 활용하기 때문에 컨테이너 환경에서만 동작
@@ -71,3 +71,54 @@ $ curl http://localhost:3003/healthy
 * "F10", "F11" 키를 활용하여 디버깅 실행
 
 
+## 클라이언트 개발
+
+### 개발용 서버 컨테이너 실행
+* kubeconfig 는 `${HOME}/.kube/config` 적용
+
+```
+$ docker run --rm -d --privileged -p 3003:3003 --name terminal \
+    -v "${HOME}/.kube:/app/.kube"\
+    ghcr.io/acornsoftlab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
+```
+
+### 클라이언트 활용 (예제 코드)
+
+* 명령어 `kubectl config view` 를 실행시키는 간단한 클라이언트 예제
+* kubeconfig context 는 'apps-06' 로 가정
+* 주요 구현 로직
+  * Token 조회
+  * socket connection 오픈
+  * Token 전달
+  * Screen 사이즈 전달
+  * 명령어(`kubectl config view`) 전달
+  * 수신 데이터 출력
+* 아래 예제 코드 참조
+```
+<!DOCTYPE html>
+<head>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+  let context = "apps-06"
+
+  axios.get(`http://localhost:3003/api/terminal/clusters/${context}/termtype/cluster`)  // get a token
+    .then(resp=> {
+      let token = resp.data.Token;
+
+      let socket = new WebSocket("ws://localhost:3003/api/terminal/ws");
+      socket.onopen = (e) => {
+        console.log("[open]");
+        socket.send(JSON.stringify({ Arguments: "", AuthToken: token,})); // authentication (using a token)
+        socket.send("3" + JSON.stringify({ columns: 100, rows: 100 }));   // set screnn size
+        socket.send("1kubectl config view\n");                            // execute shell
+      };
+      socket.onmessage = (e) =>  {
+        if(e.data[0] == "1") {
+          document.write(atob(e.data.slice(1)).replaceAll("\n","<br>"));  // receive data 
+        }
+      };
+    })
+</script>
+</head>
+</html>
+```

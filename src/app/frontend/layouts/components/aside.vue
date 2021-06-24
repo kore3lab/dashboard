@@ -94,13 +94,13 @@
 								<li class="nav-item small"><nuxt-link to="/customresource/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>efinitions</p></nuxt-link></li>
 								<ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact" data-widget="treeview" role="menu" data-accordion="false">
 									<li v-for="(group, nm) in crdList" :key="nm" class="nav-item small mw-100">
-										<a href="#" class="nav-link" v-on:click="isVisible.crdGroup[nm] ? isVisible.crdGroup[nm]=false: isVisible.crdGroup[nm]=true"><p class="text-truncate mw-100 pr-2">{{ nm }}<i v-bind:class="1==1 ? 'fa-angle-down':'fa-angle-left'" class="right fas"></i></p></a>
+										<a href="#" class="nav-link" v-on:click="isVisible.crdGroup[nm] = !isVisible.crdGroup[nm]"><p class="text-truncate mw-100 pr-2">{{ nm }}<i v-bind:class="1==1 ? 'fa-angle-down':'fa-angle-left'" class="right fas"></i></p></a>
 										<!--custom resource : group > crd -->
 										<b-collapse v-model="isVisible.crdGroup[nm]">
 											<ul class="nav d-block nav-treeview">
-												<li v-for="(crd, crdnm) in group"  :key="crdnm" class="nav-item mw-100" >
-													<nuxt-link :to="toCRDLink(crd)"  class="nav-link" replace>
-														<p>{{ crd.name }}</p>
+												<li v-for="(crd, crdnm) in group"  :key="crdnm" class="nav-item" >
+													<nuxt-link :to="toCRDLink(crd)"  class="nav-link pl-2 pt-0 pb-0" replace>
+														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.name }}</p>
 													</nuxt-link>
 												</li>
 											</ul>

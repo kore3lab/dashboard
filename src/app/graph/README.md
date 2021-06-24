@@ -9,6 +9,6 @@
 
 ## Guides
 
-* [Developer Guide](../../../docs/developer/app-graph.md)
+* [Graph Developer Guide](../../../docs/developer/app-graph.md)
 
 

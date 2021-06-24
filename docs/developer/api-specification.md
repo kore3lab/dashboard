@@ -1,37 +1,7 @@
-# Backend
+# API Specification
 
-## Run
+## Backend
 
-* Arguments
-
-|이름                   |기본값                                               |설명                                                                                           |
-|---                    |---                                                  |---                                                                                            |
-|--log-level            |debug                                                |로그 레벨(trace, debug, info, warning, error, fatal, panic) https://github.com/sirupsen/logrus |
-|--kubeconfig           |                                                     |kubeconfig 파일 위치                                                                           |
-|--metrics-scraper-url  |http://localhost:8000                                |metrics-scraper api url                                                                        |
-|--terminal-url         |http://localhost:3003                                |terminal api url                                                                               |
-|--auth                 |strategy=cookie,secret=static-token,token=acornsoft  |인증처리방식 설정                                                                              |
-
-
-* 환경변수 (env)
-
-|이름                 |기본값                                               |설명                     |
-|---                  |---                                                  |---                      |
-|LOG_LEVEL            |debug                                                |"--log-level"            |
-|KUBECONFIG           |                                                     |"--kubeconfig"           |
-|METRICS_SCRAPER_URL  |http://localhost:8000                                |"--metrics-scraper-url"  |
-|TERMINAL_URL         |http://localhost:3003                                |"--terminal-url "        |
-|AUTH                 |strategy=cookie,secret=static-token,token=acornsoft  |"--auth"                 |
-
-
-* Configuration of authentication
-  * See [Sign-in configuration](./config-sign-in.md) page
-
-* Configuration of kubeconfig
-  * See [Kkuberconfig configuration](./config-kubeconfigs.md) page
-
-
-## API
 
 |URL Pattern                        |Method |설명                                     |
 |---                                |---    |---                                      |
@@ -245,3 +215,56 @@ $ curl -X DELETE -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces/test
 # List
 $ curl -X GET -b "${COOKIE}" http://localhost:3001/raw/api/v1/namespaces
 ```
+
+
+## Metrics-Scraper
+
+|URL Pattern                                                                  |Method |설명                               |
+|---                                                                          |---    |---                                |
+|/api/v1/clusters/:cluster                                                    |GET    |클러스터 summary metrics  조회     |
+|/api/v1/clusters/:cluster/nodes/:node/metrics/:metrics                       |GET    |클러스터 Node metrics 조회         |
+|/api/v1/nodes/:node/metrics/:metrics                                         |GET    |default 클러스터 노드 metrics 조회 |
+|/api/v1/clusters/:cluster/namespaces/:namespaces/pods/:pod/metrics/:metrics  |GET    |클러스터 Pod metrics 조회          |
+|/api/v1/namespaces/:namespaces/pods/:pod/metrics/:metrics                    |GET    |default 클러스터 Pod metrics 조회  |
+
+* 변수
+  * `:cluster` : Kubeconfig context name
+  * `:node` :  Node name
+  * `:metrics` : `cpu` or `memory`
+  * `:pod` : Pod name
+
+* Examples
+
+```
+$ curl -X GET http://localhost:8000/api/v1/clusters/apps-05/nodes/apps-114/metrics/cpu
+$ curl -X GET http://localhost:8000/api/v1/nodes/apps-114/metrics/cpu
+$ curl -X GET http://localhost:8000/api/v1/clusters/apps-06/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
+$ curl -X GET http://localhost:8000/api/v1/namespaces/default/pods/dnsutils-797cbd6f5f-8sq8t/metrics/memory
+```
+
+
+## Web-Terminal
+
+* 아래 설명에서 사용하는 변수는 다음과 같습니다.
+  * `clusters` : Kubeconfig context name
+  * `namespaces` : Resource namespace
+  * `pods` : Pod name
+  * `containers` : Container name
+  * `termtype` : terminal type(cluster/pod/container) 
+
+* prefix : /api/terminal/clusters/{CLUSTER}
+
+|URL Pattern                                                                  |Method |설명                                 |
+|---                                                                          |---    |---                                  |
+|termtype/{TERMTYPE}                                                          |GET    |Web terminal 접속토큰 요청(kubectl)  |
+|namespaces/{NAMESPACE}/pods/{POD}/termtype/{TERMTYPE}                        |GET    |Web terminal 접속토큰 요청(pod)      |
+|namespaces/{NAMESPACE}/pods/{POD}/containers/{CONTAINER}/termtype/{TERMTYPE} |GET    |Web terminal 접속토큰 요청(container)|
+
+* anothers
+
+|URL Pattern      |Method |설명                                 |
+|---              |---    |---                                  |
+|/api/terminal/ws |GET    |Web terminal websocket 접속요청      |
+|/api/v1/config   |PATCH  |kubeconfig refresh event from backend|
+
+
