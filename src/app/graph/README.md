@@ -1,16 +1,14 @@
 # Graph
-> D3.js based javascript graph library
 
-## Build
+## Introduction
 
-* frontend와 연동되어 build하면 frontend 에 복사된다.
+* D3.js based javascript kubernetes graph library
+* Written in TypeScript
+* Frameworks
+  * [D3.js](https://d3js.org/)
 
-```
-$ npm run build:graph
-```
+## Guides
 
-```
-http://localhost:3002/topology.html   # topology graph
-http://localhost:3002/mesh.html       # mesh graph (deprecated)
-http://localhost:3002/rbac.html       # rbac graph
-```
+* [Graph Developer Guide](../../../docs/developer/app-graph.md)
+
+

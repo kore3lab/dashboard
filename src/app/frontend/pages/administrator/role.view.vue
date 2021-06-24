@@ -28,15 +28,15 @@
 
 		<div class="row">
 			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
+				<div class="card card-secondary card-outline">
 					<div class="card-header p-2"><h3 class="card-title text-md">Rules</h3></div>
 					<div class="card-body p-2">
-						<div class="card card-secondary m-2 mb-3" v-for="(val, idx) in rules" v-bind:key="idx">
-							<dl class="row mb-0">
-								<dt v-if="val.resources" class="col-sm-3 text-right">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources }}</dd>
-								<dt v-if="val.verbs" class="col-sm-3 text-right">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs }}</dd>
-								<dt v-if="val.apiGroups" class="col-sm-3 text-right">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups }}</dd>
-								<dt v-if="val.resourceNames" class="col-sm-3 text-right">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames }}</dd>
+						<div class="card card-secondary m-1 mb-2" v-for="(val, idx) in rules" v-bind:key="idx">
+							<dl class="row m-1 ">
+								<dt v-if="val.resources" class="col-sm-2">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources }}</dd>
+								<dt v-if="val.verbs" class="col-sm-2">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs }}</dd>
+								<dt v-if="val.apiGroups" class="col-sm-2">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups }}</dd>
+								<dt v-if="val.resourceNames" class="col-sm-2">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames }}</dd>
 							</dl>
 						</div>
 					</div>
@@ -44,7 +44,7 @@
 			</div>
 		</div>
 
-		<div class="row">
+		<div class="row" v-show="event.length>0">
 			<div class="col-md-12">
 				<div class="card card-secondary card-outline m-0">
 					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>

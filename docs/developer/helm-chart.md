@@ -1,6 +1,6 @@
-# Helm-chart development guide
+# Packaging Helm-chart 
 
-* output yaml
+* output to yaml
 
 ```
 $ helm template --debug -n kore kore-board ./kuberntes/helm-chart/ \
@@ -29,7 +29,7 @@ $ helm install --dry-run --debug -n kore kore-board ./kuberntes/helm-chart/ \
 
 
 
-* Packaging helm-chart
+* packaging helm-chart
 
 ```
 $ helm package helm-chart/    # packaging  (tgz file 생성)

@@ -1,0 +1,13 @@
+version: "3"
+services:
+  terminal-debug:
+    privileged: true
+    build:
+      context: .
+      dockerfile: ./DebugDockerfile
+    ports:
+      - "3003:3003"
+      - "5555:5555"
+    command: "/app/dlv --listen=:5555 --headless=true --api-version=2 --accept-multiclient exec --continue /app/kore-board.terminal -- --kubeconfig=/app/.kube/config --corsonoff=off"
+    volumes:
+      - ~/.kube/config:/app/.kube/config

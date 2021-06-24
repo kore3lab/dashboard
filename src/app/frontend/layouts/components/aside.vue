@@ -28,7 +28,7 @@
 						<a href="#" class="nav-link" v-on:click="isVisible.workload=!isVisible.workload"><i class="nav-icon fas fa-server"></i><p>Workload<i v-bind:class="isVisible.workload?'fa-angle-left':'fa-angle-up'" class="right fas"></i></p></a>
 						<b-collapse v-model="isVisible.workload">
 							<ul class="nav d-block nav-treeview">
-<!--								<li class="nav-item small"><nuxt-link to="/workload/overview"  class="nav-link"><i class="nav-icon text-sm mr-0">O</i><p>verview</p></nuxt-link></li>-->
+								<!--								<li class="nav-item small"><nuxt-link to="/workload/overview"  class="nav-link"><i class="nav-icon text-sm mr-0">O</i><p>verview</p></nuxt-link></li>-->
 								<li class="nav-item small"><nuxt-link to="/workload/pod.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>ods</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/workload/deployment.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>eployments</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/workload/statefulset.list"  class="nav-link"><i class="nav-icon text-sm mr-0">S</i><p>tateful Sets</p></nuxt-link></li>
@@ -70,7 +70,6 @@
 								<li class="nav-item small"><nuxt-link to="/configuration/limitrange.list"  class="nav-link"><i class="nav-icon text-sm mr-0">L</i><p>imit Ranges</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/configuration/hpa.list"  class="nav-link"><i class="nav-icon text-sm mr-0">H</i><p>orizontal Pod Autoscalers</p></nuxt-link></li>
 								<li class="nav-item small"><nuxt-link to="/configuration/poddisruptionbudget.list"  class="nav-link"><i class="nav-icon text-sm mr-0">P</i><p>od Disruption Budgets</p></nuxt-link></li>
-								<li class="nav-item small"><nuxt-link to="/configuration/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">C</i><p>ustom Resource Definitions</p></nuxt-link></li>
 							</ul>
 						</b-collapse>
 					</li>
@@ -86,6 +85,32 @@
 							</ul>
 						</b-collapse>
 					</li>
+					<!--custom resource -->
+					<li class="nav-item menu-open mw-100">
+						<a href="#" class="nav-link" v-on:click="isVisible.crd=!isVisible.crd"><i class="nav-icon fas fa-puzzle-piece"></i><p>Custom Resource<i v-bind:class="isVisible.crd?'fa-angle-left':'fa-angle-up'" class="right fas"></i></p></a>
+						<b-collapse v-model="isVisible.crd">
+							<!--custom resource : group -->
+							<ul class="nav d-block nav-treeview">
+								<li class="nav-item small"><nuxt-link to="/customresource/customresourcedefinitions.list"  class="nav-link"><i class="nav-icon text-sm mr-0">D</i><p>efinitions</p></nuxt-link></li>
+								<ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact" data-widget="treeview" role="menu" data-accordion="false">
+									<li v-for="(group, nm) in crdList" :key="nm" class="nav-item small mw-100">
+										<a href="#" class="nav-link" v-on:click="isVisible.crdGroup[nm] = !isVisible.crdGroup[nm]"><p class="text-truncate mw-100 pr-2">{{ nm }}<i v-bind:class="1==1 ? 'fa-angle-down':'fa-angle-left'" class="right fas"></i></p></a>
+										<!--custom resource : group > crd -->
+										<b-collapse v-model="isVisible.crdGroup[nm]">
+											<ul class="nav d-block nav-treeview">
+												<li v-for="(crd, crdnm) in group"  :key="crdnm" class="nav-item" >
+													<nuxt-link :to="toCRDLink(crd)"  class="nav-link pl-2 pt-0 pb-0" replace>
+														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.name }}</p>
+													</nuxt-link>
+												</li>
+											</ul>
+										</b-collapse>
+									</li>
+								</ul>
+							</ul>
+						</b-collapse>
+					</li><!--// custom resource -->
+
 				</ul>
 			</nav><!-- /.sidebar-menu -->
 		</div>
@@ -105,10 +130,34 @@ export default {
 				networking: true,
 				storage: true,
 				configuration: true,
-				administrator: true
+				administrator: true,
+				crd : true,
+				crdGroup: {}
 			},
-			isWorkload : true
+			crdList: {}
 		}
 	},
+	created() {
+		this.$nuxt.$on("aside-context-selected", (_) => {
+			this.crdList = {}
+			for(let r in this.resources()) {
+				if( !r.endsWith("k8s.io") && r.indexOf(".") > 0 ) {
+					this.crdList[r] = this.resources()[r];
+				}
+			};
+			this.isVisible.crdGroup = {};
+		});
+	},
+	methods: {
+		toCRDLink(crd) {
+			let a = crd.groupVersion.split("/");
+			//return {path: `/customresource/customresource.list?crd=${crd.name}.${a[0]}&version=${a[1]}`}
+			let query = (a.length > 1) ? {crd: `${crd.name}.${a[0]}`, version: a[1]} : {crd: `${crd.name}.${a[0]}`, version: ""}
+			return {path: '/customresource/customresource.list', query: query}
+		}
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("aside-context-selected")
+	}
 }
 </script>

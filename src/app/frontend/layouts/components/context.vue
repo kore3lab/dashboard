@@ -2,7 +2,7 @@
 	<div id="aside-contexts" class="sidebar-contexts d-flex flex-column sidebar-dark-primary border-right border-secondary">
 		<div v-for="(ctx, index) in contexts()" :key="ctx" :value="ctx">
 			<b-overlay :show="showOverlay===ctx" rounded="sm">
-				<b-overlay :show="showErrorOverlay==ctx" rounded="sm" variant="white">
+				<b-overlay :show="showErrorOverlay===ctx" rounded="sm" variant="white">
 				<template #overlay><b-icon icon="exclamation-circle-fill" font-scale="2" variant="danger"></b-icon></template>
 				<b-button v-bind:id="'btn_aside_cluster_' + ctx" @click="onContextSelected(ctx)" v-bind:class="{active: ctx===currentContext()}" :value="ctx" class="w-100 text-uppercase">{{ ctx.substring(0,1) }}</b-button>
 				</b-overlay>
@@ -28,7 +28,8 @@ export default {
 	data() {
 		return {
 			showOverlay: "",
-			showErrorOverlay: ""
+			showErrorOverlay: "",
+			list: [],
 		}
 	},
 	async fetch() {
@@ -37,9 +38,6 @@ export default {
 			// context 선택
 			let ctx = this.$route.query.context ? this.$route.query.context: "";
 			if (!ctx && localStorage.getItem("currentContext")!=null) ctx = localStorage.getItem("currentContext");
-			if(ctx) {
-				if( !this.contexts().find(el => el===ctx)) ctx = "";
-			}
 
 			// context list
 			let equals = (a, b) => {
@@ -111,7 +109,6 @@ export default {
 		},
 		// context select
 		onContextSelected(ctx) {
-
 			if (!ctx) return
 
 			this.showOverlay = ctx;
@@ -133,12 +130,13 @@ export default {
 						this.resources(resp.data.currentContext.resources);
 						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());
+						this.$nuxt.$emit("navbar-context-selected");
+						this.$nuxt.$emit("aside-context-selected");
 					}
 			}).catch(error=> {
 				this.toast(error.message, "danger");
 			}).finally(() => {
 				this.showOverlay = "";
-				this.$nuxt.$emit("navbar-context-selected");
 			});
 
 		},
@@ -149,7 +147,7 @@ export default {
 					.then( resp => {
 						let contexts = []
 						this.contexts().forEach( d => {
-							if (d!=ctx) contexts.push(d) 
+							if (d!==ctx) contexts.push(d)
 						});
 						this.contexts(contexts);
 						this.toast("Delete a selected cluster...OK", "success");

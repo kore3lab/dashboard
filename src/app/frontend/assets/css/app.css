@@ -2,6 +2,7 @@
 .main-sidebar, .main-sidebar::before { width: 17rem;}
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
 .sidebar {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
+.sidebar::-webkit-scrollbar{ display:none;}
 .brand-link { margin-left: 3.7rem;}
 .layout-fixed .brand-link { width: 13.2rem;}
 .main-footer {padding: .5rem 1rem; height: 2.5rem}
@@ -12,6 +13,7 @@ aside a.brand-link img {width: 1.7em; height:1.7em;}
 #aside-contexts p { font-size:x-small; margin: 0;}
 body:not(.layout-top-nav) .content-wrapper {margin-left:0}
 .wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));}
+.content-header { padding: .5rem .5rem .2rem .5rem;}
 label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 .brand-link .brand-image {margin-left: .5rem}
 
@@ -33,6 +35,7 @@ label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 /* custom  */
 .lh-vh-50 {line-height: 50vh;} .lh-vh-100 {line-height: 100vh;}
 .h-chart { height: 14em;}
+.cursor {cursor:pointer}
 
 /* custom -vue-boostrap  */
 .table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}

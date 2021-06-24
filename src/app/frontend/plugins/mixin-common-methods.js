@@ -1,5 +1,7 @@
 import Vue from "vue";
-
+const CONSTRANTS = {
+	"ITEMS_PER_PAGE" : [{text:"10",value:10}, {text:"20",value:20}, {text:"30",value:30}, {text:"50",value:50}, {text:"100",value:100}]
+}
 Vue.mixin({
 	methods: {
 		toast(msg, variant) {
@@ -22,49 +24,36 @@ Vue.mixin({
 				this.toast(error.message, "danger");
 			}
 		},
-	
-		/**
-		 * timestamp를 day,hour,minute,second로 구분 봔환함
-		 *
-		 * @param {date} timestamp 변환할 date 값
-		 * @return {{str: string, elapsedTime: number}} timestamp의 day/hour/minute/second 값으로 변환하여 반환함
-		 */
+		var(name) {
+			return CONSTRANTS[name];
+		},
 		getElapsedTime(timestamp) {
-			const dt = Date.parse(timestamp);
-			const elapsedTime = new Date() - dt;
+			let elapsedTime = new Date() - Date.parse(timestamp);
 
-			const second = Math.floor((elapsedTime % (1000 * 60)) / 1000);
-			const minute = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
-			const hour = Math.floor(
-				(elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-			);
-			// const day = Math.floor((elapsedTime % (1000*60*60*24*30)) / (1000*60*60*24))
-			const days = Math.floor(elapsedTime / (1000 * 60 * 60 * 24));
-			// const month = Math.floor((elapsedTime % (1000*60*60*24*30*12)) / (1000*60*60*24*30))
-			// const year = Math.floor(elapsedTime  / (1000*60*60*24*30*12))
-
+			let second = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+			let minute = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+			let hour = Math.floor((elapsedTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+			let days = Math.floor(elapsedTime / (1000 * 60 * 60 * 24));
 			let str = "";
-			// if(year > 0) str += `${year}y`
-			// if(month > 0) str += `${month}m`
-			// if(day > 0) str += `${day}d`
+
 			if (days > 0) {
 				str += `${days}d`;
-				if (days >= 10) return {elapsedTime,str};
+				if (days >= 10) return str;
 			}
 			if (hour > 0) {
 				str += `${hour}h`;
-				if (days < 10 && days > 0) return {elapsedTime,str};
+				if (days < 10 && days > 0) return str;
 			}
 			if (minute > 0) {
-				if (days > 0 || hour > 0) return {elapsedTime,str};
+				if (days > 0 || hour > 0) return str;
 				str += `${minute}m`;
 			}
 
 			if (second > 0) {
-				if (hour > 0 || minute > 9) return {elapsedTime,str};
+				if (hour > 0 || minute > 9) return str;
 				str += `${second}s`;
 			}
-			return {elapsedTime,str};
+			return str;
 		},
 		unitsToBytes(value) {
 			const base = 1024;

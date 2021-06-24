@@ -1,0 +1,36 @@
+@@startuml
+
+header	Kore-board
+title	Web-Terminal process
+hide	footbox
+
+actor		"Browser"		as browser
+participant	"Terminal"		as terminal		#d1e0ff
+participant	"Kubernetes"	as kubernetes	#d1e0ff
+
+' # driver
+browser		->	terminal		: Token 요청
+activate terminal
+	terminal	->	terminal	: Cluster정보 추출 후 Socket 접속대기
+	browser		<--	terminal	: Token
+deactivate terminal
+
+browser		->	terminal	: Socket 연결 요청
+activate terminal
+	terminal	-->	terminal	: Token 인증
+	terminal	-->	terminal	: Namespace 격리 및 \nkubectl Shell(config-namespace.sh) 실행
+	browser		<-	terminal	: Done
+deactivate terminal
+
+loop Socket Stream
+	browser		->	terminal	: Command 전송
+	activate terminal
+		activate kubernetes
+			terminal	->	kubernetes	: Command 실행 (by kubectl)
+			terminal	<--	kubernetes	: 실행 결과 반환
+		deactivate kubernetes
+		browser		<--	terminal	: Command 결과 전송
+	deactivate terminal
+end
+
+@@enduml

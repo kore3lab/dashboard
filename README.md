@@ -13,10 +13,9 @@ Kore보드는 쿠버네티스 다중 클러스터 관리를 위한 웹 기반 UI
 ### Installation
 
 ```
-$ kubectl create ns kore
-$ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kube/config -n kore
 $ kubectl apply -f https://raw.githubusercontent.com/acornsoftlab/dashboard/master/scripts/install/kuberntes/recommended.yaml
 ```
+
 See [Installation Guide](./docs/user/installation.md) page for more information
 
 ### Access
@@ -25,11 +24,11 @@ See [Installation Guide](./docs/user/installation.md) page for more information
 2. On the sign-in page, enter "acornsoft" as a token string and sign in
 
 
-See [User Guide](./docs/user/README.md) page for more information
 
-## Documentation
+## [Documentation](./docs/README.md)
 
-See [Developer Guide](./docs/developer/README.md) page.
+* See [User Guide](./docs/user/README.md) page.
+* See [Developer Guide](./docs/developer/README.md) page.
 
 ## Contribution
 

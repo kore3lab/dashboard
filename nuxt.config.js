@@ -28,7 +28,8 @@ export default {
 		{ src: "~/plugins/mixin-common-methods", mode: "client" },
 		{ src: "~/plugins/mixin-viewpage", mode: "client" },
 		{ src: "~/plugins/admin-lte", mode: "client" },
-		{ src: '~/plugins/axios', mode: "client" }
+		{ src: '~/plugins/axios', mode: "client" },
+		{ src: '~/plugins/storage', mode: "client" }
 	],
 	buildModules: ["@nuxt/typescript-build"],
 	modules: ["bootstrap-vue/nuxt", "@nuxtjs/axios", "cookie-universal-nuxt","@nuxtjs/auth-next"],
@@ -93,7 +94,7 @@ export default {
 	publicRuntimeConfig: {
 		nodeEnv: process.env.NODE_ENV,						// production or development
 		backendPort: process.env.BACKEND_PORT || "3001",	// only development mode
-		itemsPerPage: process.env.ITEMS_PER_PAGE || "10",
+		terminalPort: process.env.TERMINAL_PORT || "3003",	// only development mode
 		version: JSON.stringify(require('./package.json').version)
 	},
 	build: {

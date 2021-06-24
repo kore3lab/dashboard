@@ -23,27 +23,28 @@
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- count -->
-				<div class="row mb-2">
-					<div class="col-12 text-right "><span class="text-sm align-middle">Total : {{ totalItems }}</span></div>
+				<!-- total count & items per page  -->
+				<div class="d-flex flex-row-reverse">
+					<div class="p-2">
+						<b-form inline>
+							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
+							<i class="text-secondary ml-2 mr-2">|</i>
+							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
+							<span class="text-sm align-middle ml-2">Total : {{ totalItems }}</span>
+						</b-form>
+					</div>
 				</div>
 				<!-- GRID-->
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table id="list" hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="onSortChanged()" ref="selectableTable" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="$config.itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table hover selectable show-empty select-mode="single" @row-selected="onRowSelected" @sort-changed="currentPage=1" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
-									</template>
-									<template #empty="scope">
-										<h4 class="text-center">does not exist.</h4>
-									</template>
-									<template v-slot:cell(name)="data">
-										{{ data.value }}
 									</template>
 									<template v-slot:cell(internalEndpoints)="data">
 										<ul class="list-unstyled mb-0">
@@ -52,7 +53,7 @@
 									</template>
 									<template v-slot:cell(externalEndpoints)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.externalEndpoints" v-bind:key="value">{{ value }}</li>
+											<li v-for="(val, idx) in data.value" v-bind:key="idx">{{ val }}</li>
 										</ul>
 									</template>
 									<template v-slot:cell(selector)="data">
@@ -65,29 +66,28 @@
 											<li v-bind:key="data.value" v-bind:class="[ data.value === 'Active'? 'text-success' : 'text-warning' ]">{{ data.value }}</li>
 										</ul>
 									</template>
-									<template v-slot:cell(creationTimestamp)="data">
-										{{ data.value.str }}
-									</template>
 								</b-table>
 							</div>
-							<b-pagination v-model="currentPage" :per-page="$config.itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
+							<b-pagination v-model="currentPage" :per-page="itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
 						</div>
 					</div>
 				</div><!-- //GRID-->
 			</div>
 		</section>
-		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
-			<c-view v-model="viewModel" @delete="query_All()" @close="onRowSelected"/>
+		<b-sidebar v-model="isShowSidebar" width="50em" @hidden="$refs.grdSheet1.clearSelected()" right shadow no-header>
+			<c-view v-model="viewModel" @delete="query_All()" @close="isShowSidebar=false"/>
 		</b-sidebar>
 	</div>
 </template>
 <script>
-import VueNavigator from "@/components/navigator"
-import VueView from "@/pages/view";
+import VueNavigator			from "@/components/navigator"
+import VueColumsSelector	from "@/components/columnsSelector"
+import VueView				from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
+		"c-colums-selector": { extends: VueColumsSelector},
 		"c-view": { extends: VueView }
 	},
 	data() {
@@ -95,7 +95,8 @@ export default {
 			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
-			fields: [
+			fields: [],
+			fieldsAll: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true },
 				{ key: "type", label: "Type", sortable: true },
@@ -103,7 +104,7 @@ export default {
 				{ key: "internalEndpoints", label: "Ports", sortable: true },
 				{ key: "externalEndpoints", label: "External IP", sortable: true },
 				{ key: "selector", label: "Selector", sortable: true },
-				{ key: "creationTimestamp", label: "Age", sortable: true },
+				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 				{ key: "status", label: "Status", sortable: true }
 			],
 			isBusy: false,
@@ -111,12 +112,18 @@ export default {
 			currentItems:[],
 			selectIndex: 0,
 			status: true,
+			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
 			totalItems: 0,
 			activeColor: 'green',
 			pendingColor: 'orange',
 			isShowSidebar: false,
 			viewModel:{},
+		}
+	},
+	watch: {
+		itemsPerPage(n) {
+			this.$storage.global.set("itemsPerPage",n)
 		}
 	},
 	layout: "default",
@@ -128,37 +135,9 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		onSortChanged() {
-			this.currentPage = 1
-		},
 		onRowSelected(items) {
-			if(items) {
-				if(items.length) {
-					for(let i=0;i<this.$config.itemsPerPage;i++) {
-						if (this.$refs.selectableTable.isRowSelected(i)) this.selectIndex = i
-					}
-					this.viewModel = this.getViewLink('', 'services', items[0].namespace, items[0].name)
-					if(this.currentItems.length ===0) this.currentItems = Object.assign({},this.viewModel)
-					this.isShowSidebar = true
-				} else {
-					if(this.currentItems.title !== this.viewModel.title) {
-						if(this.currentItems.length ===0) this.isShowSidebar = false
-						else {
-							this.viewModel = Object.assign({},this.currentItems)
-							this.currentItems = []
-							this.isShowSidebar = true
-							this.$refs.selectableTable.selectRow(this.selectIndex)
-						}
-					} else {
-						this.isShowSidebar = false
-						this.$refs.selectableTable.clearSelected()
-					}
-				}
-			} else {
-				this.currentItems = []
-				this.isShowSidebar = false
-				this.$refs.selectableTable.clearSelected()
-			}
+			this.isShowSidebar = (items && items.length > 0)
+			if (this.isShowSidebar) this.viewModel = this.getViewLink('', 'services', items[0].namespace, items[0].name)
 		},
 		// 조회
 		query_All() {
@@ -175,7 +154,7 @@ export default {
 								internalEndpoints: this.toEndpointList(el.spec.ports,el.spec.type),
 								externalEndpoints: this.externalEndpoint(el),
 								selector: el.spec.selector,
-								creationTimestamp: this.getElapsedTime(el.metadata.creationTimestamp),
+								creationTimestamp: el.metadata.creationTimestamp,
 								status: this.checkStatus(el.spec.type,el.status)
 							});
 						});
@@ -204,8 +183,12 @@ export default {
 			return list;
 		},
 		externalEndpoint(el) {
+			let list = []
 			if (el.spec.type === 'LoadBalancer') {
 				return (el.status.loadBalancer.ingress !== undefined? el.status.loadBalancer : "-")
+			} else if(el.spec.type === 'ExternalName') {
+				list.push(el.spec.externalName)
+				return list
 			} else {
 				return (el.spec.externalIPs? el.spec.externalIPs : "-")
 			}
