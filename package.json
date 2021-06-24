@@ -1,6 +1,6 @@
 {
   "name": "kore-board",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Kubernetes multi-clusters dashboard",
   "repository": {
     "type": "git",
@@ -48,7 +48,7 @@
     "cookie-universal-nuxt": "^2.1.4",
     "expose-loader": "^0.7.5",
     "gulp": "4.0.2",
-    "jquery": "3.4.1",
+    "jquery": "^3.5.0",
     "js-yaml": "^3.14.1",
     "nuxt": "^2.14.11",
     "q": "^1.5.1",
