@@ -13,7 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
+	"github.com/acornsoftlab/dashboard-metrics-scraper/pkg/config"
 )
 
 type ClusterMetrics struct {

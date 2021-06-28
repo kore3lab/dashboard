@@ -1,51 +1,29 @@
-# Accept the Go version for the image to be set as a build argument.
-# Default to Go 1.13
-ARG GO_VERSION=1.13
+#-------------------------------------------
+# STEP 1 : build executable binary
+#-------------------------------------------
+FROM golang:1.15.3-alpine3.12 as builder
 
-# First stage: build the executable.
-FROM golang:${GO_VERSION}-stretch AS builder
+# gcc
+RUN apk add --no-cache build-base sqlite-libs sqlite-dev sqlite
 
-# What arch is it?
-ARG GOARCH=amd64
-ARG GOOS=linux
+ADD . /usr/src/app
+WORKDIR /usr/src/app
 
-# Install the Certificate-Authority certificates for the app to be able to make
-# calls to HTTPS endpoints.
-RUN apt-get update && \
-    apt-get install -y ca-certificates git gcc libc-dev libncurses5-dev sqlite3
+RUN GOOS=linux CGO_ENABLED=1 go build -ldflags '-w -extldflags "-static"' -tags dashboard-metrics-scraper -o dashboard-metrics-scraper -v server.go
 
-# Set the environment variables for the go command:
-# * GOFLAGS=-mod=vendor to force `go build` to look into the `/vendor` folder.
-ENV GOFLAGS=-mod=vendor
+#-------------------------------------------
+# STEP 2 : build a image
+#-------------------------------------------
+FROM scratch
 
-# Set the working directory outside $GOPATH to enable the support for modules.
-WORKDIR /src
+COPY --from=builder /usr/src/app/dashboard-metrics-scraper /app/
 
-# Import the code from the context.
-COPY ./ ./
+#-------------------------------------------
+# STEP 3 : execute a binary
+#-------------------------------------------
+ENV KUBECONFIG  ""
 
-# Build the executable to `/app`. Mark the build as statically linked.
-RUN echo "Building for $GOARCH" \
-    && mkdir -p ${GOPATH}/src/github.com/kubernetes-sigs \
-    && ln -sf `pwd` ${GOPATH}/src/github.com/kubernetes-sigs/dashboard-metrics-scraper \
-    && GOARCH=${GOARCH} hack/build.sh 
+ENTRYPOINT [ "/app/dashboard-metrics-scraper" ]
 
-# Create a nonroot user for final image
-# RUN useradd -u 10001 nonroot 
-
-# Final stage: the running container.
-FROM scratch AS final
-
-# Import the compiled executable from the second stage.
-COPY --from=builder /metrics-sidecar /metrics-sidecar
-
-# Copy nonroot user
-COPY --from=builder /etc/passwd /etc/passwd
-
-# Declare the port on which the webserver will be exposed.
 EXPOSE 8080
-#USER nonroot
 
-ENV KUBECONFIG ""
-# Run the compiled binary.
-ENTRYPOINT ["/metrics-sidecar"]
