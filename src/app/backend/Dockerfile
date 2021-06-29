@@ -10,14 +10,14 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags kore-board.backend -o kore-board.backend -v backend.go
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags backend -o backend -v backend.go
 
 #-------------------------------------------
 # STEP 2 : build a image
 #-------------------------------------------
 FROM scratch
 
-COPY --from=builder /usr/src/app/kore-board.backend /app/
+COPY --from=builder /usr/src/app/backend /app/
 
 #-------------------------------------------
 # STEP 3 : execute a binary
@@ -27,6 +27,6 @@ ENV KUBECONFIG  ""
 ENV GIN_MODE=release
 ENV APP_ENV=${app_env:-"production"}
 
-ENTRYPOINT [ "/app/kore-board.backend" ]
+ENTRYPOINT [ "/app/backend" ]
 
 EXPOSE 3001

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/acornsoftlab/dashboard/terminal/cache/token"
-	"github.com/acornsoftlab/dashboard/terminal/webtty"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
+	"github.com/kore3lab/dashboard/terminal/cache/token"
+	"github.com/kore3lab/dashboard/terminal/webtty"
 	"github.com/pkg/errors"
 )
 

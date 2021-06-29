@@ -3,11 +3,11 @@ package apis
 import (
 	"net/http"
 
-	"github.com/acornsoftlab/dashboard/model/v1alpha1"
-	"github.com/acornsoftlab/dashboard/pkg/app"
-	"github.com/acornsoftlab/dashboard/pkg/config"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
 	"github.com/gin-gonic/gin"
+	"github.com/kore3lab/dashboard/model/v1alpha1"
+	"github.com/kore3lab/dashboard/pkg/app"
+	"github.com/kore3lab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/pkg/lang"
 )
 
 func Topology(c *gin.Context) {

@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/acornsoftlab/dashboard/pkg/app"
-	"github.com/acornsoftlab/dashboard/pkg/auth"
+	"github.com/kore3lab/dashboard/pkg/app"
+	"github.com/kore3lab/dashboard/pkg/auth"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/gin-gonic/gin"
+	"github.com/kore3lab/dashboard/pkg/config"
 )
 
 type user struct {

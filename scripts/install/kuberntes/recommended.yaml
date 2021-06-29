@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
+          image: ghcr.io/kore3lab/kore-board.metrics-scraper:latest
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config
@@ -164,7 +164,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/kore-board.backend:latest
+          image: ghcr.io/kore3lab/kore-board.backend:latest
           imagePullPolicy: Always
           args:
             - --kubeconfig=strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config
@@ -357,7 +357,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/acornsoftlab/kore-board.frontend:latest
+          image: ghcr.io/kore3lab/kore-board.frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -371,6 +371,7 @@ spec:
             - mountPath: /etc/nginx/nginx.conf
               name: nginx-conf
               subPath: nginx.conf
+      serviceAccountName: kore-board
       nodeSelector:
         "kubernetes.io/os": linux
       volumes:
@@ -427,7 +428,7 @@ spec:
     spec:
       containers:
         - name: terminal
-          image: ghcr.io/acornsoftlab/kore-board.terminal:latest
+          image: ghcr.io/kore3lab/kore-board.terminal:latest
           imagePullPolicy: Always
           args:
             - --kubeconfig=/app/.kube/config

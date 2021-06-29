@@ -10,7 +10,7 @@ ADD . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags kore-board.terminal -o kore-board.terminal -v terminal-main.go
+RUN GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -extldflags "-static"' -tags terminal -o terminal -v terminal-main.go
 
 #-------------------------------------------
 # STEP 2 : terminal
@@ -24,7 +24,7 @@ ARG ARCH=amd64
 RUN rm -f /bin/sh && ln -s /bin/bash /bin/sh
 ENV KUBECTL_VERSION v1.20.2
 
-COPY --from=builder /usr/src/app/kore-board.terminal /app/
+COPY --from=builder /usr/src/app/terminal /app/
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends curl ca-certificates jq iproute2 less bash-completion unzip sysstat acl net-tools iputils-ping telnet dnsutils wget vim git && \
@@ -52,4 +52,4 @@ EXPOSE 3003
 
 ENV KUBECONFIG ""
 
-ENTRYPOINT [ "/app/kore-board.terminal" ]
+ENTRYPOINT [ "/app/terminal" ]

@@ -22,7 +22,7 @@ import path from "path";
 import goCommand from "./gocommand.js";
 
 const basePath = path.join(__dirname, "../../");
-const mainPackageName = "github.com/acornsoftlab/dashboard";
+const mainPackageName = "github.com/kore3lab/dashboard";
 
 /**
  * Compiles backend application in development mode and places the binary in the serve

@@ -4,7 +4,7 @@
   "description": "Kubernetes multi-clusters dashboard",
   "repository": {
     "type": "git",
-    "url": "https://github.com/acornsoftlab/dashboard.git"
+    "url": "https://github.com/kore3lab/dashboard.git"
   },
   "license": " Apache-2.0 License",
   "scripts": {
@@ -15,7 +15,7 @@
     "start:metrics-scraper": "cd src/app/metrics-scraper; go run server.go",
     "start:graph:backend": "concurrently \"npm run start:backend\" \"npm run start:graph\"",
     "build:frontend": "nuxt generate",
-    "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/acorn-graph/",
+    "build:graph": "cd src/app/graph; npm run build; cd ..;cd ..;cd ..;cp src/app/graph/dist/*.js src/app/frontend/static/kore3lab.graph/",
     "docker:build:frontend": "./scripts/docker/docker-build.sh frontend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
     "docker:build:backend": "./scripts/docker/docker-build.sh backend build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",
     "docker:build:metrics-scraper": "./scripts/docker/docker-build.sh metrics-scraper build $npm_package_config_docker_image_tag $npm_package_config_docker_image_registry",

@@ -10,8 +10,8 @@
 
 ### Summary
 
-* 개발은 원본(acornosftlab/dashboard) repository를 fork 받아 로컬 repository 에서 수행하고 "Pull Reuqest"를 통해 리뷰 프로세스 수행
-* 리뷰가 완료되면 원본(acornosftlab/dashboard) repository의 branch에 merge 하여 반영
+* 개발은 원본(kore3lab/dashboard) repository를 fork 받아 로컬 repository 에서 수행하고 "Pull Reuqest"를 통해 리뷰 프로세스 수행
+* 리뷰가 완료되면 원본(kore3lab/dashboard) repository의 branch에 merge 하여 반영
 * Feature 개발 : `develop` branch에서 로컬 branch를 생성&개발 후 원본 repository의 `develop` branch에 merge
 * Hotfix 개발 : `master` branch에서 로컬 branch를 생성&개발 후 원본 repository의 `develop` 와 `master` branch에 merge
 * Release 개발 : `develop` branch에서 로컬 branch를 생성&개발 후 원본 repository의 `masater` 와 `develop` branch에 merge
@@ -37,14 +37,14 @@ origin	https://github.com/<github id>/dashboard.git (push)
 원격 저장소(프로젝트의 원래 저장소)를 추가한다.
 
 ```
-$ git remote add upstream https://github.com/acornsoftlab/dashboard.git
+$ git remote add upstream https://github.com/kore3lab/dashboard.git
 
 $ git remote -v
 
 origin	https://github.com/<github id>/dashboard.git (fetch)
 origin	https://github.com/<github id>/dashboard.git (push)
-upstream	https://github.com/acornsoftlab/dashboard.git (fetch)
-upstream	https://github.com/acornsoftlab/dashboard.git (push)
+upstream	https://github.com/kore3lab/dashboard.git (fetch)
+upstream	https://github.com/kore3lab/dashboard.git (push)
 ```
 
 ### 개발 준비
@@ -79,7 +79,7 @@ $ git branch
   master
 ```
 
- * [README.md](https://github.com/acornsoftlab/dashboard/blob/master/README.md)에서 "Getting started" 섹션의 clone 이후 내용을 참고하여 개발환경 구성
+ * [README.md](https://github.com/kore3lab/dashboard/blob/master/README.md)에서 "Getting started" 섹션의 clone 이후 내용을 참고하여 개발환경 구성
 
 
 

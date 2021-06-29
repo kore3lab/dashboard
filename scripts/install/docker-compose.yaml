@@ -2,21 +2,21 @@ version: "3.8"
 
 services:
   terminal:
-    image: ghcr.io/acornsoftlab/kore-board.terminal:latest
+    image: ghcr.io/kore3lab/kore-board.terminal:latest
     command: --kubeconfig=/app/.kube/config --log-level=info
     volumes:
       - kubeconfig:/app/.kube
     privileged: true
 
   metrics-scraper:
-    image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest
+    image: ghcr.io/kore3lab/kore-board.metrics-scraper:latest
     command: --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db --log-level=info
     volumes:
       - kubeconfig:/app/.kube
       - data:/app/data
 
   backend:
-    image: ghcr.io/acornsoftlab/kore-board.backend:latest
+    image: ghcr.io/kore3lab/kore-board.backend:latest
     command: --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003 --log-level=info
     volumes:
       - kubeconfig:/app/.kube
@@ -24,7 +24,7 @@ services:
       - metrics-scraper
 
   frontend:
-    image: ghcr.io/acornsoftlab/kore-board.frontend:latest
+    image: ghcr.io/kore3lab/kore-board.frontend:latest
     ports:
       - 3000:80
     links:

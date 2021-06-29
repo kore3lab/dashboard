@@ -16,33 +16,9 @@
 * clone
 
 ```
-$ git clone https://github.com/acornsoftlab/dashboard.git
+$ git clone https://github.com/kore3lab/dashboard.git
 $ cd dashboard
 ```
-
-* `subtree`로 구성된 소스 중 사용되지 않는 파일을 제외하도록 지정하고 소스 트리를 업데이트합니다.
-
-```
-# sparse checkout 옵션 지정
-$ git config core.sparsecheckout true
-
-# 대상 파일 지정
-$ cat <<EOF> .git/info/sparse-checkout
-/*
-!/src/app/metrics-scraper
-/src/app/metrics-scraper/hack/build.sh
-/src/app/metrics-scraper/pkg
-/src/app/metrics-scraper/vendor
-/src/app/metrics-scraper/Dockerfile
-/src/app/metrics-scraper/go.*
-/src/app/metrics-scraper/*.go
-!/src/app/metrics-scraper/**/*_test.go
-EOF
-
-# 트리 업데이트
-$ git read-tree HEAD -m -u
-```
-
 
 * Installation dependencies (frontend,graph)
 

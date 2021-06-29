@@ -29,7 +29,7 @@
 	</div>
 </template>
 <script>
-import * as graph	from "../../static/acorn-graph/acorn.graph.topology"
+import * as graph	from "../../static/kore3lab.graph/kore3lab.graph.topology"
 import VueNavigator from "@/components/navigator"
 
 export default {

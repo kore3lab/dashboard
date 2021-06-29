@@ -40,11 +40,11 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/kore-board.backend:latest
+          image: ghcr.io/kore3lab/kore-board.backend:latest
           args:
             - --metrics-scraper-url=http://metrics-scraper:8000
             - --log-level=info
-            - --auth=strategy=cookie,secret=static-token,token=acornsoft
+            - --auth=strategy=cookie,secret=static-token,token=kore3lab
 ```
 
 ### static-token
@@ -55,7 +55,7 @@ spec:
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --auth=strategy=<cookie/local>,secret=static-token,token=<token-string>
 ```
@@ -69,7 +69,7 @@ spec:
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --auth=strategy=<cookie/local>,secret=static-user,username=<username>,password=<password>
 ```
@@ -96,7 +96,7 @@ EOF
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --auth=strategy=<cookie/local>,secret=basic-auth,dir=/var/user
         ...
@@ -115,7 +115,7 @@ spec:
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --auth=strategy=<cookie/local>,access-key=<access-token-secret>,refresh=<refresh-token-secret>,secret=service-account-token
 ```

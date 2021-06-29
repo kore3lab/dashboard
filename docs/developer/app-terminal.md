@@ -4,7 +4,7 @@
 
 ### 전체 주요 프로세스
 
-![termianl process](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/acornsoftlab/dashboard/master/docs/developer/app-terminal.puml)
+![termianl process](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/kore3lab/dashboard/master/docs/developer/app-terminal.puml)
 
 ### Linux `unshare` 명령을 활용
 
@@ -79,7 +79,7 @@ $ curl http://localhost:3003/healthy
 ```
 $ docker run --rm -d --privileged -p 3003:3003 --name terminal \
     -v "${HOME}/.kube:/app/.kube"\
-    ghcr.io/acornsoftlab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
+    ghcr.io/kore3lab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
 ```
 
 ### 클라이언트 활용 (예제 코드)

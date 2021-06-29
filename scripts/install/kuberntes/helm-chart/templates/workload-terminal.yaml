@@ -1,0 +1,62 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    kore.board: terminal
+  name: terminal
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3003
+      targetPort: 3003
+  selector:
+    app: {{ .Chart.Name }}
+    kore.board: terminal
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+    kore.board: terminal
+  name: terminal
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      kore.board: terminal
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        kore.board: terminal
+    spec:
+      containers:
+        - name: terminal
+          image: ghcr.io/kore3lab/kore-board.terminal:{{ .Chart.AppVersion }}
+          imagePullPolicy: Always
+          args:
+            - --kubeconfig=/app/.kube/config
+            - --log-level=info
+          ports:
+            - containerPort: 3003
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/.kube
+              name: kubeconfig
+          securityContext:
+            privileged: true
+      volumes:
+        - name: kubeconfig
+          configMap:
+            name: {{ .Chart.Name }}-kubeconfig
+      serviceAccountName: {{ .Chart.Name }}
+      nodeSelector:
+        "kubernetes.io/os": linux
+

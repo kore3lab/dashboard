@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/acornsoftlab/dashboard/model"
-	"github.com/acornsoftlab/dashboard/pkg/config"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
 	resty "github.com/go-resty/resty/v2"
+	"github.com/kore3lab/dashboard/model"
+	"github.com/kore3lab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/pkg/lang"
 	log "github.com/sirupsen/logrus"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

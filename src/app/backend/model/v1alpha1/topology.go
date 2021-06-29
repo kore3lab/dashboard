@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/acornsoftlab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/pkg/config"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

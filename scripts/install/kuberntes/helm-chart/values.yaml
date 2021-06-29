@@ -2,9 +2,6 @@ image:
   pullPolicy: IfNotPresent  #Always
 
 metricsScraper:
-  replicaCount: 1
-  service:
-    type: ClusterIP
   persistence:
     enabled: false
     accessMode: ReadWriteOnce
@@ -24,8 +21,6 @@ metricsScraper:
 
 backend:
   replicaCount: 1
-  service:
-    type: ClusterIP
 
 frontend:
   replicaCount: 1
