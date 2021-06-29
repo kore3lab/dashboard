@@ -7,14 +7,11 @@ metadata:
   name: backend
   namespace: {{ .Release.Namespace }}
 spec:
-  type: {{ .Values.backend.service.type }}
+  type: ClusterIP
   ports:
     - name: http
-{{- if hasKey .Values.backend.service "nodePort" }}
-      nodePort: {{ .Values.backend.service.nodePort }}
-{{- end }}
-      port: 3001
       protocol: TCP
+      port: 3001
       targetPort: 3001
   selector:
     app: {{ .Chart.Name }}
@@ -44,33 +41,20 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/acornsoftlab/kore-board.backend:{{ .Chart.AppVersion }}
+          image: ghcr.io/kore3lab/kore-board.backend:{{ .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
-            - --kubeconfig=/app/.kube/config
+            - --kubeconfig=strategy=configmap,configmap={{ .Chart.Name }}-kubeconfig,namespace={{ .Release.Namespace }},filename=config
             - --metrics-scraper-url=http://metrics-scraper:8000
+            - --terminal-url=http://terminal:3003
             - --log-level=info
           ports:
             - containerPort: 3000
               protocol: TCP
           volumeMounts:
-            - mountPath: /app/.kube/config
-              name: kubeconfig
-              subPath: config
             - mountPath: /tmp
               name: tmp-volume
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsUser: 1001
-            runAsGroup: 2001
       volumes:
-        - name: kubeconfig
-          configMap:
-            name: kore-board-kubeconfig
-            items:
-            - key: config
-              path: config
         - name: tmp-volume
           emptyDir: {}
       serviceAccountName: {{ .Chart.Name }}

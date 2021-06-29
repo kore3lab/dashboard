@@ -4,7 +4,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/acornsoftlab/dashboard/terminal/server"
+	"github.com/kore3lab/dashboard/terminal/server"
 )
 
 // Options - LocalCommand 운영에 필요한 옵션 정보 구조체

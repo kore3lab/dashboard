@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/acornsoftlab/dashboard/pkg/auth"
-	"github.com/acornsoftlab/dashboard/pkg/client"
+	"github.com/kore3lab/dashboard/pkg/auth"
+	"github.com/kore3lab/dashboard/pkg/client"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

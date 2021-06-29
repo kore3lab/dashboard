@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/acornsoftlab/dashboard/pkg/client"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
+	"github.com/kore3lab/dashboard/pkg/client"
+	"github.com/kore3lab/dashboard/pkg/lang"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"

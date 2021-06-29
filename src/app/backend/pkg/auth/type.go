@@ -7,13 +7,13 @@ import (
 /**
 auth-info USE-CASES
 	{"strategy":"cookie"}
-	{"strategy":"cookie",	"secret": {"type": "static-user",			"username": "admin", "password": "acornsoft"} }
-	{"strategy":"cookie",	"secret": {"type": "static-token",			"token": "acornsoft"} }
+	{"strategy":"cookie",	"secret": {"type": "static-user",			"username": "admin", "password": "kore3lab"} }
+	{"strategy":"cookie",	"secret": {"type": "static-token",			"token": "kore3lab"} }
 	{"strategy":"cookie",	"secret": {"type": "basic-auth",			"dir": "/var/tmp"} }
 	{"strategy":"cookie",	"secret": {"type": "service-account-token"} }
 	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"} }
-	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "static-user",			"username": "admin", "password": "acornsoft"} }
-	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "static-token"	,		"token": "acornsoft"} }
+	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "static-user",			"username": "admin", "password": "kore3lab"} }
+	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "static-token"	,		"token": "kore3lab"} }
 	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "basic-auth",			"dir": "/var/tmp"} }
 	{"strategy":"local",	"key": {"access": "whdmstkddk", "refresh":"hsthvmxm"},	"secret": {"type": "service-account-token"} }
 */

@@ -1,4 +1,4 @@
-module github.com/acornsoftlab/dashboard-metrics-scraper
+module github.com/kore3lab/dashboard-metrics-scraper
 
 go 1.15
 

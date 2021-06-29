@@ -11,9 +11,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/acornsoftlab/dashboard/pkg/app"
-	"github.com/acornsoftlab/dashboard/pkg/config"
 	"github.com/gin-gonic/gin"
+	"github.com/kore3lab/dashboard/pkg/app"
+	"github.com/kore3lab/dashboard/pkg/config"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )

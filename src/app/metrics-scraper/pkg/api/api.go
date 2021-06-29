@@ -3,11 +3,11 @@ package api
 import (
 	"database/sql"
 	"fmt"
-	"github.com/acornsoftlab/dashboard-metrics-scraper/pkg/config"
+	"github.com/kore3lab/dashboard-metrics-scraper/pkg/config"
 	"net/http"
 
-	dashboardProvider "github.com/acornsoftlab/dashboard-metrics-scraper/pkg/api/dashboard"
 	"github.com/gorilla/mux"
+	dashboardProvider "github.com/kore3lab/dashboard-metrics-scraper/pkg/api/dashboard"
 	_ "github.com/mattn/go-sqlite3"
 	log "github.com/sirupsen/logrus"
 )

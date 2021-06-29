@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/acornsoftlab/dashboard/pkg/config"
-	"github.com/acornsoftlab/dashboard/router"
+	"github.com/kore3lab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/router"
 )
 
 func main() {

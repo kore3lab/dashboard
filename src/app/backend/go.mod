@@ -1,4 +1,4 @@
-module github.com/acornsoftlab/dashboard
+module github.com/kore3lab/dashboard
 
 go 1.15
 
