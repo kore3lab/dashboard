@@ -63,11 +63,15 @@ func NewDashboard(contextName string) Dashboard {
 
 func (self *Dashboard) Get() error {
 
+	timeout := int64(5)
+	options := metav1.ListOptions{TimeoutSeconds: &timeout} //timeout 5s
+
 	allocateTotal := resource{} // self.Nodes.Address/Status/Roles 외 리소스 allocatable
 	usageTotal := resource{}    // self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
 
 	client, err := config.Cluster.Client(self.context)
 	if err != nil {
+
 		return err
 	}
 
@@ -81,12 +85,12 @@ func (self *Dashboard) Get() error {
 		return err
 	}
 
-	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), options)
 	if err != nil {
 		return err
 	}
 
-	podList, err := apiClient.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
+	podList, err := apiClient.CoreV1().Pods("").List(context.TODO(), options)
 	if err != nil {
 		return err
 	}
@@ -95,7 +99,7 @@ func (self *Dashboard) Get() error {
 	self.Workloads = make(map[string]dashboardAvailable)
 
 	// self.Workloads.DaemonSet
-	dsList, err := apiClient.AppsV1().DaemonSets("").List(context.TODO(), metav1.ListOptions{})
+	dsList, err := apiClient.AppsV1().DaemonSets("").List(context.TODO(), options)
 	if err != nil {
 		log.Errorf("Unable to get daemonsets (cause=%v)", err)
 		return err
@@ -109,7 +113,7 @@ func (self *Dashboard) Get() error {
 	self.Workloads["daemonset"] = dashboardAvailable{Available: len(dsList.Items), Ready: ready}
 
 	// self.Workloads.Deployment
-	deployList, err := apiClient.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
+	deployList, err := apiClient.AppsV1().Deployments("").List(context.TODO(), options)
 	if err != nil {
 		return err
 	}
@@ -122,7 +126,7 @@ func (self *Dashboard) Get() error {
 	self.Workloads["deployment"] = dashboardAvailable{Available: len(deployList.Items), Ready: ready}
 
 	// self.Workloads.ReplicaSet
-	rsList, err := apiClient.AppsV1().ReplicaSets("").List(context.TODO(), metav1.ListOptions{})
+	rsList, err := apiClient.AppsV1().ReplicaSets("").List(context.TODO(), options)
 	if err != nil {
 		log.Errorf("Unable to get replicasets (cause=%v)", err)
 		return err
@@ -136,7 +140,7 @@ func (self *Dashboard) Get() error {
 	self.Workloads["replicaset"] = dashboardAvailable{Available: len(rsList.Items), Ready: ready}
 
 	// self.Workloads.StatefulSet
-	sfsList, err := apiClient.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
+	sfsList, err := apiClient.AppsV1().StatefulSets("").List(context.TODO(), options)
 	if err != nil {
 		log.Errorf("Unable to get statefulsets (cause=%v)", err)
 		return err
@@ -150,15 +154,18 @@ func (self *Dashboard) Get() error {
 	self.Workloads["statefulset"] = dashboardAvailable{Available: len(sfsList.Items), Ready: ready}
 
 	for _, m := range nodeList.Items {
+
+		// node summary for storage used percentage (/api/v1/nodes/<node name>/proxy/stats/summary)
 		nodeSummary := model.Summary{}
 		request := apiClient.CoreV1().RESTClient().Get().Resource("nodes").Name(m.Name).SubResource("proxy").Suffix("stats/summary")
 		responseRawArrayOfBytes, err := request.DoRaw(context.Background())
 		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(responseRawArrayOfBytes, &nodeSummary)
-		if err != nil {
-			return err
+			log.Warnf("Unable to get %s/proxy/stats/summary (cause=%v)", m, err)
+		} else {
+			err = json.Unmarshal(responseRawArrayOfBytes, &nodeSummary)
+			if err != nil {
+				log.Warnf("Unable to unmarshal data %s/proxy/stats/summary (cause=%v)", m, err)
+			}
 		}
 
 		self.Nodes[m.Name] = dashboardNode{
@@ -183,17 +190,15 @@ func (self *Dashboard) Get() error {
 
 	}
 
-	versionedNodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), metav1.ListOptions{})
+	versionedNodeMetrics, err := metricsClient.MetricsV1beta1().NodeMetricses().List(context.TODO(), options)
 	if err != nil {
-		log.Errorf("Unable to get node metries (cause=%v)", err)
-		return err
+		log.Warnf("Unable to get node metries (cause=%v)", err)
 	}
 
 	nodeMetrics := &metricsapi.NodeMetricsList{}
 	err = metricsV1beta1api.Convert_v1beta1_NodeMetricsList_To_metrics_NodeMetricsList(versionedNodeMetrics, nodeMetrics, nil)
 	if err != nil {
-		log.Errorf("Unable to convert node metries (cause=%v)", err)
-		return err
+		log.Warnf("Unable to convert node metries (cause=%v)", err)
 	}
 
 	for _, m := range nodeMetrics.Items {
