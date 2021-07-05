@@ -1,180 +1,181 @@
 <template>
-	<!-- content-wrapper -->
-	<div class="content-wrapper">
-
-		<!-- Content Header (Page header) -->
-		<div class="content-header">
-			<div class="container-fluid">
+<div class="content-wrapper">
+	<section class="content pt-3">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-6">
+					<div class="small-box bg-warning">
+						<div class="inner"><h3>{{ summary.nodes.usage ? summary.nodes.usage: "NaN"}}</h3><p>Nodes</p></div>
+						<div class="icon"><i class="fas fa-server"></i></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-6">
+					<div class="small-box bg-success">
+						<div class="inner"><h3>{{ Math.round(summary.cpu["percent"],0) }}<small>%</small></h3><p>CPU</p></div>
+						<div class="icon"><i class="fas fa-microchip"></i></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-6">
+					<div class="small-box bg-info">
+						<div class="inner"><h3>{{ Math.round(summary.memory["percent"],0) }}<small>%</small></h3><p>Memory</p></div>
+						<div class="icon"><i class="fas fa-memory"></i></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-6">
+					<div class="small-box bg-secondary">
+						<div class="inner"><h3>{{ Math.round(summary.storage["percent"],0) }}<small>%</small></h3><p>Storage</p></div>
+						<div class="icon"><i class="fas fa-hdd"></i></div>
+					</div>
+				</div>
 			</div>
+			<div class="row">
+				<div class="col-lg-7">
+					<!-- Nodes -->
+					<div class="card">
+						<div class="card-header">
+							<div class="d-flex justify-content-between">
+								<h3 class="card-title">Nodes</h3>
+								<div class="card-tools">
+									<nuxt-link to="/cluster/node.list" class="btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+								</div>
+							</div>
+						</div>
+						<div class="card-body p-0">
+							<b-table-simple small responsive borderless >
+								<colgroup><col width="40%"><col><col><col><col><col><col><col><col><col></colgroup>
+								<b-thead><b-tr><b-th>Name</b-th><b-th>CPU</b-th><b-th>Memory</b-th><b-th>Storage</b-th><b-th>Pods</b-th></b-tr></b-thead>
+								<b-tbody>
+									<b-tr v-for="(nd, key) in nodes" :key="key">
+										<b-td>
+											<span v-bind:class="{ 'bg-success': (nd.status=='Ready'), 'bg-warning': (nd.status!='Ready')}" class="badge font-weight-light">{{ nd.status }}</span>
+											<span class="pl-1 text-lg">{{ key }}</span>
+											<p class="text-muted text-sm font-weight-light ml-1">{{ nd.role }}</p>
+										</b-td>
+										<b-td>
+											<p class="text-lg">{{ nd.usage.cpu.percent }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(nd.usage.cpu.usage).toLocaleString() }}/{{ Number(nd.usage.cpu.allocatable).toLocaleString() }} m</p>
+										</b-td>
+										<b-td >
+											<p class="text-lg">{{ nd.usage.memory.percent }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} MiB</p>
+										</b-td>
+										<b-td>
+											<p class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} GiB</p>
+										</b-td>
+										<b-td>
+											<p class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ nd.usage.pod.usage }}/{{ nd.usage.pod.allocatable }} ea</p>
+										</b-td> 
+									</b-tr>
+								</b-tbody>
+							</b-table-simple>
+						</div>
+					</div><!-- / Nodes -->
+				</div>
+				<div class="col-lg-5">
+					<!-- Nodes Map -->
+					<div class="card">
+						<div class="card-header">
+							<div class="d-flex justify-content-between">
+								<h3 class="card-title">Nodes Map</h3>
+							</div>
+						</div>
+						<div class="card-body">
+							<ul class="hexGrid">
+								<li class="hex" v-for="(nd, key) in nodes" :key="key">
+									<div class="hexIn">
+										<a v-bind:class="{ 'bg-success': (nd.status=='Ready'), 'bg-warning': (nd.status!='Ready'), 'hexLink':true }" href="#"><h1>{{ key }}</h1><p class="text-truncate">{{ nd.address }}</p></a>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div><!-- /Nodes Map -->
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm">
+					<div class="info-box">
+						<div class="info-box-content">
+							<span class="info-box-text">Daemon Sets</span>
+							<span class="info-box-number">{{ workloads.daemonset.ready }} / {{ workloads.daemonset.available }}</span>
+						</div>
+						<nuxt-link to="/workload/daemonset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+					</div>
+				</div>
+				<div class="col-sm">
+					<div class="info-box">
+						<div class="info-box-content">
+							<span class="info-box-text">Deployments</span>
+							<span class="info-box-number">{{ workloads.deployment.ready }} / {{ workloads.deployment.available }}</span>
+						</div>
+						<nuxt-link to="/workload/deployment.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+					</div>
+				</div>
+				<div class="col-sm">
+					<div class="info-box">
+						<div class="info-box-content">
+							<span class="info-box-text">Replica Sets</span>
+							<span class="info-box-number">{{ workloads.replicaset.ready }} / {{ workloads.replicaset.available }}</span>
+						</div>
+						<nuxt-link to="/workload/replicaset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+					</div>
+				</div>
+				<div class="col-sm">
+					<div class="info-box">
+						<div class="info-box-content">
+							<span class="info-box-text">Stateful Sets</span>
+							<span class="info-box-number">{{ workloads.statefulset.ready }} / {{ workloads.statefulset.available }}</span>
+						</div>
+						<nuxt-link to="/workload/statefulset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+					</div>
+				</div>
+				<div class="col-sm">
+					<div class="info-box">
+						<div class="info-box-content">
+							<span class="info-box-text">Pods</span>
+							<span class="info-box-number">{{ workloads.pod.ready }} / {{ workloads.pod.available }}</span>
+						</div>
+						<nuxt-link to="/workload/pod.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
+					</div>
+				</div>
+			</div>
+			<!-- charts -->
+			<div class="row">
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-header border-0">
+							<h3 class="card-title">CPU Usages</h3>
+						</div>
+						<div class="card-body">
+							<div class="chart">
+								<c-linechart id="cpuChart" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-header border-0">
+							<h3 class="card-title">Memory Usages</h3>
+						</div>
+						<div class="card-body">
+							<div class="chart">
+								<c-linechart id="memoryChart" :chart-data="chart.data.memory"  :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div><!-- /charts -->
 		</div>
-
-		<!-- Main content -->
-		<section class="content">
-			<div class="container-fluid">
-				<!-- @@@@ -->
-				<!-- row -->
-				<div class="row">
-					<div class="col-lg-3 col-6">
-						<div class="small-box bg-warning">
-							<div class="inner"><h3>{{ summary.nodes.usage ? summary.nodes.usage: "NaN"}}</h3><p>Nodes</p></div>
-							<div class="icon"><i class="fas fa-server"></i></div>
-						</div>
-					</div>
-					<div class="col-lg-3 col-6">
-						<div class="small-box bg-success">
-							<div class="inner"><h3>{{ Math.round(summary.cpu["percent"],0) }}<small>%</small></h3><p>CPU</p></div>
-							<div class="icon"><i class="fas fa-microchip"></i></div>
-						</div>
-					</div>
-					<div class="col-lg-3 col-6">
-						<div class="small-box bg-info">
-							<div class="inner"><h3>{{ Math.round(summary.memory["percent"],0) }}<small>%</small></h3><p>Memory</p></div>
-							<div class="icon"><i class="fas fa-memory"></i></div>
-						</div>
-					</div>
-					<div class="col-lg-3 col-6">
-						<div class="small-box bg-secondary">
-							<div class="inner"><h3>{{ Math.round(summary.storage["percent"],0) }}<small>%</small></h3><p>Storage</p></div>
-							<div class="icon"><i class="fas fa-hdd"></i></div>
-						</div>
-					</div>
-				</div><!-- /.row -->
-				<!-- row -->
-				<div class="row">
-					<div class="col-lg-7">
-						<div class="card">
-							<div class="card-header">
-								<div class="d-flex justify-content-between">
-									<h3 class="card-title">Nodes</h3>
-								</div>
-							</div>
-							<div class="card-body">
-								<div class="d-flex flex-row justify-content-between align-items-center"  v-for="(nd, key) in nodes" :key="key">
-									<p class="text-lg mr-auto">{{ key }}</p>
-									<p class="d-flex text-left p-2">
-										<span class="badge badge-success font-weight-light ml-1">{{ nd.status }}</span>
-										<span class="badge badge-secondary font-weight-light ml-1">{{ nd.roles }}</span>
-									</p>
-									<p class="d-flex flex-column text-center p-2">
-										<span class="text-lg">{{ nd.usage.cpu.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(nd.usage.cpu.usage).toLocaleString() }}/{{ Number(nd.usage.cpu.allocatable).toLocaleString() }} m</span>
-									</p>
-									<p class="d-flex flex-column text-center p-2">
-										<span class="text-lg">{{ nd.usage.memory.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} MiB</span>
-									</p>
-									<p class="d-flex flex-column text-center p-2">
-										<span class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} GiB</span>
-									</p>
-									<p class="d-flex flex-column text-center  p-2">
-										<span class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></span>
-										<span class="text-muted text-sm font-weight-light">{{ nd.usage.pod.usage }}/{{ nd.usage.pod.allocatable }} ea</span>
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-lg-5">
-						<div class="card">
-							<div class="card-header">
-								<div class="d-flex justify-content-between">
-									<h3 class="card-title">Nodes Map</h3>
-								</div>
-							</div>
-							<div class="card-body">
-								<ul class="hexGrid">
-									<li class="hex" v-for="(nd, key) in nodes" :key="key">
-										<div class="hexIn">
-											<a v-bind:class="{ 'bg-success': (nd.status==='Ready'), 'bg-warning': (nd.status==='NotReady'), 'hexLink':true }" href="#"><h1>{{ key }}</h1><p class="text-truncate">{{ nd.address }}</p></a>
-										</div>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div><!-- /.row -->
-				<!-- row -->
-				<div class="row">
-					<div class="col-sm">
-						<div class="info-box">
-							<div class="info-box-content">
-								<span class="info-box-text">Daemon Sets</span>
-								<span class="info-box-number">{{ workloads.daemonset.ready }} / {{ workloads.daemonset.available }}</span>
-							</div>
-							<nuxt-link to="/workload/daemonset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
-						</div>
-					</div>
-					<div class="col-sm">
-						<div class="info-box">
-							<div class="info-box-content">
-								<span class="info-box-text">Deployments</span>
-								<span class="info-box-number">{{ workloads.deployment.ready }} / {{ workloads.deployment.available }}</span>
-							</div>
-							<nuxt-link to="/workload/deployment.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
-						</div>
-					</div>
-					<div class="col-sm">
-						<div class="info-box">
-							<div class="info-box-content">
-								<span class="info-box-text">Replica Sets</span>
-								<span class="info-box-number">{{ workloads.replicaset.ready }} / {{ workloads.replicaset.available }}</span>
-							</div>
-							<nuxt-link to="/workload/replicaset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
-						</div>
-					</div>
-					<div class="col-sm">
-						<div class="info-box">
-							<div class="info-box-content">
-								<span class="info-box-text">Stateful Sets</span>
-								<span class="info-box-number">{{ workloads.statefulset.ready }} / {{ workloads.statefulset.available }}</span>
-							</div>
-							<nuxt-link to="/workload/statefulset.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
-						</div>
-					</div>
-					<div class="col-sm">
-						<div class="info-box">
-							<div class="info-box-content">
-								<span class="info-box-text">Pods</span>
-								<span class="info-box-number">{{ workloads.pod.ready }} / {{ workloads.pod.available }}</span>
-							</div>
-							<nuxt-link to="/workload/pod.list" class="small-box-footer"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
-						</div>
-					</div>
-				</div><!-- /.row -->
-				<!-- row -->
-				<div class="row">
-					<div class="col-md-6">
-						<div class="card">
-							<div class="card-header border-0">
-								<h3 class="card-title">CPU Usages</h3>
-							</div>
-							<div class="card-body">
-								<div class="chart">
-									<c-linechart id="cpuChart" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="card">
-							<div class="card-header border-0">
-								<h3 class="card-title">Memory Usages</h3>
-							</div>
-							<div class="card-body">
-								<div class="chart">
-									<c-linechart id="memoryChart" :chart-data="chart.data.memory"  :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div><!-- /.row -->
-				<!-- //@@@@ -->
-			</div>
-		</section>
-	</div>
-	<!-- /.content-wrapper -->
+	</section>
+</div>
 </template>
+<style scoped>
+.card {height: calc(100% - 1rem);}
+th {font-weight: normal;font-size:.8em}
+td > p {margin-bottom: 0;}
+</style>
 <script>
 import "@/assets/css/hexagons.css"
 import VueChartJs	from "vue-chartjs"
