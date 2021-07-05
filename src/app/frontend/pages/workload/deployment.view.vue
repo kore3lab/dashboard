@@ -230,7 +230,7 @@ export default {
 			this.totalCpu = 0; this.totalMemory = 0; this.cpus = {};
 			this.info = this.getInfo(data);
 			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
-			this.childPod = this.getChildPod(data.spec.template.metadata.labels);
+			this.childPod = this.getChildPod(data.spec.selector.matchLabels);
 		},
 		getInfo(data) {
 			let replicas = data.spec.replicas +' desired, ' + (data.status.updatedReplicas || 0) + ' updated, ' + (data.status.replicas || 0) +' total, ' + (data.status.availableReplicas || 0) + ' available, ' + (data.status.unavailableReplicas || 0) + ' unavailable'
@@ -294,16 +294,18 @@ export default {
 					.then( resp => {
 						let idx = 0;
 						resp.data.items.forEach(el =>{
-							childPod.push({
-								name: el.metadata.name,
-								namespace: el.metadata.namespace,
-								ready: this.toReady(el.status,el.spec),
-								nowMemory: this.onMemory(el,idx),
-								nowCpu: this.onCpu(el,idx),
-								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-								idx: idx,
-							})
-							idx++;
+							if(el.metadata.ownerReferences) {
+								childPod.push({
+									name: el.metadata.name,
+									namespace: el.metadata.namespace,
+									ready: this.toReady(el.status,el.spec),
+									nowMemory: this.onMemory(el,idx),
+									nowCpu: this.onCpu(el,idx),
+									status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+									idx: idx,
+								})
+								idx++;
+							}
 						})
 					})
 			return childPod
