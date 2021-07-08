@@ -1,118 +1,112 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row mb-0">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<b-tabs content-class="mt-3" >
-							<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
-								<div v-if="isCpu" class="chart">
-									<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
-								</div>
-								<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
-							</b-tab>
-							<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
-								<div v-if="isMemory" class="chart">
-									<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
-								</div>
-								<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
-							</b-tab>
-						</b-tabs>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-3 text-truncate">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-3 text-truncate">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-							<dt class="col-sm-3 text-truncate">Capacity</dt><dd class="col-sm-9">{{ info.capacity }}</dd>
-							<dt class="col-sm-3 text-truncate">Allocatable</dt><dd class="col-sm-9">{{ info.allocatable }}</dd>
-							<dt class="col-sm-3 text-truncate">Addresses</dt>
-							<dd class="col-sm-9">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(val, idx) in info.addresses" v-bind:key="idx">{{ val.type }}: {{ val.address }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3 text-truncate">OS</dt><dd class="col-sm-9">{{ info.os }}</dd>
-							<dt class="col-sm-3 text-truncate">OS Image</dt><dd class="col-sm-9">{{ info.osImage }}</dd>
-							<dt class="col-sm-3 text-truncate">Kernel version</dt><dd class="col-sm-9">{{ info.kernelVersion }}</dd>
-							<dt class="col-sm-3 text-truncate">Container runtime</dt><dd class="col-sm-9">{{ info.containerRuntime }}</dd>
-							<dt class="col-sm-3 text-truncate">Kubelet version</dt><dd class="col-sm-9">{{ info.kubeletVersion }}</dd>
-							<dt class="col-sm-3 text-truncate">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
-							<dt class="col-sm-3 text-truncate">Annotations</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3">Labels</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt v-if="info.taints" class="col-sm-3 text-truncate">Taints</dt><dd v-if="info.taints" class="col-sm-9"><span v-for="(val, idx) in info.taints" v-bind:key="idx" v-bind:class="val.style" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val.key }}: {{ val.effect }} ({{ val.value }})</span></dd>
-							<dt class="col-sm-3 text-truncate">Conditions</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mb-1 mr-1">{{ val.type }}</span></dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md ">Pods</h3></div>
-					<div class="card-body p-2 overflow-auto">
-						<b-table striped hover small :items="childPod" :fields="fields" class="text-truncate">
-							<template v-slot:cell(name)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
-							</template>
-							<template v-slot:cell(status)="data">
-								<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
-							</template>
-							<template v-slot:cell(nowCpu)="data">
-								<span v-if="data.value[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
-							</template>
-							<template v-slot:cell(nowMemory)="data">
-								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
-							</template>
-						</b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p v-bind:class="val.type" class="mb-1">{{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-							<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-							<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-							<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-						</dl>
-					</div>
+<div>
+	<!-- 1. charts -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<b-tabs content-class="mt-3" >
+						<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
+							<div v-if="isCpu" class="chart">
+								<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
+							</div>
+							<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
+						</b-tab>
+						<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
+							<div v-if="isMemory" class="chart">
+								<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
+							</div>
+							<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
+						</b-tab>
+					</b-tabs>
 				</div>
 			</div>
 		</div>
 	</div>
+	<!-- 2. metadata -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
+						<dt class="col-sm-3">Capacity</dt><dd class="col-sm-9">{{ info.capacity }}</dd>
+						<dt class="col-sm-3">Allocatable</dt><dd class="col-sm-9">{{ info.allocatable }}</dd>
+						<dt class="col-sm-3">Addresses</dt>
+						<dd class="col-sm-9">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(val, idx) in info.addresses" v-bind:key="idx">{{ val.type }}: {{ val.address }}</li>
+							</ul>
+						</dd>
+						<dt class="col-sm-3">OS</dt><dd class="col-sm-9">{{ info.os }}</dd>
+						<dt class="col-sm-3">OS Image</dt><dd class="col-sm-9">{{ info.osImage }}</dd>
+						<dt class="col-sm-3">Kernel version</dt><dd class="col-sm-9">{{ info.kernelVersion }}</dd>
+						<dt class="col-sm-3">Container runtime</dt><dd class="col-sm-9">{{ info.containerRuntime }}</dd>
+						<dt class="col-sm-3">Kubelet version</dt><dd class="col-sm-9">{{ info.kubeletVersion }}</dd>
+						<dt class="col-sm-3">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
+						<dt class="col-sm-3">Annotations</dt>
+						<dd class="col-sm-9">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
+							</ul>
+						</dd>
+						<dt class="col-sm-3">Labels</dt>
+						<dd class="col-sm-9">
+							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+						</dd>
+						<dt v-if="info.taints" class="col-sm-3">Taints</dt>
+						<dd v-if="info.taints" class="col-sm-9">
+							<span v-for="(val, idx) in info.taints" v-bind:key="idx" v-bind:class="val.style">{{ val.key }}: {{ val.effect }} ({{ val.value }})</span>
+						</dd>
+						<dt class="col-sm-3">Conditions</dt>
+						<dd class="col-sm-9">
+							<span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mb-1 mr-1">{{ val.type }}</span>
+						</dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 3. pods -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Pods</h3></div>
+				<div class="card-body p-2 overflow-auto">
+					<b-table striped hover small :items="childPod" :fields="fields">
+						<template v-slot:cell(name)="data">
+							<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
+						</template>
+						<template v-slot:cell(status)="data">
+							<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
+						</template>
+						<template v-slot:cell(nowCpu)="data">
+							<span v-if="data.value[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxCpu).toFixed(2)+'%' : '' }}</span>
+						</template>
+						<template v-slot:cell(nowMemory)="data">
+							<span v-if="data.item.nowMemory[data.item.idx]">{{ data.value[data.item.idx].val ? (data.value[data.item.idx].val*100/maxMemory).toFixed(2)+'%' : ''}}</span>
+						</template>
+					</b-table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 4. events -->
+	<c-events class="row" v-model="metadata.uid"></c-events>
+
+</div>
 </template>
 <script>
-import VueJsonTree from "@/components/jsontree";
-import VueChartJs from "vue-chartjs";
+import VueChartJs		from "vue-chartjs";
+import VueJsonTree		from "@/components/jsontree";
+import VueEventsView	from "@/components/view/eventsView.vue";
 import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	components: {
 		"c-jsontree": { extends: VueJsonTree },
+		"c-events": { extends: VueEventsView },
 		"c-linechart": {
 			extends: VueChartJs.Line,
 			props: ["options"],
@@ -142,7 +136,6 @@ export default {
 		return {
 			metadata: {},
 			info: [],
-			event: [],
 			childPod: [],
 			nowCpu: [],
 			nowMemory: [],
@@ -208,7 +201,6 @@ export default {
 			this.maxCpu = data.status.capacity.cpu;
 			this.maxMemory = this.tranMemory(data.status.capacity.memory)/(1024);
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod();
 		},
 		getInfo(data) {

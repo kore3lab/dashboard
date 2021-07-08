@@ -1,89 +1,78 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-							<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-2">Annotations</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">Labels</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-							<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">{{ info.ports }}</dd>
-							<dt v-if="info.tls" class="col-sm-2">TLS</dt><dd v-if="info.tls" class="col-sm-10"><span v-for="(val,idx) in info.tls" v-bind:key="idx">{{ val }} </span></dd>
-							<dt v-if="info.service" class="col-sm-2">Service</dt><dd v-if="info.service" class="col-sm-10">{{ info.type }}</dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Rules</h3></div>
-					<dl v-for="(val, idx) in rules" v-bind:key="idx" class="row mb-0 card-body p-2">
-						<dt class="col-sm-12"><h3 class="text-md text-bold">Host: {{ val.host }}</h3></dt>
-						<dd class="col-sm-12 overflow-auto">
-							<b-table striped hover small :items="val.value" :fields="ruleFields" class="text-truncate"></b-table>
+<div>
+	<!-- 1. metadata -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
+						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
+						<dt class="col-sm-2">Annotations</dt>
+						<dd class="col-sm-10">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
+							</ul>
 						</dd>
+						<dt class="col-sm-2">Labels</dt>
+						<dd class="col-sm-10">
+							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+						</dd>
+						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
+						<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">{{ info.ports }}</dd>
+						<dt v-if="info.tls" class="col-sm-2">TLS</dt><dd v-if="info.tls" class="col-sm-10"><span v-for="(val,idx) in info.tls" v-bind:key="idx">{{ val }} </span></dd>
+						<dt v-if="info.service" class="col-sm-2">Service</dt><dd v-if="info.service" class="col-sm-10">{{ info.type }}</dd>
 					</dl>
 				</div>
 			</div>
 		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Load-Balancer Ingress Points</h3></div>
-					<div v-if="isLb" class="card-body p-2 overflow-auto">
-						<b-table striped hover small :items="lbIp" :fields="lbFields" class="text-truncate"></b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p v-bind:class="val.type" class="mb-1">{{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-							<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-							<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-							<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-						</dl>
-					</div>
+	</div>
+	<!-- 2. rules -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Rules</h3></div>
+				<div class="card-body group">
+					<ul>
+						<li v-for="(val, idx) in rules" v-bind:key="idx">
+							<p class="title">Host: {{ val.host }}</p>
+							<b-table striped hover small :items="val.value" :fields="ruleFields"></b-table>
+						</li>
+					</ul>
 				</div>
 			</div>
 		</div>
 	</div>
+	<!-- 3. Load-Balancer Ingress Point -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Load-Balancer Ingress Points</h3></div>
+				<div class="card-body group">
+					<b-table striped hover small :items="lbIp" :fields="lbFields"></b-table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 4. events -->
+	<c-events class="row" v-model="metadata.uid"></c-events>
+
+</div>
 </template>
 <script>
+import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	components: {
+		"c-events": { extends: VueEventsView }
+	},
 	data() {
 		return {
 			metadata: {},
-			event: [],
 			info: [],
 			rules: [],
 			lbIp: [],
-			isLb: false,
 			ruleFields: [
 				{ key: "path", label: "Path" },
 				{ key: "backends", label: "Backends" },
@@ -105,7 +94,6 @@ export default {
 	methods: {
 		onSync(data) {
 			this.rules = [];
-			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.getRules(data.spec.rules);
 			this.lbIp = this.getLb(data.status.loadBalancer);
@@ -125,7 +113,6 @@ export default {
 			let list = []
 			if(lb.ingress) {
 				lb.ingress.map((val, _) => {
-					this.isLb = true;
 					list.push({
 						hostname: val.hostname? val.hostname: "-",
 						ip: val.ip? val.ip: "-",

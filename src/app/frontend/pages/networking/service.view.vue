@@ -1,98 +1,89 @@
 <template>
-	<div>
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-							<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-2">Annotations</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">Labels</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-							<dt class="col-sm-2">Selector</dt><dd class="col-sm-10"><span v-for="(val, idx) in info.selector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ val }}</span></dd>
-							<dt v-if="metadata.ownerReferences" class="col-sm-2 text-truncate">Controlled By</dt>
-							<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-							<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ info.type }}</dd>
-							<dt class="col-sm-2">Session Affinity</dt><dd class="col-sm-10">{{ info.sessionAffinity }}</dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Connection</h3></div>
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Cluster IP</dt><dd class="col-sm-10">{{ connection.clusterIP }}</dd>
-							<dt class="col-sm-2 text-truncate">Ports</dt><dd class="col-sm-10">
-							<ul class="list-unstyled">
-								<li v-for="(val,idx) in connection.ports" v-bind:key="idx">{{ val }}</li>
+<div>
+	<!-- 1. metadta -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
+						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
+						<dt class="col-sm-2">Annotations</dt>
+						<dd class="col-sm-10">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
 							</ul>
 						</dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Endpoint</h3></div>
-					<div v-show="isEndpoint" class="card-body p-2 overflow-auto">
-						<b-table striped hover small :items="endpoints" :fields="fields" class="text-truncate">
-							<template v-slot:cell(name)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.value }}</a>
-							</template>
-							<template v-slot:cell(endpoints)="data">
-								<span v-for="(val, idx) in data.item.endpoints" v-bind:key="idx">{{ val }} </span>
-							</template>
-						</b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p v-bind:class="val.type" class="mb-1">{{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-							<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-							<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-							<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-						</dl>
-					</div>
+						<dt class="col-sm-2">Labels</dt>
+						<dd class="col-sm-10">
+							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+						</dd>
+						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
+						<dt class="col-sm-2">Selector</dt>
+						<dd class="col-sm-10">
+							<span v-for="(val, idx) in info.selector" v-bind:key="idx" class="border-box background">{{ val }}</span>
+						</dd>
+						<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
+						<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
+						<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ info.type }}</dd>
+						<dt class="col-sm-2">Session Affinity</dt><dd class="col-sm-10">{{ info.sessionAffinity }}</dd>
+					</dl>
 				</div>
 			</div>
 		</div>
 	</div>
+	<!-- 2. connection -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Connection</h3></div>
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-2">Cluster IP</dt><dd class="col-sm-10">{{ connection.clusterIP }}</dd>
+						<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">
+						<ul class="list-unstyled">
+							<li v-for="(val,idx) in connection.ports" v-bind:key="idx">{{ val }}</li>
+						</ul>
+					</dd>
+					</dl>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 3. endpoint -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Endpoint</h3></div>
+				<div v-show="isEndpoint" class="card-body p-2 overflow-auto">
+					<b-table striped hover small :items="endpoints" :fields="fields">
+						<template v-slot:cell(name)="data">
+							<a href="#" @click="$emit('navigate', getViewLink('', 'endpoints', data.item.namespace, data.item.name))">{{ data.value }}</a>
+						</template>
+						<template v-slot:cell(endpoints)="data">
+							<span v-for="(val, idx) in data.item.endpoints" v-bind:key="idx">{{ val }} </span>
+						</template>
+					</b-table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 4. events -->
+	<c-events class="row" v-model="metadata.uid"></c-events>
+
+</div>
 </template>
 <script>
+import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	components: {
+		"c-events": { extends: VueEventsView }
+	},
 	data() {
 		return {
 			metadata: {},
-			event: [],
 			info: [],
 			connection: [],
 			endpoints: [],
@@ -115,7 +106,6 @@ export default {
 	methods: {
 		onSync(data) {
 			this.controller = this.getController(data.metadata.ownerReferences);
-			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.info = this.getInfo(data);
 			this.connection = this.getConnection(data);
 			this.endpoints = this.getEndpoints(data);

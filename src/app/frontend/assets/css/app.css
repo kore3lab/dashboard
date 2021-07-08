@@ -36,11 +36,46 @@ label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 .lh-vh-50 {line-height: 50vh;} .lh-vh-100 {line-height: 100vh;}
 .h-chart { height: 14em;}
 .cursor {cursor:pointer}
+.label {
+	display: inline-grid;
+	border:1px #73b5fc solid;
+	background-color: #eff6fd;
+	padding: 1px 4px;
+	line-height: 1.3rem;
+	border-radius: .25em!important;
+	margin: .1em .2em .1em 0em;
+	color: #0363ca;
+}
+.border-box {
+	display: inline-grid;
+    border: 1px #6c757d dotted;
+	line-height: 1.3rem;
+    padding: 0 .4em;
+    border-radius: .25em!important;
+    margin: .1em .2em .1em 0em;
+    color: #6c757d;
+}
+.border-box.background {
+	background-color: #f3f4f5;
+}
+/* custom > view */
+section.content-view {font-size: .95rem;}
+section.content-view .card-primary > .card-header {font-size: 1.1rem; line-height: 1.1rem;}
+section.content-view a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0 .3em}
+section.content-view a.nav-link {padding: .3em .3em; color:#aaa}
+section.content-view dt {line-height: 1.8rem;background-color:#f3f4f5; font-weight: 500;}
+section.content-view dd {line-height: 1.8rem; margin: 0}
+section.content-view .card-header {background-color:#f3f4f5;}
+section.content-view .card-title {font-size:1rem;}
+section.content-view .card-body.group {padding: 0 .5em .5em .5em}
+section.content-view .card-body.group > ul { padding: 0; margin:0; list-style: none; }
+section.content-view .card-body.group > ul > li { margin-top: .5em }
+section.content-view .card-body.group > ul > li .title { margin: .3rem .3rem; font-weight:400; font-size:1.1rem }
+section.content-view .card-body.group > ul > li > dl { border: 1px solid #dee2e6!important; margin: 0 0;}
+
 
 /* custom -vue-boostrap  */
-.table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}
-.table.b-table tr:focus { outline: none; }
-
-/* bootstrap custom - Tab */
-.content a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0 .3rem}
-.content a.nav-link {padding: .3rem .3rem; color:#aaa}
+table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}
+table.b-table tr:focus { outline: none; }
+table.b-table.table-sm {margin: 0;}
+table.b-table.table-sm tbody > tr {line-height: 1rem; margin-bottom: 0;}

@@ -2,6 +2,12 @@ import Vue from "vue";
 const CONSTRANTS = {
 	"ITEMS_PER_PAGE" : [{text:"10",value:10}, {text:"20",value:20}, {text:"30",value:30}, {text:"50",value:50}, {text:"100",value:100}]
 }
+Vue.filter("formatNumber", (value) => {
+	if(value === 0) return value
+	let regexp = /\B(?=(\d{3})+(?!\d))/g;
+	return value.toString().replace(regexp, ',');
+});
+
 Vue.mixin({
 	methods: {
 		toast(msg, variant) {
@@ -131,25 +137,6 @@ Vue.mixin({
 
 			return Math.floor(seconds) + " seconds";
 		},
-		getEvents(uid,query) {
-			let events = [];
-			this.$axios.get(this.getApiUrl('','events','', '',query))
-				.then( resp => {
-					for(let i=0; i<resp.data.items.length; i++) {
-						if(resp.data.items[i].involvedObject.uid === uid) {
-							events.unshift({
-								name: resp.data.items[i].message || "-",
-								source: resp.data.items[i].source.host || resp.data.items[i].source.component || "undefined",
-								count: resp.data.items[i].count || "-",
-								subObject: resp.data.items[i].involvedObject.fieldPath || "-",
-								lastSeen: resp.data.items[i].lastTimestamp || "-",
-								type: resp.data.items[i].type === "Warning"? "text-danger" : "text-secondary",
-							})
-						}
-					}
-				})
-			return events
-		},
 		toStatus(deletionTimestamp, status) {
 			// 삭제
 			if (deletionTimestamp) {
@@ -202,8 +189,12 @@ Vue.mixin({
 		},
 		stringifyLabels(label) {
 			if(!label) return [];
-
-			return Object.entries(label).map(([name, value]) => `${name}=${value}`);
+			try {
+				return Object.entries(label).map(([name, value]) => `${name}=${value}`);
+			} catch (e) {
+				console.log(e);
+			}
+			return [];
 		},
 		getController(ref) {
 			if (!ref) return
