@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Networking"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -57,9 +57,7 @@
 										</ul>
 									</template>
 									<template v-slot:cell(selector)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.selector" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-										</ul>
+										<span v-for="(value, name) in data.item.selector" v-bind:key="name" class="border-box background">{{ name }}={{ value }}</span>
 									</template>
 									<template v-slot:cell(status)="data">
 										<ul class="list-unstyled mb-0">

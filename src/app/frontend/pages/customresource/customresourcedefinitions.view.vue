@@ -1,76 +1,73 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-3 text-truncate">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-							<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-3">Annotations</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3">Labels</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
-							<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
-							<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
-							<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
-							<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind, columnsName: info.printerColumns? info.printerColumns.name : '', columnsPath: info.printerColumns? info.printerColumns.path : '', scope: info.scope }}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
-							<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
-							<dt class="col-sm-3">Conditions</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span></dd>
-						</dl>
-					</div>
+<div>
+	<!-- 1. metadata -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
+						<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
+						<dt class="col-sm-3">Annotations</dt>
+						<dd class="col-sm-9">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
+							</ul>
+						</dd>
+						<dt class="col-sm-3">Labels</dt>
+						<dd class="col-sm-9">
+							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+						</dd>
+						<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
+						<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
+						<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
+						<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
+						<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind, columnsName: info.printerColumns? info.printerColumns.name : '', columnsPath: info.printerColumns? info.printerColumns.path : '', scope: info.scope }}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
+						<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
+						<dt class="col-sm-3">Conditions</dt>
+						<dd class="col-sm-9">
+							<span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span>
+						</dd>
+					</dl>
 				</div>
 			</div>
 		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Names</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small fixed :items="info.resource" :fields="fields"></b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div v-if="printerColumns.length !== 0" class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Additional Printer Columns</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="printerColumns" :fields="columnsFields">
-							<template v-slot:cell(jsonPath)="data">
-								<span class="badge badge-secondary font-weight-light text-sm mb-1">{{ data.value }}</span>
-							</template>
-						</b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Validation</h3></div>
-					<div class="card-body p-2">
-						<c-jsontree id="txtValidation" v-model="validation" class="card-body p-2 border"></c-jsontree>
-					</div>
-				</div>
-			</div>
-		</div>
-
 	</div>
+	<!-- 2. names -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Names</h3></div>
+				<div class="card-body p-2">
+					<b-table-lite small :items="info.resource" :fields="fields"></b-table-lite>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 3. additional printer columns -->
+	<div v-if="printerColumns.length !== 0" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Additional Printer Columns</h3></div>
+				<div class="card-body p-2">
+					<b-table-lite small :items="printerColumns" :fields="columnsFields"></b-table-lite>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 4. validation -->
+	<div v-if="validation" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Validation</h3></div>
+				<div class="card-body p-2">
+					<c-jsontree id="txtValidation" v-model="validation" class="card-body p-2 border"></c-jsontree>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 </template>
 <script>
 

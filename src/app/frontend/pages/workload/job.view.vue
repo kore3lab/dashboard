@@ -1,91 +1,89 @@
 <template>
-	<div>
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-							<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-2">Annotations</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">Labels</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-							<dt v-if="metadata.ownerReferences" class="col-sm-2 text-truncate">Controlled By</dt>
-							<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-							<dt v-if="info.selector" class="col-sm-2">Selector</dt><dd v-if="info.selector" class="col-sm-10"><span v-for="(value, key) in info.selector" v-bind:key="key" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ value }}</span></dd>
-							<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt><dd v-if="info.nodeSelector" class="col-sm-10"><span v-for="(value, key) in info.nodeSelector" v-bind:key="key" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{key}}={{value}}</span></dd>
-							<dt class="col-sm-2">Image</dt><dd class="col-sm-10">{{ info.image }}</dd>
-							<dt class="col-sm-2">Conditions</dt><dd class="col-sm-10"><span v-for="(val, idx) in info.condition" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mb-1 mr-1"> {{ val.type }} </span></dd>
-							<dt class="col-sm-2">Completions</dt><dd class="col-sm-10">{{ info.completions }}</dd>
-							<dt class="col-sm-2">Parallelism</dt><dd class="col-sm-10">{{ info.parallelism }}</dd>
-							<dt class="col-sm-2">Pod Status</dt><dd class="col-sm-10"><span v-for="(val,idx) in cs" v-bind:key="idx" v-bind:class="val.style">{{ val.status }} : {{ val.count }}  </span><span v-if="!isStatus">-</span></dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div v-show="isPods" class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Pods</h3></div>
-					<div class="card-body p-2 overflow-auto">
-						<b-table striped hover small :items="childPod" :fields="fields" class="text-truncate">
-							<template v-slot:cell(name)="data">
-								<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
-							</template>
-							<template v-slot:cell(status)="data">
-								<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
-							</template>
-							<template v-slot:cell(nowCpu)="data">
-								<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? data.item.nowCpu[data.item.idx].val : '-' }}</span>
-							</template>
-							<template v-slot:cell(nowMemory)="data">
-								<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? data.item.nowMemory[data.item.idx].val+'Mi' : '-'}}</span>
-							</template>
-						</b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p v-bind:class="val.type" class="mb-1">{{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-							<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-							<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-							<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-						</dl>
-					</div>
+<div>
+	<!-- 1. metadata -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-body p-2">
+					<dl class="row mb-0">
+						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
+						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
+						<dt class="col-sm-2">Annotations</dt>
+						<dd class="col-sm-10">
+							<ul class="list-unstyled mb-0">
+								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
+							</ul>
+						</dd>
+						<dt class="col-sm-2">Labels</dt>
+						<dd class="col-sm-10">
+							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+						</dd>
+						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
+						<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
+						<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
+						<dt v-if="info.selector" class="col-sm-2">Selector</dt>
+						<dd v-if="info.selector" class="col-sm-10">
+							<span v-for="(value, key) in info.selector" v-bind:key="key" class="border-box background">{{ value }}</span>
+						</dd>
+						<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt>
+						<dd v-if="info.nodeSelector" class="col-sm-10">
+							<span v-for="(value, key) in info.nodeSelector" v-bind:key="key" class="border-box background">{{key}}={{value}}</span>
+						</dd>
+						<dt class="col-sm-2">Image</dt><dd class="col-sm-10">{{ info.image }}</dd>
+						<dt class="col-sm-2">Conditions</dt>
+						<dd class="col-sm-10">
+							<span v-for="(val, idx) in info.condition" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mb-1 mr-1"> {{ val.type }} </span>
+						</dd>
+						<dt class="col-sm-2">Completions</dt><dd class="col-sm-10">{{ info.completions }}</dd>
+						<dt class="col-sm-2">Parallelism</dt><dd class="col-sm-10">{{ info.parallelism }}</dd>
+						<dt class="col-sm-2">Pod Status</dt><dd class="col-sm-10"><span v-for="(val,idx) in cs" v-bind:key="idx" v-bind:class="val.style">{{ val.status }} : {{ val.count }}  </span><span v-if="!isStatus">-</span></dd>
+					</dl>
 				</div>
 			</div>
 		</div>
 	</div>
+	<!-- 2. pods -->
+	<div v-show="isPods" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Pods</h3></div>
+				<div class="card-body p-2 overflow-auto">
+					<b-table striped hover small :items="childPod" :fields="fields">
+						<template v-slot:cell(name)="data">
+							<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
+						</template>
+						<template v-slot:cell(status)="data">
+							<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
+						</template>
+						<template v-slot:cell(nowCpu)="data">
+							<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? data.item.nowCpu[data.item.idx].val : '-' }}</span>
+						</template>
+						<template v-slot:cell(nowMemory)="data">
+							<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? data.item.nowMemory[data.item.idx].val+'Mi' : '-'}}</span>
+						</template>
+					</b-table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 3. events -->
+	<c-events class="row" v-model="metadata.uid"></c-events>
+
+</div>
 </template>
 <script>
 
+import VueEventsView	from "@/components/view/eventsView.vue";
+
 export default {
+	components: {
+		"c-events": { extends: VueEventsView }
+	},
 	data() {
 		return {
 			metadata: {},
 			info: [],
-			event: [],
 			childPod: [],
 			controller: [],
 			temp: [],
@@ -116,7 +114,6 @@ export default {
 		onSync(data) {
 			this.controller = this.getController(data.metadata.ownerReferences)
 			this.info = this.getInfo(data);
-			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
 			this.childPod = this.getChildPod(data.metadata.uid);
 		},
 		getInfo(data) {
