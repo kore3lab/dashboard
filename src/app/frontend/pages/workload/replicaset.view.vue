@@ -1,28 +1,7 @@
 <template>
 <div>
 	<!-- 1. charts -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<b-tabs content-class="mt-3" >
-						<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
-							<div v-if="isCpu" class="chart">
-								<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
-							</div>
-							<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-						<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
-							<div v-if="isMemory" class="chart">
-								<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
-							</div>
-							<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-					</b-tabs>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-charts class="row" v-model="chartsUrl"></c-charts>
 	<!-- 2. metadata -->
 	<div class="row">
 		<div class="col-md-12">
@@ -65,16 +44,6 @@
 							<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
 						</dd>
 						<dt class="col-sm-2">Pod Status</dt><dd class="col-sm-10"><span v-for="(val,idx) in cs" v-bind:key="idx" v-bind:class="val.style">{{ val.status }} : {{ val.count }}  </span><span v-if="!isStatus">-</span></dd>
-						<dt class="col-sm-2">CPU</dt><dd class="col-sm-10">
-						<span v-if="totalCpu !== 0" class="border-box">Usage : {{ totalCpu }}</span>
-						<span v-if="cpuRequests !== 0" class="border-box">Requests : {{ cpuRequests.toFixed(2) }}</span>
-						<span v-if="cpuLimits !== 0" class="border-box">Limits : {{ cpuLimits.toFixed(2) }}</span>
-						<span v-if="totalCpu === 0 && cpuRequests === 0 && cpuLimits === 0">-</span></dd>
-						<dt class="col-sm-2">Memory</dt><dd class="col-sm-10">
-						<span v-if="totalMemory !== 0" class="border-box">Usage : {{ totalMemory | formatNumber }} Mi</span>
-						<span v-if="memoryRequests !== 0" class="border-box">Requests : {{ memoryRequests.toFixed(1) | formatNumber }} Mi</span>
-						<span v-if="memoryLimits !== 0" class="border-box">Limits : {{ memoryLimits.toFixed(1) | formatNumber }} Mi</span>
-						<span v-if="totalMemory === 0 && memoryRequests === 0 && memoryLimits === 0">-</span></dd>
 					</dl>
 				</div>
 			</div>
@@ -110,62 +79,25 @@
 </div>
 </template>
 <script>
-import VueChartJs		from "vue-chartjs";
 import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
-import {CHART_BG_COLOR} from "static/constrants";
+import VueChartsView	from "@/components/view/metricsChartsView.vue";
 
 export default {
 	components: {
 		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView },
-		"c-linechart": {
-			extends: VueChartJs.Line,
-			props: ["options"],
-			mixins: [VueChartJs.mixins.reactiveProp],
-			mounted () {
-				if(this.chartData) {
-					this.renderChart(this.chartData, this.options)
-					this.update()
-				}
-			},
-			watch: {
-				chartData: function () {
-					this.update();
-				},
-				options: function() {
-					this.update();
-				},
-			},
-			methods: {
-				update: function() {
-					this.renderChart(this.chartData, this.options);
-				},
-			},
-		}
+		"c-charts": { extends: VueChartsView }
 	},
 	data() {
 		return {
 			metadata: {},
+			chartsUrl: "",
 			info: [],
 			childPod: [],
 			controller: [],
 			temp: [],
 			cs: [],
-			sumCpu: [],
-			sumMemory: [],
-			nowCpu: [],
-			topCpu: [],
-			topMemory: [],
-			nowMemory: {},
-			totalCpu: 0,
-			totalMemory: 0,
-			cpuRequests: 0,
-			cpuLimits: 0,
-			memoryRequests: 0,
-			memoryLimits: 0,
-			isCpu: false,
-			isMemory: false,
 			isStatus: false,
 			onTols: false,
 			onAffis: false,
@@ -177,43 +109,14 @@ export default {
 				{ key: "nowCpu", label: "CPU" },
 				{ key: "nowMemory", label: "Memory" },
 				{ key: "status", label: "Status" },
-			],
-			chart: {
-				options: {
-					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)}} }]
-						}
-					},
-					memory: {
-						tooltips: {
-							callbacks: {
-								label: function(data) {
-									return (data.yLabel).toFixed(2) + "Mi"
-								}
-							}
-						},
-						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
-										if(value === 0) return value
-										let regexp = /\B(?=(\d{3})+(?!\d))/g;
-										return value.toString().replace(regexp, ',')+'Mi';}
-								}}]
-						}
-					}
-				},
-				data: { cpu: {}, memory: {}}
-			},
+			]
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
+			this.chartsUrl = `namespaces/${data.metadata.namespace}/replicasets/${data.metadata.name}/metrics`;
 			this.onSync(data)
 		});
 		this.$nuxt.$emit("onCreated",'')
@@ -262,22 +165,10 @@ export default {
 		getChildPod(label) {
 			label = this.stringifyLabels(label)
 			let childPod = [];
-			this.nowMemory = [];
-			this.nowCpu = [];
-			this.sumCpu = [];
-			this.sumMemory = [];
 			this.temp = [];
 			this.cs = [];
-			this.topCpu = [];
-			this.topMemory = [];
-			this.cpuRequests = 0
-			this.cpuLimits = 0
-			this.memoryRequests = 0
-			this.memoryLimits = 0
 			this.isStatus = false;
 			this.isPods = false;
-			this.isCpu = false;
-			this.isMemory = false;
 			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=' + label))
 					.then( resp => {
 						let idx = 0;
@@ -287,8 +178,10 @@ export default {
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
 								ready: this.toReady(el.status,el.spec),
-								nowMemory: this.onMemory(el,idx),
-								nowCpu: this.onCpu(el,idx),
+								nowMemory: 0,
+								nowCpu: 0,
+								//nowMemory: this.onMemory(el,idx),
+								//nowCpu: this.onCpu(el,idx),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
 								countStatus: this.countStatus(el.status),
 								idx: idx,
@@ -297,186 +190,6 @@ export default {
 						})
 					})
 			return childPod
-		},
-
-		onCpu(el,idx) {
-			if(el.spec.containers) {
-				el.spec.containers.forEach(el => {
-					if(el.resources && el.resources.requests) {
-						if(el.resources.requests.cpu) {
-							this.topCpu.push(el.resources.requests.cpu)
-							this.cpuRequests += this.cpuRL(el.resources.requests.cpu)
-						}
-					}
-					if(el.resources.limits && el.resources.limits.cpu) {
-						this.cpuLimits += this.cpuRL(el.resources.limits.cpu)
-					}
-				})
-			}
-			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/cpu`)
-					.then(resp => {
-						if (resp.data.items) {
-							let data = resp.data.items[0];
-							let labels=[], da= [];
-							data.metricPoints.forEach(d => {
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(d.value/1000);
-								this.sumCpu.push({
-									val: d.value,
-									time: dt,
-								})
-							});
-							this.nowCpu.push({
-								val:((da[da.length-1])).toFixed(3),
-								idx:idx,
-							})
-							this.getCpuGraph(this.sumCpu,labels)
-							this.cpuSum(this.sumCpu)
-						} else {
-							this.nowCpu.push({
-								val: '',
-								idx: idx,
-							})
-						}
-						this.nowCpu = this.sorted(this.nowCpu)
-					})
-			return this.nowCpu
-		},
-		getCpuGraph(value,labels) {
-			let top = 0; let da= [];
-			let map = {};
-			let re=[], li=[];
-			if(value)
-			{
-				for (let i=0;i<value.length;i++) {
-					if(value[i].time in map) {
-						map[value[i].time] += value[i].val;
-					} else {
-						map[value[i].time] = value[i].val;
-					}
-					if(top<map[value[i].time]) top = map[value[i].time]
-				}
-				let keys = Object.keys(map)
-				for (let i=0;i<keys.length;i++) {
-					da[i] = map[keys[i]]/1000
-					if(this.cpuRequests) re[i] = this.cpuRequests
-					if(this.cpuLimits) li[i] = this.cpuLimits
-				}
-				if(this.cpuLimits > 0) {
-					top = this.cpuLimits
-				} else if ( this.cpuRequests > 0) {
-					top = this.cpuRequests
-				} else {
-					top = top*1.2 / 1000
-				}
-				if(top === 0) top = 1
-				this.isCpu = !!value
-				this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top;
-				this.$data.chart.data.cpu = {
-					labels: labels,
-					datasets: [
-						{ backgroundColor : CHART_BG_COLOR.cpu,data: da,label:'Usage'},
-					]
-				}
-				if(this.cpuRequests) this.$data.chart.data.cpu.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
-				if(this.cpuLimits) this.$data.chart.data.cpu.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
-			}
-		},
-		onMemory(el,idx) {
-			if(el.spec.containers) {
-				el.spec.containers.forEach(el => {
-					if(el.resources && el.resources.requests) {
-						if(el.resources.requests.memory) {
-							this.topMemory.push(el.resources.requests.memory)
-							this.memoryRequests += this.memoryRL(el.resources.requests.memory)
-						}
-					}
-					if(el.resources.limits && el.resources.limits.memory) {
-						this.memoryLimits += this.memoryRL(el.resources.limits.memory)
-					}
-				})
-			}
-			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${el.metadata.namespace}/pods/${el.metadata.name}/metrics/memory`)
-					.then(resp => {
-						if (resp.data.items) {
-							let data = resp.data.items[0];
-							let labels=[], da= [];
-							data.metricPoints.forEach(d => {
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(Math.round(d.value/1024));
-								this.sumMemory.push({
-									val: d.value,
-									time: dt,
-								})
-							});
-							this.nowMemory.push({
-								val:((da[da.length-1])/1024).toFixed(2),
-								idx:idx,
-							})
-							this.getMemoryGraph(this.sumMemory,labels)
-							this.memorySum(this.sumMemory)
-						} else {
-							this.nowMemory.push({
-								val: '',
-								idx: idx,
-							})
-						}
-						this.nowMemory = this.sorted(this.nowMemory)
-					})
-			return this.nowMemory
-		},
-		getMemoryGraph(value, labels) {
-			let top = 0; let da= [];
-			let map = {};
-			let re=[], li=[];
-			if(value) {
-				for (let i = 0; i < value.length; i++) {
-					if (value[i].time in map) {
-						map[value[i].time] += value[i].val;
-					} else {
-						map[value[i].time] = value[i].val;
-					}
-					if (top < map[value[i].time]) top = map[value[i].time] / 1024 / 1024
-				}
-				let keys = Object.keys(map)
-				for (let i = 0; i < keys.length; i++) {
-					da[i] = map[keys[i]] / 1024 / 1024
-					if(this.memoryRequests) re[i] = this.memoryRequests
-					if(this.memoryLimits) li[i] = this.memoryLimits
-				}
-				if(this.memoryLimits > 0) {
-					top = this.memoryLimits
-				} else if ( this.memoryRequests > 0) {
-					top = this.memoryRequests
-				} else {
-					top = top*1.2
-				}
-				if (top === 0) top = 1024
-				this.isMemory = !!value
-				this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top;
-				this.$data.chart.data.memory = {
-					labels: labels,
-					datasets: [
-						{backgroundColor: CHART_BG_COLOR.memory, data: da, label:'Usage'},
-					]
-				}
-				if(this.memoryRequests) this.$data.chart.data.memory.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
-				if(this.memoryLimits) this.$data.chart.data.memory.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
-			}
-		},
-		cpuSum(cpu) {
-			if(cpu && cpu[cpu.length -1].val) {
-				this.totalCpu += (cpu[cpu.length - 1].val / 1000)
-				this.totalCpu = Number(this.totalCpu.toFixed(3))
-			}
-		},
-		memorySum(memory) {
-			if(memory && memory[memory.length -1].val) {
-				this.totalMemory += (memory[memory.length - 1].val / (1024 * 1024))
-				this.totalMemory = Number(this.totalMemory.toFixed(2))
-			}
 		},
 		countStatus(status) {
 			this.isStatus = true;

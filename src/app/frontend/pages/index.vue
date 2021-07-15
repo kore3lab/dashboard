@@ -178,8 +178,8 @@ td > p {margin-bottom: 0;}
 </style>
 <script>
 import "@/assets/css/hexagons.css"
-import VueChartJs	from "vue-chartjs"
-import {CHART_BG_COLOR} from "static/constrants";
+import VueChartJs		from "vue-chartjs"
+import {CHART_BG_COLOR}	from "static/constrants";
 
 export default {
 	data() {
@@ -252,45 +252,39 @@ export default {
 			let ctx = this.currentContext();
 			if(!ctx) return;
 			this.$axios.get(`/api/clusters/${ctx}/dashboard`)
-					.then((resp) => {
-						this.$data.summary = resp.data.summary;
-						this.$data.nodes = resp.data.nodes;
-						this.$data.workloads = resp.data.workloads;
+				.then((resp) => {
+					this.$data.summary = resp.data.summary;
+					this.$data.nodes = resp.data.nodes;
+					this.$data.workloads = resp.data.workloads;
 
-						if (resp.data.metrics && resp.data.metrics.cpu && resp.data.metrics.cpu.dataPoints ) {
-							let labels = [], data = [];
-							resp.data.metrics.cpu.dataPoints.forEach(d => {
-								let dt = new Date(d.x*1000);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
-								data.push((d.y/1000).toFixed(3));
-							});
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable/1000;
-							this.$data.chart.data.cpu = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.cpu, data: data }
-								]
-							};
-						}
-						if (resp.data.metrics && resp.data.metrics.memory && resp.data.metrics.memory.dataPoints ) {
-							let labels = [], data = [];
-							resp.data.metrics.memory.dataPoints.forEach(d => {
-								let dt = new Date(d.x*1000);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
-								data.push(Math.round(d.y/(1024*1024)));
-							});
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.memory.allocatable/(1024*1024);
-							this.$data.chart.data.memory = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.memory, data: data }
-								]
-							};
-						}
+					if (resp.data.metrics ) {
+						let labels = [], cpus = [], memories = [];
+						resp.data.metrics.forEach(d => {
+							let dt = new Date(d.timestamp);
+							labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
+							cpus.push((d.cpu/1000).toFixed(3));
+							memories.push(Math.round(d.memory/(1024*1024)));
 
-					})
-					.catch(e => { this.msghttp(e);})
+						});
+						this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable/1000;
+						this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.memory.allocatable/(1024*1024);
 
+						this.$data.chart.data.cpu = {
+							labels: labels,
+							datasets: [
+								{ backgroundColor : CHART_BG_COLOR.cpu, data: cpus }
+							]
+						};
+						this.$data.chart.data.memory = {
+							labels: labels,
+							datasets: [
+								{ backgroundColor : CHART_BG_COLOR.memory, data: memories }
+							]
+						};
+					}
+
+				})
+				.catch(e => { this.msghttp(e);})
 		})
 
 		this.$nuxt.$emit("navbar-context-selected",);
