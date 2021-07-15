@@ -3,10 +3,8 @@ package model
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
-	resty "github.com/go-resty/resty/v2"
 	"github.com/kore3lab/dashboard/model"
 	"github.com/kore3lab/dashboard/pkg/config"
 	"github.com/kore3lab/dashboard/pkg/lang"
@@ -23,7 +21,7 @@ type Dashboard struct {
 	Summary   map[string]*dashboardUsage    `json:"summary"`
 	Nodes     map[string]dashboardNode      `json:"nodes"`
 	Workloads map[string]dashboardAvailable `json:"workloads"`
-	Metrics   map[string]interface{}        `json:"metrics"`
+	Metrics   []interface{}                 `json:"metrics"`
 }
 type dashboardNode struct {
 	Address string                     `json:"address"`
@@ -40,11 +38,6 @@ type dashboardUsage struct {
 	Allocatable int64   `json:"allocatable"`
 	Usage       int64   `json:"usage"`
 	Percent     float32 `json:"percent"`
-}
-
-type dashboardMetrics struct {
-	Allocatable int64         `json:"allocatable"`
-	DataPoints  []interface{} `json:"dataPoints"`
 }
 
 type resource struct {
@@ -238,13 +231,14 @@ func (self *Dashboard) Get() error {
 	parsePercentUsages(self.Summary)
 
 	// self.Metrics
-	_, err = resty.New().R().
-		SetHeader("Content-Type", "application/json").
-		SetResult(&self.Metrics).
-		Get(fmt.Sprintf("%s/api/v1/clusters/%s", config.Value.MetricsScraperUrl, self.context))
-
+	scraperClient := ScraperClient{
+		context: self.context,
+	}
+	err = scraperClient.GetClusterMetrics()
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)
+	} else {
+		self.Metrics = scraperClient.Metrics
 	}
 
 	return nil

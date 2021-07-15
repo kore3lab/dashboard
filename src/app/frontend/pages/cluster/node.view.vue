@@ -1,28 +1,7 @@
 <template>
 <div>
 	<!-- 1. charts -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<b-tabs content-class="mt-3" >
-						<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
-							<div v-if="isCpu" class="chart">
-								<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
-							</div>
-							<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-						<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
-							<div v-if="isMemory" class="chart">
-								<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
-							</div>
-							<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
-						</b-tab>
-					</b-tabs>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-charts class="row" v-model="chartsUrl"></c-charts>
 	<!-- 2. metadata -->
 	<div class="row">
 		<div class="col-md-12">
@@ -98,53 +77,26 @@
 </div>
 </template>
 <script>
-import VueChartJs		from "vue-chartjs";
 import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
-import {CHART_BG_COLOR} from "static/constrants";
+import VueChartsView	from "@/components/view/metricsChartsView.vue";
 
 export default {
 	components: {
 		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView },
-		"c-linechart": {
-			extends: VueChartJs.Line,
-			props: ["options"],
-			mixins: [VueChartJs.mixins.reactiveProp],
-			mounted () {
-				if(this.chartData) {
-					this.renderChart(this.chartData, this.options)
-					this.update()
-				}
-			},
-			watch: {
-				chartData: function () {
-					this.update();
-				},
-				options: function() {
-					this.update();
-				},
-			},
-			methods: {
-				update: function() {
-					this.renderChart(this.chartData, this.options);
-				},
-			},
-		}
+		"c-charts": { extends: VueChartsView }
 	},
 	data() {
 		return {
 			metadata: {},
 			info: [],
+			chartsUrl: "",
 			childPod: [],
 			nowCpu: [],
 			nowMemory: [],
 			maxCpu: 0,
 			maxMemory: 0,
-			isCpu: false,
-			isMemory: false,
-			isStatus: false,
-			isPods: false,
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
@@ -153,36 +105,6 @@ export default {
 				{ key: "nowMemory", label: "Memory" },
 				{ key: "status", label: "Status" },
 			],
-			chart: {
-				options: {
-					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0} }]
-						}
-					},
-					memory: {
-						tooltips: {
-							callbacks: {
-								label: function(data) {
-									return (data.yLabel).toFixed(2) + "Mi"
-								}
-							}
-						},
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
-										if(value === 0) return value
-										let regexp = /\B(?=(\d{3})+(?!\d))/g;
-										return value.toString().replace(regexp, ',')+'Mi';}
-								}}]
-						}
-					}
-				},
-				data: { cpu: {}, memory: {}}
-			},
 		}
 	},
 	mounted() {
@@ -190,8 +112,7 @@ export default {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.onSync(data)
-			this.onCpu(data.status.allocatable.cpu)
-			this.onMemory(data.status.allocatable.memory)
+			this.chartsUrl = `nodes/${data.metadata.name}/metrics`;
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
@@ -223,55 +144,6 @@ export default {
 				conditions: conditions,
 				taints: taints,
 			}
-		},
-		onCpu(top) {
-			this.$axios.get(`/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/cpu`)
-					.then(resp => {
-						if (resp.data.items) {
-							let data = resp.data.items[0]
-							let labels =[], da= [];
-							data.metricPoints.forEach(d => {
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(d.value/1000);
-							});
-							this.isCpu = !!data;
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top;
-							this.$data.chart.data.cpu = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.cpu,data: da}
-								]
-							};
-						} else {
-							this.isCpu = false;
-						}
-					})
-		},
-		onMemory(top) {
-			this.$axios.get(`/api/clusters/${this.currentContext()}/nodes/${this.metadata.name}/metrics/memory`)
-					.then(resp => {
-						if (resp.data.items){
-							let data = resp.data.items[0]
-							let labels =[], da= [];
-							data.metricPoints.forEach(d => {
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(Math.round(d.value/(1024*1024)));
-							});
-							top = this.tranMemory(top)
-							this.isMemory = !!data;
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = (top/(1024*1024));
-							this.$data.chart.data.memory = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.memory,data: da}
-								]
-							};
-						} else {
-							this.isMemory = false;
-						}
-					})
 		},
 		getTaints(t) {
 			let list = [];
@@ -346,8 +218,10 @@ export default {
 								namespace: el.metadata.namespace,
 								ready: this.toReady(el.status,el.spec),
 								status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-								nowCpu: this.getPodCpu(el,idx),
-								nowMemory: this.getPodMemory(el,idx),
+								nowCpu: 0,
+								nowMemory: 0,
+								//nowCpu: this.getPodCpu(el,idx),
+								//nowMemory: this.getPodMemory(el,idx),
 								idx: idx,
 							})
 							idx++;

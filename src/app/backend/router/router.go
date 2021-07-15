@@ -59,11 +59,11 @@ func CreateUrlMappings() {
 	// clusters API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER", authenticate())
 	{
-		clustersAPI.GET("/nodes/:NODE/metrics/:METRICS", api.GetNodeMetrics)                    // get node metrics
-		clustersAPI.GET("/namespaces/:NAMESPACE/pods/:POD/metrics/:METRICS", api.GetPodMetrics) // get pod metrics
-		clustersAPI.GET("/topology", api.Topology)                                              // get cluster topology graph
-		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
-		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
+		clustersAPI.GET("/nodes/:NODE/metrics", api.GetNodeMetrics)                       // get node metrics
+		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/metrics", api.GetMetrics) // get metrics (pod, deployment, statefulset, daemonset, replicaset)
+		clustersAPI.GET("/topology", api.Topology)                                        // get cluster topology graph
+		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                  // get namespace topology graph
+		clustersAPI.GET("/dashboard", api.Dashboard)                                      // get dashboard
 	}
 	clustersAPI_ := Router.Group("/api", authenticate())
 	{
