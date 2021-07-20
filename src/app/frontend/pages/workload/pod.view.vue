@@ -231,7 +231,7 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if (!data) return
 			this.metadata = data.metadata;
-			this.chartsUrl = `namespaces/${data.metadata.namespace}/pods/${data.metadata.name}/metrics`;
+			this.chartsUrl = `namespaces/${data.metadata.namespace}/pods/${data.metadata.name}`;
 			this.onSync(data)
 		});
 		this.$nuxt.$emit("onCreated",'')

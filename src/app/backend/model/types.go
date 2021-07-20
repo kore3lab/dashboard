@@ -2,7 +2,41 @@ package model
 
 import "time"
 
-type Summary struct {
+// base
+type Model struct {
+	Name string `json:"name"`
+	Kind string `json:"kind"`
+}
+
+type ListModel struct {
+	Kind  string        `json:"kind"`
+	Items []interface{} `json:"items"`
+}
+
+// status
+
+const (
+	KIND_STAUTS      = "Status"
+	STATUS_UNKNOWN   = 0
+	STATUS_NOT_EXIST = 404
+	// STATUS_OK        = 200
+	// STATUS_FAIL      = 500
+)
+
+type Status struct {
+	Kind    string `json:"kind"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func NewStatus(code int) *Status {
+	return &Status{
+		Kind: KIND_STAUTS,
+		Code: code}
+}
+
+// "proxy" > "stats/summary"  (using dashboard)
+type ProxyNodeSummary struct {
 	Node struct {
 		Nodename         string            `json:"nodeName"`
 		Systemcontainers []ContainerStruct `json:"systemContainers"`

@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. charts -->
-	<c-charts class="row" v-model="chartsUrl"></c-charts>
+	<c-charts class="row" v-model="selectUrl"></c-charts>
 	<!-- 2. metadata -->
 	<div class="row">
 		<div class="col-md-12">
@@ -36,11 +36,11 @@
 							<span v-for="(d, idx) in info.conditions" v-bind:key="idx" v-bind:class="d.style" class="badge font-weight-light text-sm mb-1 mr-1">{{ d.type }}</span>
 						</dd>
 						<dt v-if="info.isToleration" class="col-sm-2">Tolerations</dt>
-						<dd v-if="info.isToleration" class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
+						<dd v-if="info.isToleration" class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="isTolerations=!isTolerations">{{isTolerations ? 'Hide' : 'Show'}}</a></dd>
 						<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="info.tolerations"></b-table></b-collapse>
 
 						<dt v-show="info.isAffinity" class="col-sm-2">Affinities</dt>
-						<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
+						<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="isAffinities=!isAffinities">{{isAffinities ? 'Hide' : 'Show'}}</a>
 							<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
 						</dd>
 					</dl>
@@ -50,30 +50,7 @@
 	</div>
 
 	<!-- 3. pods -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-header p-2"><h3 class="card-title">Pods</h3></div>
-				<div class="card-body p-2">
-					<b-table striped hover small :items="childPod" :fields="fields">
-						<template v-slot:cell(name)="data">
-							<a href="#" @click="$emit('navigate', getViewLink('', 'pods', data.item.namespace, data.item.name))">{{ data.item.name }}</a>
-						</template>
-						<template v-slot:cell(status)="data">
-							<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
-						</template>
-						<template v-slot:cell(nowCpu)="data">
-							<span v-if="data.item.nowCpu[data.item.idx]">{{ data.item.nowCpu[data.item.idx].val ? data.item.nowCpu[data.item.idx].val : '' }}</span>
-						</template>
-						<template v-slot:cell(nowMemory)="data">
-							<span v-if="data.item.nowMemory[data.item.idx]">{{ data.item.nowMemory[data.item.idx].val ? data.item.nowMemory[data.item.idx].val+'Mi' : '' }}</span>
-						</template>
-					</b-table>
-				</div>
-			</div>
-		</div>
-	</div>
-
+	<c-podlist class="row" v-model="selectUrl" @navigate="$emit('navigate',arguments[0])"></c-podlist>
 	<!-- 4. events -->
 	<c-events class="row" v-model="metadata.uid"></c-events>
 
@@ -83,52 +60,41 @@
 import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
 import VueChartsView	from "@/components/view/metricsChartsView.vue";
+import VuePodListView	from "@/components/view/podListView.vue";
 
 export default {
 	components: {
 		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView },
-		"c-charts": { extends: VueChartsView }
+		"c-charts": { extends: VueChartsView },
+		"c-podlist": { extends: VuePodListView }
 	},
 	data() {
 		return {
 			metadata: {},
-			chartsUrl: "",
+			selectUrl: "",
 			info: [],
-			childPod: [],
-			onTols: false,
-			onAffis: false,
-			fields: [
-				{ key: "name", label: "Name", sortable: true },
-				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "ready", label: "Ready", sortable: true  },
-				{ key: "nowCpu", label: "CPU" },
-				{ key: "nowMemory", label: "Memory" },
-				{ key: "status", label: "Status" },
-			],
+			isTolerations: false,
+			isAffinities: false
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.chartsUrl = `namespaces/${data.metadata.namespace}/deployments/${data.metadata.name}/metrics`;
-			this.onSync(data)
+			this.selectUrl = `namespaces/${data.metadata.namespace}/deployments/${data.metadata.name}`;
+			this.info = this.getInfo(data);
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		onSync(data) {
-			this.info = this.getInfo(data);
-			this.childPod = this.getChildPod(data.spec.template.metadata.labels);
-		},
 		getInfo(data) {
 			let replicas = data.spec.replicas +' desired, ' + (data.status.updatedReplicas || 0) + ' updated, ' + (data.status.replicas || 0) +' total, ' + (data.status.availableReplicas || 0) + ' available, ' + (data.status.unavailableReplicas || 0) + ' unavailable'
 			let conditions = [];
 			let tolerations = [];
 			let affinity = [];
-			let isToleration = false;
-			let isAffinity = false;
+			let bToleration = false;
+			let bAffinity = false;
 			if (data.status.conditions) {
 				data.status.conditions.forEach(el => {
 					conditions.push({
@@ -148,12 +114,12 @@ export default {
 						effect: el.effect || '',
 						seconds: el.tolerationSeconds || '',
 					})
-					isToleration = true;
+					bToleration = true;
 				})
 			}
 			if(data.spec.template.spec.affinity && Object.keys(data.spec.template.spec.affinity).length !== 0) {
 				affinity = data.spec.template.spec.affinity;
-				isAffinity = true;
+				bAffinity = true;
 			}
 			return {
 				replicas: replicas,
@@ -162,48 +128,16 @@ export default {
 				strategyType: data.spec.strategy.type,
 				conditions: conditions,
 				tolerations: tolerations,
-				affinities: affinity,
-				isAffinity: isAffinity,
-				isToleration: isToleration,
+				affinities: Object.assign({},affinity),
+				isAffinity: bAffinity,
+				isToleration: bToleration,
 			}
-		},
-		getChildPod(label) {
-			label = this.stringifyLabels(label)
-			let childPod = [];
-			this.$axios.get(this.getApiUrl('','pods',this.metadata.namespace,'','labelSelector=' + label))
-					.then( resp => {
-						let idx = 0;
-						resp.data.items.forEach(el =>{
-							if(el.metadata.ownerReferences) {
-								childPod.push({
-									name: el.metadata.name,
-									namespace: el.metadata.namespace,
-									ready: this.toReady(el.status,el.spec),
-									nowMemory: 0,
-									nowCpu: 0,
-									//nowMemory: this.onMemory(el,idx),
-									//nowCpu: this.onCpu(el,idx),
-									status: this.toStatus(el.metadata.deletionTimestamp, el.status),
-									idx: idx,
-								})
-								idx++;
-							}
-						})
-					})
-			return childPod
 		},
 		checkStyle(t) {
 			if(t === 'Progressing') return 'badge-primary'
 			if(t === 'Available') return 'badge-success'
 			else return 'badge-danger'
-		},
-		onTol() {
-			this.onTols = !this.onTols
-		},
-		onAffi() {
-			this.info.affinities = Object.assign({},this.info.affinities)
-			this.onAffis = !this.onAffis
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
