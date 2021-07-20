@@ -88,7 +88,7 @@ export default {
 	},
 	watch: {
 		value(newVal) {
-			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}`)
+			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}/metrics`)
 				.then(resp => {
 					this.isEmpty = true
 					this.resources = { limits: resp.data.limits, requests: resp.data.requests};

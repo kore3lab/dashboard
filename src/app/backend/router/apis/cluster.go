@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kore3lab/dashboard/model/v1alpha1"
+	"github.com/kore3lab/dashboard/model"
 	"github.com/kore3lab/dashboard/pkg/app"
 	"github.com/kore3lab/dashboard/pkg/config"
 	"github.com/kore3lab/dashboard/pkg/lang"

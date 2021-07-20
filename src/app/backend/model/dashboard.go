@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/kore3lab/dashboard/model"
+	"github.com/kore3lab/dashboard/pkg/client"
 	"github.com/kore3lab/dashboard/pkg/config"
 	"github.com/kore3lab/dashboard/pkg/lang"
 	log "github.com/sirupsen/logrus"
@@ -62,18 +62,23 @@ func (self *Dashboard) Get() error {
 	allocateTotal := resource{} // self.Nodes.Address/Status/Roles 외 리소스 allocatable
 	usageTotal := resource{}    // self.Nodes.cpu/memory (리소스 Usage 입력,  Percent 계산)
 
-	client, err := config.Cluster.Client(self.context)
+	clientSet, err := config.Cluster.Client(self.context)
 	if err != nil {
 
 		return err
 	}
 
-	apiClient, err := client.NewKubernetesClient()
+	apiClient, err := clientSet.NewKubernetesClient()
 	if err != nil {
 		return err
 	}
 
-	metricsClient, err := client.NewMetricsClient()
+	metricsClient, err := clientSet.NewMetricsClient()
+	if err != nil {
+		return err
+	}
+
+	cumulativeMetricsClient := clientSet.NewCumulativeMetricsClient()
 	if err != nil {
 		return err
 	}
@@ -149,7 +154,7 @@ func (self *Dashboard) Get() error {
 	for _, m := range nodeList.Items {
 
 		// node summary for storage used percentage (/api/v1/nodes/<node name>/proxy/stats/summary)
-		nodeSummary := model.Summary{}
+		nodeSummary := ProxyNodeSummary{}
 		request := apiClient.CoreV1().RESTClient().Get().Resource("nodes").Name(m.Name).SubResource("proxy").Suffix("stats/summary")
 		responseRawArrayOfBytes, err := request.DoRaw(context.Background())
 		if err != nil {
@@ -231,14 +236,11 @@ func (self *Dashboard) Get() error {
 	parsePercentUsages(self.Summary)
 
 	// self.Metrics
-	scraperClient := ScraperClient{
-		context: self.context,
-	}
-	err = scraperClient.GetClusterMetrics()
+	cmetrics, err := cumulativeMetricsClient.Get(client.CumulativeMetricsResourceSelector{})
 	if err != nil {
 		log.Errorf("Unable to get scrapping metrics (cause=%v)", err)
 	} else {
-		self.Metrics = scraperClient.Metrics
+		self.Metrics = cmetrics
 	}
 
 	return nil

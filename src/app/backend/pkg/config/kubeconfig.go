@@ -147,7 +147,7 @@ func newKubeCluster(conf kubeConfig) (*kubeCluster, error) {
 	}
 
 	// properties
-	clusters := make(map[string]*kubeClient)
+	clusters := make(map[string]*ClientSet)
 	clusterNames := []string{}
 	defaultContext := ""
 
@@ -172,7 +172,7 @@ func newKubeCluster(conf kubeConfig) (*kubeCluster, error) {
 
 			if restConfig, err := clientcmd.NewNonInteractiveClientConfig(*apiConfig, key, &clientcmd.ConfigOverrides{}, nil).ClientConfig(); err == nil {
 				clusterNames = append(clusterNames, key)
-				clusters[key] = createKubeClient(key, restConfig)
+				clusters[key] = createClientSet(key, restConfig)
 			}
 		}
 	}
@@ -182,7 +182,7 @@ func newKubeCluster(conf kubeConfig) (*kubeCluster, error) {
 
 	// 로드된 context가 없다면 in-cluster 사용
 	if len(clusters) == 0 && inClusterConfig != nil {
-		clusters[IN_CLUSTER_NAME] = createKubeClient(IN_CLUSTER_NAME, inClusterConfig)
+		clusters[IN_CLUSTER_NAME] = createClientSet(IN_CLUSTER_NAME, inClusterConfig)
 		clusterNames = []string{IN_CLUSTER_NAME}
 		defaultContext = IN_CLUSTER_NAME
 	}
@@ -195,12 +195,12 @@ func newKubeCluster(conf kubeConfig) (*kubeCluster, error) {
 		DefaultContext: defaultContext,
 	}
 	if inClusterConfig != nil {
-		c.InCluster = createKubeClient(IN_CLUSTER_NAME, inClusterConfig)
+		c.InCluster = createClientSet(IN_CLUSTER_NAME, inClusterConfig)
 	}
 	c.IsRunningInCluster = (len(c.ClusterNames) == 1 && c.InCluster != nil) // running within a cluster
 
 	// kubeCluster.Client()
-	c.Client = func(context string) (*kubeClient, error) {
+	c.Client = func(context string) (*ClientSet, error) {
 		if !lang.ArrayContains(c.ClusterNames, context) {
 			if context == IN_CLUSTER_NAME && c.InCluster != nil {
 				return c.InCluster, nil
@@ -322,9 +322,9 @@ func createConfigmapClusterConfig(nsName string, cmName string, fileName string)
 	return conf, nil
 }
 
-func createKubeClient(name string, restConfig *rest.Config) *kubeClient {
+func createClientSet(name string, restConfig *rest.Config) *ClientSet {
 
-	cluster := &kubeClient{Name: name, RESTConfig: restConfig}
+	cluster := &ClientSet{Name: name, RESTConfig: restConfig}
 
 	// NewDynamicClient
 	cluster.NewMetricsClient = func() (*versioned.Clientset, error) {
@@ -343,6 +343,10 @@ func createKubeClient(name string, restConfig *rest.Config) *kubeClient {
 	// NewDynamicClient
 	cluster.NewDynamicClient = func() (*client.DynamicClient, error) {
 		return client.NewDynamicClient(restConfig), nil
+	}
+
+	cluster.NewCumulativeMetricsClient = func() *client.CumulativeMetricsClient {
+		return client.NewCumulativeMetricsClient(Value.MetricsScraperUrl, name)
 	}
 
 	// 예:  schema.GroupVersionResource{Group: "networking.istio.io", Version: "v1alpha3", Resource: "virtualservices"}
