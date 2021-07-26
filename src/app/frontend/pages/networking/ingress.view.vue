@@ -1,33 +1,11 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-						<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">{{ info.ports }}</dd>
-						<dt v-if="info.tls" class="col-sm-2">TLS</dt><dd v-if="info.tls" class="col-sm-10"><span v-for="(val,idx) in info.tls" v-bind:key="idx">{{ val }} </span></dd>
-						<dt v-if="info.service" class="col-sm-2">Service</dt><dd v-if="info.service" class="col-sm-10">{{ info.type }}</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+		<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">{{ info.ports }}</dd>
+		<dt v-if="info.tls" class="col-sm-2">TLS</dt><dd v-if="info.tls" class="col-sm-10"><span v-for="(val,idx) in info.tls" v-bind:key="idx">{{ val }} </span></dd>
+		<dt v-if="info.service" class="col-sm-2">Service</dt><dd v-if="info.service" class="col-sm-10">{{ info.type }}</dd>
+	</c-metadata>
 	<!-- 2. rules -->
 	<div class="row">
 		<div class="col-md-12">
@@ -37,7 +15,9 @@
 					<ul>
 						<li v-for="(val, idx) in rules" v-bind:key="idx">
 							<p class="title">Host: {{ val.host }}</p>
-							<b-table striped hover small :items="val.value" :fields="ruleFields"></b-table>
+							<div class="ml-3">
+								<b-table-lite :items="val.value" :fields="ruleFields" class="subset"></b-table-lite>
+							</div>
 						</li>
 					</ul>
 				</div>
@@ -50,7 +30,7 @@
 			<div class="card card-secondary card-outline">
 				<div class="card-header p-2"><h3 class="card-title">Load-Balancer Ingress Points</h3></div>
 				<div class="card-body group">
-					<b-table striped hover small :items="lbIp" :fields="lbFields"></b-table>
+					<b-table-lite small :items="lbIp" :fields="lbFields"></b-table-lite>
 				</div>
 			</div>
 		</div>
@@ -61,10 +41,12 @@
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {

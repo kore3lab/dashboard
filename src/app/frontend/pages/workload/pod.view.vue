@@ -3,67 +3,53 @@
 	<!-- 1. chart -->
 	<c-charts class="row" v-model="chartsUrl"></c-charts>
 	<!-- 2. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name" class="text-wrap">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-						<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-						<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-						<dt class="col-sm-2">Status</dt><dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
-						<dt class="col-sm-2">Node</dt>
-						<dd v-if="raw.spec.nodeName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', raw.spec.nodeName? raw.spec.nodeName : '' ))">{{ raw.spec.nodeName}}</a></dd>
-						<dd v-if="!raw.spec.nodeName" class="col-sm-10">-</dd>
-						<dt class="col-sm-2">Pod IP</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(d, idx) in info.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
-						<dt class="col-sm-2">QoS Class</dt><dd class="col-sm-10">{{ info.qosClass }}</dd>
-						<dt v-if="info.conditions" class="col-sm-2">Conditions</dt>
-						<dd v-if="info.conditions" class="col-sm-10">
-							<span v-for="(d, idx) in info.conditions" v-bind:key="idx" class="border-box">{{ d }}</span>
-						</dd>
-						<dt v-if="info.isNodeSelector" class="col-sm-2">Node Selector</dt>
-						<dd v-if="info.isNodeSelector" class="col-sm-10">
-							<span v-for="(d, idx) in info.nodeSelector" v-bind:key="idx" class="border-box  background">{{ d.name }}: {{ d.value }}</span>
-						</dd>
-						<dt class="col-sm-2">Tolerations</dt>
-						<dd class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
-						<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="info.tolerations"></b-table></b-collapse>
-						<dt v-show="info.isAffinity" class="col-sm-2">Affinities</dt>
-						<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
-							<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
-						</dd>
-						<dt v-if="info.secret" class="col-sm-2">Secrets</dt>
-						<dd v-if="info.secret" class="col-sm-10" >
-							<ul class="list-unstyled">
-								<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
-									<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d))">{{ d }}</a>
-								</li>
-							</ul>
-						</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+		<dt class="col-sm-2">Controlled By</dt>
+		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+		<dt class="col-sm-2">Status</dt><dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
+		<dt class="col-sm-2">Node</dt>
+		<dd v-if="nodeName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', nodeName))">{{ nodeName}}</a></dd>
+		<dd v-if="!nodeName" class="col-sm-10">-</dd>
+		<dt class="col-sm-2">Pod IP</dt>
+		<dd class="col-sm-10">
+			<ul class="list-unstyled mb-0">
+				<li v-for="(v, k) in info.podIP" v-bind:key="k" class="mb-1">{{ v.ip }}</li>
+			</ul>
+		</dd>
+		<dt class="col-sm-2">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
+		<dt class="col-sm-2">QoS Class</dt><dd class="col-sm-10">{{ info.qosClass }}</dd>
+		<dt v-if="info.conditions" class="col-sm-2">Conditions</dt>
+		<dd v-if="info.conditions" class="col-sm-10">
+			<span v-for="(v, k) in info.conditions" v-bind:key="k" class="border-box">{{ v.type }}</span>
+		</dd>
+		<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt>
+		<dd v-if="info.nodeSelector" class="col-sm-10">
+			<span v-for="(v, k) in info.nodeSelector" v-bind:key="k" class="border-box  background">{{ k }}: {{ v }}</span>
+		</dd>
+		<dt class="col-sm-2">Tolerations</dt>
+		<dd class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}
+			<a href="#" class="float-right " @click="isTolerations=!isTolerations">{{isTolerations?'Hide':'Show'}}</a>
+		</dd>
+		<b-collapse class="col-sm-12" v-model="isTolerations">
+			<b-table-lite :items="info.tolerations" class="subset"></b-table-lite>
+		</b-collapse>
+
+		<dt v-show="Object.keys(affinities).length>0" class="col-sm-2">Affinities</dt>
+		<dd v-show="Object.keys(affinities).length>0" class="col-sm-10">{{ Object.keys(affinities).length }}
+			<a href="#" class="float-right " @click="isAffinities=!isAffinities">{{isAffinities?'Hide':'Show'}}</a>
+			<b-collapse v-model="isAffinities">
+				<c-jsontree v-model="affinities" class="card-body p-2 border"></c-jsontree>
+			</b-collapse>
+		</dd>
+		<dt v-if="info.secret" class="col-sm-2">Secrets</dt>
+		<dd v-if="info.secret" class="col-sm-10" >
+			<ul class="list-unstyled">
+				<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
+					<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d.secret.secretName))">{{ d.secret.secretName }}</a>
+				</li>
+			</ul>
+		</dd>
+	</c-metadata>
 
 	<!-- 3. init container -->
 	<div class="row" v-show="initContainers.length > 0">
@@ -185,8 +171,10 @@
 						<li v-for="(val, idx) in volumes" v-bind:key="idx">
 							<div class="title"><i class="fas fa-hdd mr-1 "></i> {{ val.name }}</div>
 							<dl class="row">
-								<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ val.type }}</dd>
-								<dt v-if="val.subName !== ''" class="col-sm-2">{{ val.subName }}</dt><dd v-if="val.subName !== ''" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', val.type.toLowerCase()+'s', metadata.namespace, val.subValue))">{{ val.subValue }}</a></dd>
+								<dt class="col-sm-2">Type</dt>
+								<dd class="col-sm-10">{{ val.type }}</dd>
+								<dt v-if="val.subName" class="col-sm-2">{{ val.subName }}</dt>
+								<dd v-if="val.subName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', val.type.toLowerCase()+'s', metadata.namespace, val.subValue))">{{ val.subValue }}</a></dd>
 							</dl>
 						</li>
 					</ul>
@@ -201,19 +189,22 @@
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
 import VueChartsView	from "@/components/view/metricsChartsView.vue";
 
+
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView },
 		"c-charts": { extends: VueChartsView }
 	},
 	data() {
 		return {
-			raw: { metadata: {}, spec: {} },
+			nodeName: "",
 			metadata: {},
 			chartsUrl: "",
 			volumes: [],
@@ -221,10 +212,11 @@ export default {
 			containers: [],
 			status: [],
 			metrics: [],
-			controller: [],
+			controller: {},
 			info: [],
-			onTols: false,
-			onAffis: false
+			affinities: {},
+			isTolerations: false,
+			isAffinities: false
 		}
 	},
 	mounted() {
@@ -232,84 +224,40 @@ export default {
 			if (!data) return
 			this.metadata = data.metadata;
 			this.chartsUrl = `namespaces/${data.metadata.namespace}/pods/${data.metadata.name}`;
-			this.onSync(data)
-		});
-		this.$nuxt.$emit("onCreated",'')
-	},
-	methods: {
-		onSync(data) {
-			this.raw = data;
-			this.volumes = this.getVolumes(data.spec.volumes) || {};
+			this.nodeName = data.spec.nodeName;
 			this.containers = this.getContainers(data) || {};
-			this.status = this.toStatus(data.metadata.deletionTimestamp, data.status);
-			this.controller = this.getController(data.metadata.ownerReferences);
-			this.info = this.getInfo(data);
+			this.status = this.toPodStatus(data.metadata.deletionTimestamp, data.status);
+			this.controller = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
+			this.info = {
+				podIP: data.status.podIPs || ["-"],
+				priorityClass: data.spec.priorityClassName || '-',
+				qosClass: data.status.qosClass || '-',
+				conditions: data.status.conditions || [],
+				nodeSelector: data.spec.nodeSelector,
+				tolerations: data.spec.tolerations || [],
+				secret: data.spec.volumes? data.spec.volumes.filter(el=>{return el.secret}): []
+			};
+			this.affinities = data.spec.affinity || {},
 			this.initContainers = this.getInitContainers(data);
-		},
-		getInfo(d) {
-			let podIP = [];
-			let conditions = [];
-			let tolerations = [];
-			let affinity = [];
-			let secret = [];
-			let nodeSelector = [];
-			let isAffinity = false;
-			let isNodeSelector = false;
-			if(d.status.podIPs) {
-				d.status.podIPs.forEach(el => {
-					podIP.push(el.ip)
-				})
-			} else podIP =['-']
-			if(d.status.conditions) {
-				d.status.conditions.forEach(el =>{
-					conditions.push(el.type)
-				})
-			}
-			if(d.spec.tolerations) {
-				d.spec.tolerations.forEach(el => {
-					tolerations.push({
-						key: el.key || '',
-						operator: el.operator || '',
-						effect: el.effect || '',
-						seconds: el.tolerationSeconds || '',
-					})
-				})
-			}
-			if(d.spec.affinity && Object.keys(d.spec.affinity).length !== 0) {
-				affinity = d.spec.affinity;
-				isAffinity = true;
-			}
-			if(d.spec.volumes) {
-				d.spec.volumes.forEach(el => {
-					if(el.secret) {
-						secret.push(el.secret.secretName)
+
+			// volumns
+			this.volumes = [];
+			if(data.spec.volumes) {
+				data.spec.volumes.forEach(d => {
+					if (d.persistentVolumeClaim) {
+						this.volumes.push({name: d.name, type: "persistentVolumeClaim", subName: "claimName", subValue: d.persistentVolumeClaim.claimName});
+					} else if (d.configMap) {
+						this.volumes.push({name: d.name, type: "configMap", subName: "name", subValue: d.configMap.name});
+					} else {
+						this.volumes.push({name: d.name, type: (Object.keys(d)[1] === "name"? Object.keys(d)[0] : Object.keys(d)[1]), subName: "",subValue: ""});
 					}
 				})
-				if(secret.length === 0) secret = false
 			}
-			if(d.spec.nodeSelector) {
-				let key = Object.keys(d.spec.nodeSelector)
-				for(let i=0;i<key.length;i++) {
-					nodeSelector.push({
-						name: key[i],
-						value: d.spec.nodeSelector[key[i]]
-					})
-				}
-				isNodeSelector = true
-			}
-			return {
-				podIP: podIP,
-				priorityClass: d.spec.priorityClassName? d.spec.priorityClassName: '-',
-				qosClass: d.status.qosClass? d.status.qosClass: '-',
-				conditions: conditions,
-				nodeSelector: nodeSelector,
-				tolerations: tolerations,
-				affinities: affinity,
-				secret: secret,
-				isAffinity: isAffinity,
-				isNodeSelector: isNodeSelector,
-			}
-		},
+
+		});
+		this.$nuxt.$emit("onCreated","")
+	},
+	methods: {
 		getInitContainers(d) {
 			let statusCons = []
 			let specCons = []
@@ -347,38 +295,6 @@ export default {
 			} else if(statusCon) {
 				return statusCon
 			} else return false
-		},
-		getVolumes(vol) {
-			let vols = []
-			if(vol) {
-				vol.forEach(d => {
-					if (d.persistentVolumeClaim) {
-						vols.push({
-							name: d.name,
-							type: 'persistentVolumeClaim',
-							subName: 'claimName',
-							subValue: d.persistentVolumeClaim.claimName
-						})
-					} else if (d.configMap) {
-						vols.push({
-							name: d.name,
-							type: 'configMap',
-							subName: 'name',
-							subValue: d.configMap.name
-						})
-					} else {
-						vols.push({
-							name: d.name,
-							type: (Object.keys(d)[1] === 'name'? Object.keys(d)[0] : Object.keys(d)[1]),
-							subName: '',
-							subValue: '',
-						})
-					}
-				})
-				return vols
-			}
-			return false
-
 		},
 		getContainers(d) {
 			let statusCons = []
@@ -584,14 +500,7 @@ export default {
 					`#failure=${failureThreshold || "0"}`,
 			);
 			return probe;
-		},
-		onTol() {
-			this.onTols = !this.onTols
-		},
-		onAffi() {
-			this.info.affinities = Object.assign({},this.info.affinities)
-			this.onAffis = !this.onAffis
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");

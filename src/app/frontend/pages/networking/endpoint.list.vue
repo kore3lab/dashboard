@@ -43,9 +43,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(endpoint)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.endpoint" v-bind:key="value">{{ value }}</li>
-										</ul>
+										<span v-for="value in data.value" v-bind:key="value" v-bind:class="{'border-box':value!='<none>'}">{{ value }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -80,7 +78,7 @@ export default {
 			fieldsAll: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true },
-				{ key: "endpoint", label: "Endpoints"},
+				{ key: "endpoint", label: "Endpoints",  formatter: this.formatEndpoints },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			isBusy: false,
@@ -121,7 +119,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								endpoint: this.onEndpoints(el),
+								endpoint: el.subsets,
 								creationTimestamp: el.metadata.creationTimestamp,
 							});
 						});
@@ -134,23 +132,17 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		onEndpoints(el){
-			let list = [];
-			if (el.subsets !== undefined) {
-				if (el.subsets[0].notReadyAddresses) {
-					return "-"
-				}
-				for (let i =0;i<el.subsets[0].addresses.length;i++){
-					list.push(`${el.subsets[0].addresses[i].ip}`)
-				}
-				return list
+		formatEndpoints(subsets, key, itme) {
+			if (!subsets || subsets[0].notReadyAddresses) return ["<none>"];
+			let list = [];			
+			for (let i =0;i< subsets[0].addresses.length;i++){
+				list.push(`${subsets[0].addresses[i].ip}`)
 			}
-			return "-"
-		},
+			return list
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	},
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

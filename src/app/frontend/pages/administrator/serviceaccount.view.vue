@@ -1,31 +1,11 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-						<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-3">Annotations</dt>
-						<dd class="col-sm-9">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-3">Labels</dt>
-						<dd class="col-sm-9">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt v-if="IPS" class="col-sm-3">ImagePullSecrets</dt>
-						<dd v-if="IPS" class="col-sm-9"><span v-for="(val, idx) in IPS" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('','secrets',metadata.namespace,val))">{{ val }}</a></span></dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+		<dt v-if="imagePullSecrets.length>0" class="col-sm-3">ImagePullSecrets</dt>
+		<dd v-if="imagePullSecrets.length>0" class="col-sm-9"><span v-for="(value, idx) in imagePullSecrets" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('','secrets',metadata.namespace,value.name))">{{ value.name }}</a></span></dd>
+		<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt><dd v-if="metadata.ownerReferences" class="col-sm-9">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+	</c-metadata>
 	<!-- 2. mountable secrets -->
 	<div class="row">
 		<div class="col-md-12">
@@ -56,40 +36,34 @@
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {
 		return {
 			metadata: {},
-			IPS: [],
+			controller: {},
+			imagePullSecrets: [],
 			secrets: [],
-			isShow: [],
+			isShow: {},
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
-			this.origin = data;
 			this.metadata = data.metadata;
-			this.IPS = this.getIPS(data.imagePullSecrets)
-			this.secrets = this.getSecrets(data.secrets)
+			this.controller = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
+			this.imagePullSecrets = data.imagePullSecrets? data.imagePullSecrets: [];
+			this.secrets = this.secrets ?this.getSecrets(data.secrets):[];
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		getIPS(ips) {
-			if(!ips) return
-
-			let list = []
-			ips.map((v) => {
-				if(v.name) list.push(v.name)
-			})
-			return list
-		},
 		getSecrets(secrets) {
 			this.isShow = [];
 			if(!secrets) return

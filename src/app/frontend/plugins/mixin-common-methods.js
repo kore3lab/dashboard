@@ -1,7 +1,15 @@
 import Vue from "vue";
 const CONSTRANTS = {
-	"ITEMS_PER_PAGE" : [{text:"10",value:10}, {text:"20",value:20}, {text:"30",value:30}, {text:"50",value:50}, {text:"100",value:100}]
+	"ITEMS_PER_PAGE" : [{text:"10",value:10}, {text:"20",value:20}, {text:"30",value:30}, {text:"50",value:50}, {text:"100",value:100}],
+	"CHART_BG_COLOR" : {
+		cpu: "rgba(119,149,233,0.9)",
+		memory:	"rgba(179,145,208,1)",
+		requests: "#6c757d",
+		limits: "#6c757d",
+		background: "#fff",
+	}
 }
+
 Vue.filter("formatNumber", (value) => {
 	if(value === 0) return value
 	let regexp = /\B(?=(\d{3})+(?!\d))/g;
@@ -61,62 +69,6 @@ Vue.mixin({
 			}
 			return str;
 		},
-		unitsToBytes(value) {
-			const base = 1024;
-			const suffixes = ["K", "M", "G", "T", "P", "E"];
-
-			if (!suffixes.some(suffix => value.includes(suffix))) {
-				return parseFloat(value);
-			}
-
-			const suffix = value.replace(/[0-9]|i|\./g, "");
-			const index = suffixes.indexOf(suffix);
-
-			return parseInt(
-				(parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
-			);
-		},
-		cpuUnitsToNumber(cpu) {
-			const thousand = 1000;
-			const million = thousand * thousand;
-			const shortBillion = thousand * million;
-
-			const cpuNum = parseInt(cpu);
-			if (cpu.includes("k")) return cpuNum * thousand;
-			if (cpu.includes("m")) return cpuNum / thousand;
-			if (cpu.includes("u")) return cpuNum / million;
-			if (cpu.includes("n")) return cpuNum / shortBillion;
-
-			return parseFloat(cpu);
-		},
-		metricUnitsToNumber(value) {
-			const base = 1000;
-			const suffixes = ["k", "m", "g", "t", "p"];
-
-			const suffix = value.toLowerCase().slice(-1);
-			const index = suffixes.indexOf(suffix);
-
-			return parseInt(
-				(parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
-			);
-		},
-		memoryUnitsToNumber(value) {
-			const base = 1024;
-			const suffixes = ["ki", "mi", "gi","ti","pi"]
-
-			const suffix = value.toLowerCase().slice(-2);
-			const index = suffixes.indexOf(suffix);
-
-			return (parseFloat(value) * Math.pow(base, index + 1))
-		},
-		cpuRL(cpu) {
-			if(!cpu) return 0
-			return this.cpuUnitsToNumber(cpu)
-		},
-		memoryRL(memory) {
-			if(!memory) return 0
-			return this.memoryUnitsToNumber(memory)/(1024 * 1024)
-		},
 		getTimestampString(timestamp) {
 			let dt = Date.parse(timestamp);
 			let seconds = Math.floor((new Date() - dt) / 1000);
@@ -137,7 +89,7 @@ Vue.mixin({
 
 			return Math.floor(seconds) + " seconds";
 		},
-		toStatus(deletionTimestamp, status) {
+		toPodStatus(deletionTimestamp, status) {
 			// 삭제
 			if (deletionTimestamp) {
 				return { "value": "Terminating", "style": "text-secondary"}
@@ -165,28 +117,6 @@ Vue.mixin({
 				return { "value": state[Object.keys(state)].reason, "style": style }
 			}
 		},
-		toReady(status, spec) {
-			let containersReady = 0
-			let containersLength = 0
-			if ( spec.containers ) containersLength = spec.containers.length
-			if ( status.containerStatuses ) containersReady = status.containerStatuses.filter(el => el.ready).length
-			return `${containersReady}/${containersLength}`
-		},
-		sorted(val) {
-			if(val) {
-				let temp = [];
-				for (let i = 0; i < val.length; i++) {
-					for (let j = 0; j < val.length; j++) {
-						if (val[i].idx < val[j].idx) {
-							temp = val[i]
-							val[i] = val[j]
-							val[j] = temp
-						}
-					}
-				}
-			}
-			return val
-		},
 		stringifyLabels(label) {
 			if(!label) return [];
 			try {
@@ -196,19 +126,26 @@ Vue.mixin({
 			}
 			return [];
 		},
-		getController(ref) {
-			if (!ref) return
-			let or = ref[0] ? ref[0] : ref
-			let len = or.kind.length
-			let k;
-			if(or.kind[len-1] === 's') k = (or.kind).toLowerCase() + 'es'
-			else k = (or.kind).toLowerCase() + 's'
-			if(!or.apiVersion) return {g: '', k: k}
-			let g = (or.apiVersion).split('/')
-			if (g.length === 2) {
-				return { g: g[0], k: k }
+		// get a resource-info(selfLink)( metdata.ownerReferences, ...  )
+		getResource(reference) {
+			let resource = {};
+			if(reference) {
+				let version = reference.apiVersion?reference.apiVersion.split('/'):[];
+				resource = {
+					kind: reference.kind,
+					group: (version.length>1)? version[0]: "",
+					resource:`${reference.kind.toLowerCase()}${reference.kind.endsWith('s')?'es':'s'}`
+				};
+				if (reference["metadata"]) {
+					resource["name"] = reference.metadata.name;
+					resource["namespace"] = reference.metadata["namespace"]? reference.metadata["namespace"]: "";
+				} else {
+					resource["name"] = reference.name;
+					resource["namespace"] = reference["namespace"]? reference["namespace"]: "";
+				}
+				return resource;
 			} else {
-				return { g: '', k: k}
+				return {}
 			}
 		},
 		getApiUrl(group, rscName, namespace, name, query) {

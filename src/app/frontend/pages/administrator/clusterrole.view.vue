@@ -1,28 +1,8 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	</c-metadata>
 	<!-- 2. rules -->
 	<div class="row">
 		<div class="col-md-12">
@@ -32,10 +12,10 @@
 					<ul>
 						<li v-for="(val, idx) in rules" v-bind:key="idx">
 							<dl class="row">
-								<dt v-if="val.resources" class="col-sm-3">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources }}</dd>
-								<dt v-if="val.verbs" class="col-sm-3 ">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs }}</dd>
-								<dt v-if="val.apiGroups" class="col-sm-3 ">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups }}</dd>
-								<dt v-if="val.resourceNames" class="col-sm-3 ">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames }}</dd>
+								<dt v-if="val.resources" class="col-sm-3">Resources</dt><dd v-if="val.resources" class="col-sm-9">{{ val.resources.join(", ") }}</dd>
+								<dt v-if="val.verbs" class="col-sm-3 ">Verbs</dt><dd v-if="val.verbs" class="col-sm-9">{{ val.verbs.join(", ") }}</dd>
+								<dt v-if="val.apiGroups" class="col-sm-3 ">Api Groups</dt><dd v-if="val.apiGroups" class="col-sm-9">{{ val.apiGroups.join(", ") }}</dd>
+								<dt v-if="val.resourceNames" class="col-sm-3 ">Resource Names</dt><dd v-if="val.resourceNames" class="col-sm-9">{{ val.resourceNames.join(", ") }}</dd>
 							</dl>
 						</li>
 					</ul>
@@ -49,10 +29,12 @@
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {
@@ -64,28 +46,12 @@ export default {
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
-			this.origin = data;
 			this.metadata = data.metadata;
-			this.rules = this.getRules(data.rules)
+			this.rules = data.rules? data.rules: {};
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
-	methods: {
-		getRules(rules) {
-			if(!rules) return
-
-			let list = []
-			rules.map(({ resourceNames, apiGroups, resources, verbs }, index) => {
-				list.push({
-					resourceNames: resourceNames? resourceNames.join(", ") : null,
-					apiGroups: apiGroups? apiGroups.join(", ") ? apiGroups.join(", ") : '*'  : null,
-					resources: resources? resources.join(", ") : null,
-					verbs: verbs? verbs.join(", ") : null,
-				})
-			})
-			return list
-		},
-	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

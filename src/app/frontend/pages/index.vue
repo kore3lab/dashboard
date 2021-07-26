@@ -179,7 +179,6 @@ td > p {margin-bottom: 0;}
 <script>
 import "@/assets/css/hexagons.css"
 import VueChartJs		from "vue-chartjs"
-import {CHART_BG_COLOR}	from "static/constrants";
 
 export default {
 	data() {
@@ -272,13 +271,13 @@ export default {
 						this.$data.chart.data.cpu = {
 							labels: labels,
 							datasets: [
-								{ backgroundColor : CHART_BG_COLOR.cpu, data: cpus }
+								{ backgroundColor : this.var("CHART_BG_COLOR").cpu, data: cpus }
 							]
 						};
 						this.$data.chart.data.memory = {
 							labels: labels,
 							datasets: [
-								{ backgroundColor : CHART_BG_COLOR.memory, data: memories }
+								{ backgroundColor : this.var("CHART_BG_COLOR").memory, data: memories }
 							]
 						};
 					}

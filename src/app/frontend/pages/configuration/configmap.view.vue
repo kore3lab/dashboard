@@ -1,31 +1,10 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-						<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
+		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+	</c-metadata>
 	<!-- 2. data -->
 	<div v-show="configData" class="row">
 		<div class="col-md-12">
@@ -45,14 +24,15 @@
 	</div>
 	<!-- 4. events -->
 	<c-events class="row" v-model="metadata.uid"></c-events>
-
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {
@@ -60,7 +40,7 @@ export default {
 			metadata: {},
 			info: [],
 			origin: [],
-			controller: [],
+			controller: {},
 			configData: [],
 			fields: [
 				{ key: "name", label: "Name" },
@@ -79,7 +59,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.controller = this.getController(data.metadata.ownerReferences);
+			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
 			this.configData = this.getData(data.data);
 		},
 		getData(data) {

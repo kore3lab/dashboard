@@ -58,6 +58,13 @@ label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 .border-box.background {
 	background-color: #f3f4f5;
 }
+
+/* table of viewpage*/
+table.b-table.subset th {font-weight:400; padding: .3rem}
+table.b-table.subset td {font-weight:350; padding: .3rem}
+
+
+
 /* custom > view */
 section.content-view {font-size: .95rem;}
 section.content-view .card-primary > .card-header {font-size: 1.1rem; line-height: 1.1rem;}

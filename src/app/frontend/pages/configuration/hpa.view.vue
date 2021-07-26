@@ -1,83 +1,69 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+		<dt class="col-sm-3">Reference</dt>
+		<dd class="col-sm-9">{{ ref.kind }} / <a href="#" @click="$emit('navigate', getViewLink(ref.group, ref.resource, metadata.namespace, ref.name))">{{ ref.name }}</a></dd>
+		<dt class="col-sm-3">Min Pods</dt><dd class="col-sm-9">{{ info.minPods }}</dd>
+		<dt class="col-sm-3">Max Pods</dt><dd class="col-sm-9">{{ info.maxPods }}</dd>
+		<dt class="col-sm-3">Replicas</dt><dd class="col-sm-9">{{ info.replicas }}</dd>
+	</c-metadata>
+	<!-- 2. metrics-->
+	<div class="row" v-show="metrics">
 		<div class="col-md-12">
 			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-						<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-3">Annotations</dt>
-						<dd class="col-sm-9">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-3">Labels</dt>
-						<dd class="col-sm-9">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt class="col-sm-3">Reference</dt>
-						<dd class="col-sm-9"><a href="#" @click="$emit('navigate', getViewLink(ref.group.g, ref.group.k, metadata.namespace, ref.name))">{{ ref.kind }}/{{ ref.name }}</a></dd>
-						<dt class="col-sm-3">Min Pods</dt><dd class="col-sm-9">{{ info.minPods }}</dd>
-						<dt class="col-sm-3">Max Pods</dt><dd class="col-sm-9">{{ info.maxPods }}</dd>
-						<dt class="col-sm-3">Replicas</dt><dd class="col-sm-9">{{ info.replicas }}</dd>
-					</dl>
+				<div class="card-header p-2"><h3 class="card-title">Metrics</h3></div>
+				<div class="card-body group">
+					<b-table-lite :items="metrics" :fields="fields" class="subset">
+					</b-table-lite>
 				</div>
 			</div>
 		</div>
 	</div>
-	<!-- 2. evnets -->
+	<!-- 3. evnets -->
 	<c-events class="row" v-model="metadata.uid"></c-events>
-
 </div>
 </template>
 <script>
-import VueEventsView	from "@/components/view/eventsView.vue";
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueEventsView		from "@/components/view/eventsView.vue";
+import VueJsonTree			from "@/components/jsontree";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
+		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {
 		return {
 			metadata: {},
 			info: [],
-			ref: []
+			ref: {},
+			fields: [
+				{ key: "name", label: "Name" },
+				{ key: "metric", label: "Current/Target" },
+			],
+			metrics: []
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.onSync(data)
-		});
-		this.$nuxt.$emit("onCreated",'')
-	},
-	methods: {
-		onSync(data) {
-			this.info = this.getInfo(data)
-			this.ref = this.getRef(data.spec.scaleTargetRef)
-		},
-		getInfo(data) {
-			return {
+			this.info = {
 				minPods: data.spec.minReplicas || 0,
 				maxPods: data.spec.maxReplicas || 0,
 				replicas: data.status.currentReplicas
-			}
-		},
-		getRef(ref) {
-			if(!ref) return
-
-			return {
-				group: this.getController(ref),
-				name: ref.name,
-				kind: ref.kind
-			}
-		},
+			},
+			this.metrics = [
+				{name: "Resource cpu on Pods (as a percentage of request)", metric: `${data.status.currentCPUUtilizationPercentage ? data.status.currentCPUUtilizationPercentage + '%': "<unknown>"} / ${data.spec.targetCPUUtilizationPercentage?data.spec.targetCPUUtilizationPercentage:"0"}%`}
+			];
+			this.ref = this.getResource(data.spec.scaleTargetRef)
+		});
+		this.$nuxt.$emit("onCreated",'')
 	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

@@ -18,6 +18,7 @@
 			</div>
 		</section>
 		<section class="content">
+			<b-overlay :show="isBusy" rounded="sm">
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-md-12">
@@ -28,6 +29,7 @@
 					</div>
 				</div>
 			</div>
+			</b-overlay>
 		</section>
 	</div>
 	<!-- /.content-wrapper -->
@@ -45,6 +47,7 @@ export default {
 	},
 	data() {
 		return {
+			isBusy:false,
 			badge: this.$route.query.crd ? this.$route.query.crd.substring(0,1): "P",
 			group: this.$route.query.group ?  this.$route.query.group: "Workload",
 			crd : this.$route.query.crd ?  this.$route.query.crd: "pod",
@@ -70,6 +73,7 @@ export default {
 	methods: {
 		onCreate() {
 			if(!this.raw.metadata.namespace) this.raw.metadata.namespace = 'default'
+			this.isBusy = true;
 			this.$axios.post(`/raw/clusters/${this.currentContext()}`, this.raw)
 				.then( resp => {
 					this.origin = Object.assign({}, resp.data);
@@ -95,7 +99,8 @@ export default {
 					}
 
 				})
-				.catch(e => { this.msghttp(e);});
+				.catch(e => { this.msghttp(e);})
+				.finally(()=> { this.isBusy = false; });
 		},
 		onError(error) {
 			this.toast(error.message, "danger");

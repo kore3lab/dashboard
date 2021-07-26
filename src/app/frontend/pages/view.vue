@@ -37,30 +37,7 @@
 				<!--1. not Yaml(editor) -->
 				<div v-show="!isYaml && !errorcheck" class="card-body p-2">
 					<!-- 1.1 meta data -->
-					<div class="row" v-show="isJSON">
-						<div class="col-md-12">
-							<div class="card card-secondary card-outline">
-								<div class="card-body p-2">
-									<dl class="row mb-0">
-										<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(raw.metadata.creationTimestamp)}} ago ({{ raw.metadata.creationTimestamp }})</dd>
-										<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ raw.metadata.name }}</dd>
-										<dt v-if="raw.metadata.namespace" class="col-sm-2">Namespace</dt><dd v-if="raw.metadata.namespace" class="col-sm-10">{{ raw.metadata.namespace }}</dd>
-										<dt class="col-sm-2">Annotations</dt>
-										<dd class="col-sm-10">
-											<ul class="list-unstyled mb-0">
-												<li v-for="(value, name) in raw.metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-											</ul>
-										</dd>
-										<dt class="col-sm-2">Labels</dt>
-										<dd class="col-sm-10">
-											<span v-for="(value, name) in raw.metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-										</dd>
-										<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ raw.metadata.uid }}</dd>
-									</dl>
-								</div>
-							</div>
-						</div>
-					</div>
+					<c-metadata v-show="isJSON" v-model="raw.metadata" dtCols="2" ddCols="10"></c-metadata>
 					<!-- 1.2  view -->
 					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="navigate"/>
 					<!-- 1.3 json-tree -->
@@ -115,14 +92,14 @@
 	</section>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueAceEditor 		from "@/components/aceeditor"
+import VueJsonTree 			from "@/components/jsontree"
 
-import VueAceEditor 	from "@/components/aceeditor"
-import VueJsonTree 		from "@/components/jsontree"
 export default {
-
 	props:["value"],
-
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-aceeditor": { extends: VueAceEditor },
 		"c-jsontree": { extends: VueJsonTree },
 	},
@@ -246,7 +223,6 @@ export default {
 					this.errorcheck = false;
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
-					this.selfLink = this.getSelfLink(this.raw)
 					if(this.title === "ConfigMap" || this.title === "Secret") this.raw.spec = resp.data.data || {};
 					else if(this.title === "StorageClass") this.raw.spec = {}; // 무시
 					else if(this.title === "Role" || this.title === "ClusterRole") this.raw.spec = resp.data.rules || {};
@@ -262,15 +238,13 @@ export default {
 						this.$nuxt.$emit('resetHistory',this.raw);
 					}
 					this.delay = 0;
+					// calcuate selfLink (deprecated metadata.selfLink)
+					let c = this.getResource(this.raw)
+					this.selfLink = this.getApiUrl(c.group, c.resource, this.raw.metadata.namespace, c.name);
 				})
 				.catch(e => {
 					this.isError(e);
 				});
-		},
-		getSelfLink(data) {
-			let v = this.getController(data)
-			let url = this.getApiUrl(v.g,v.k,data.metadata.namespace,data.metadata.name)
-			return url
 		},
 		isError(e) {
 			this.errorcheck = true;
@@ -302,7 +276,11 @@ export default {
 				.then( _ => {
 					this.watch();
 				})
-				.catch(e => {this.msghttp(e);});
+				.catch(e => {
+					this.deleteOverlay.visible = false; 
+					this.deleteOverlay.processing = false;
+					this.msghttp(e);
+				});
 		},
 		watch() {
 			if(this.selfLink !== this.deleteLink) {

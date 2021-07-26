@@ -1,8 +1,8 @@
 <template>
-<div class="row">
+<div v-if="items.length>0" class="row">
 	<div class="col-md-12">
 		<div class="card card-secondary card-outline">
-			<div v-if="isSpinner" class="card-header p-2"><h3 class="card-title">Pods</h3></div>
+			<div class="card-header p-2"><h3 class="card-title">Pods</h3></div>
 			<div class="card-body p-2">
 				<b-table striped hover small :items="items" :fields="fields" :busy="isBusy" >
 					<template #table-busy>
@@ -19,6 +19,9 @@
 					</template>
 					<template v-slot:cell(memory)="data">
 						<span>{{ (data.item.metrics.memory/(1024*1024)).toFixed(2) | formatNumber}} Mi</span>
+					</template>
+					<template v-slot:cell(status)="data">
+						<span v-bind:class="{'text-success':data.value=='Completed'||data.value=='Running'}">{{ data.value }}</span>
 					</template>
 				</b-table>
 			</div>
@@ -37,24 +40,25 @@ export default {
 			fields: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true, thClass: this.namespace?"":"d-none", tdClass: this.namespace?"":"d-none" },
-				{ key: "ready", label: "Ready" },
-				{ key: "cpu", label: "CPU", sortable: true },
-				{ key: "memory", label: "Memory", sortable: true },
+				{ key: "ready", label: "Ready" , thClass:"text-center", tdClass:"text-center" },
+				{ key: "cpu", label: "CPU", sortable: true, thClass:"text-right", tdClass:"text-right" },
+				{ key: "memory", label: "Memory", sortable: true, thClass:"text-right", tdClass:"text-right" },
 				{ key: "status", label: "Status" },
 			],
 		}
 	},
 	watch: {
 		value(newVal) {
-			this.items = [];
 			this.isBusy = true;
 			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}/pods`)
 				.then(resp => {
 					this.items = resp.data
-				}
-			).finally(()=>{
-				this.isBusy = false
-			});
+				}).catch(e => {
+					this.msghttp(e);
+					this.items = [];
+				}).finally(()=>{
+					this.isBusy = false
+				});
 		}
 	}
 }

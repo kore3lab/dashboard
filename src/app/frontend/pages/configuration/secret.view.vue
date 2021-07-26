@@ -1,32 +1,11 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-						<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-						<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ origin.type }}</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
+		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+		<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ origin.type }}</dd>
+	</c-metadata>
 	<!-- 2. data -->
 	<div v-show="secretData" class="row">
 		<div class="col-md-12">
@@ -54,8 +33,12 @@
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
+	components: {
+		"c-metadata": { extends: VueMetadataView }
+	},
 	data() {
 		return {
 			te: '',
@@ -63,7 +46,7 @@ export default {
 			metadata: {},
 			info: [],
 			origin: [],
-			controller: [],
+			controller: {},
 			secretData: [],
 			isShow: [],
 			fields: [
@@ -83,7 +66,7 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.controller = this.getController(data.metadata.ownerReferences);
+			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]):{};
 			this.secretData = this.getData(data.data);
 		},
 		getData(data) {

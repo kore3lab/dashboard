@@ -52,23 +52,16 @@
 										</div>
 									</template>
 									<template v-slot:cell(status)="data">
-										<div class="list-unstyled mb-0" v-if="data.item.status.value">
-											<span v-bind:class="data.item.status.style">{{ data.item.status.value }}</span>
-										</div>
+										<span v-bind:class="data.value.style">{{ data.value.value }}</span>
 									</template>
 									<template v-slot:cell(containers)="data">
-										<div class="list-unstyled mb-0 float-left" v-if="data.item.containers.containerStatuses.length > 0">
-											<span v-for="(containerStatuses, idx) in data.item.containers.containerStatuses" v-bind:key="idx" v-bind:class="containerStatuses.style" class="badge font-weight-light text-sm ml-1"> {{" "}}</span>
-										</div>
-										<div class="list-unstyled mb-0 ml-0 float-left" v-if="data.item.containers.initContainerStatuses.length > 0">
-											<span v-for="(initContainerStatuses, idx) in data.item.containers.initContainerStatuses" v-bind:key="idx" v-bind:class="initContainerStatuses.style" class="badge font-weight-light text-sm ml-1">{{" "}}</span>
-										</div>
+										<span v-for="(value, idx) in data.value" v-bind:key="idx" v-bind:class="`badge-${value}`" class="badge font-weight-light text-sm ml-1"> {{" "}}</span>
 									</template>
 									<template v-slot:cell(controller)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}</a>
+										<a href="#" @click="viewModel=getViewLink(data.value.group, data.value.resource, data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}</a>
 									</template>
 									<template v-slot:cell(node)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs, '',  data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink('','nodes', '',  data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 								</b-table>
 							</div>
@@ -117,13 +110,13 @@ export default {
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
 				{ key: "ready", label: "Ready", sortable: true  },
-				{ key: "containers", label: "Containers", sortable: true  },
+				{ key: "containers", label: "Containers", sortable: true, formatter: this.formatContainers },
 				{ key: "restartCount", label: "Restart", sortable: true  },
-				{ key: "controller", label: "Controlled By", sortable: true,  formatter: this.formatPodsController },
-				{ key: "node", label: "Node", sortable: true, formatter: this.formatNode  },
+				{ key: "controller", label: "Controlled By", sortable: true,  formatter: this.getResource },
+				{ key: "node", label: "Node", sortable: true },
 				{ key: "qos", label: "QoS", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "status", label: "Status", sortable: true  }
+				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
 			],
 			isBusy: false,
 			origin: [],
@@ -176,12 +169,13 @@ export default {
 						this.items.push({
 							name: el.metadata.name,
 							namespace: el.metadata.namespace,
-							ready: this.toReady(el.status, el.spec),
-							containers: this.toContainers(el.status),
+							ready: `${el.status.containerStatuses ? el.status.containerStatuses.filter(e => e.ready).length: 0}/${el.spec.containers?el.spec.containers.length: 0}`,
+							containers: el.status,
 							restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
-							controller: el.metadata.ownerReferences,
-							status: this.toStatus(el.metadata.deletionTimestamp, el.status),
+							controller: el.metadata.ownerReferences?el.metadata.ownerReferences[0]:null,
+							status: el.status,
 							creationTimestamp: el.metadata.creationTimestamp,
+							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
 							qos: el.status.qosClass
 						});
@@ -196,85 +190,6 @@ export default {
 		selectedClear() {
 			this.selectedStatus = [];
 			this.query_All()
-		},
-		formatNode(d) {
-			return {
-				"name" : d ? d : "",
-				"group" : "",
-				"rs" : "nodes"
-			}
-		},
-		formatPodsController(d) {
-			let version
-			let group
-			let gr = ""
-			if ( d ) {
-				let or = d[0]
-				version = or.apiVersion.split('/')
-				if (version.length>1) {
-					group = version[0]
-				}
-				if (or.kind === "Node") {
-					gr = "Cluster"
-				} else {
-					gr = "Workload"
-				}
-				let rs;
-				let len = or.kind.length
-				if(or.kind[len-1] === 's') rs = (or.kind).toLowerCase() + 'es'
-				else rs = (or.kind).toLowerCase() + 's'
-				return {
-					"name" : or.name,
-					"group" : group ||"",
-					"kind" : or.kind,
-					"rs" : rs,
-					"spaceKind" : this.onKind(or.kind),
-					"gr" : gr,
-				}
-			} else {
-				return ""
-			}
-		},
-		onKind(kind) {
-			if (kind === "StatefulSet") {
-				return "Stateful Set"
-			} else if (kind === "CronJob") {
-				return "Cron Job"
-			} else if (kind === "DaemonSet") {
-				return "Daemon Set"
-			} else if (kind === "ReplicaSet") {
-				return "Replica Set"
-			} else {
-				return kind
-			}
-		},
-		// check pod's containers
-		toContainers(status) {
-			let initContainerStatuses = []
-			let containerStatuses = []
-			let style = ""
-			if ( status.initContainerStatuses ) {
-				initContainerStatuses = status.initContainerStatuses.map(x => {
-					if ( !x.ready ) style = "badge-warning"
-					else style = "badge-secondary"
-					return Object.assign(x, {"style": style})
-				})
-
-			}
-			if ( status.containerStatuses ) {
-				containerStatuses = status.containerStatuses.map(x => {
-					if ( !x.ready ) {
-						style = "badge-warning"
-						if ( x.state[Object.keys(x.state)].reason === "Completed") style = "badge-secondary"
-					}
-					else style = "badge-success"
-					return Object.assign(x, {"style": style})
-				})
-			}
-			return {
-				"initContainerStatuses": initContainerStatuses,
-				"containerStatuses": containerStatuses,
-			}
 		},
 		onFiltered(filteredItems) {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
@@ -304,6 +219,27 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
+		formatStatus(status, key, item)  {
+			return this.toPodStatus(item.deletionTimestamp, status);
+		},
+		formatContainers(status, key, item) {
+			let list = []
+			if ( status.initContainerStatuses ) {
+				status.initContainerStatuses.forEach(el=> {
+					el.ready ? "secondary" : "warning"
+				});
+			}
+			if ( status.containerStatuses ) {
+				status.containerStatuses.forEach(el=> {
+					if (el.ready) {
+						list.push("success");
+					} else {
+						list.push((el.state[Object.keys(el.state)].reason === "Completed") ? "secondary":  "warning");
+					}
+				});
+			}
+			return list;
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')

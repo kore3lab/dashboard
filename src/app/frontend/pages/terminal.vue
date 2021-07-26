@@ -77,8 +77,6 @@ export default {
 			this.axiosInst.get(this.requrl)
 					.then( resp => {
 						this.token = resp.data.Token;
-						console.log(resp.data.Token);
-						console.log(this.token);			
 						this.connWs();
 						this.instterm.focus();
 					})

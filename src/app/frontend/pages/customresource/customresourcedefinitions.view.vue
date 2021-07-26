@@ -1,39 +1,18 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-						<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-3">Annotations</dt>
-						<dd class="col-sm-9">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-3">Labels</dt>
-						<dd class="col-sm-9">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
-						<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
-						<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
-						<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
-						<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind, columnsName: info.printerColumns? info.printerColumns.name : '', columnsPath: info.printerColumns? info.printerColumns.path : '', scope: info.scope }}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
-						<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
-						<dt class="col-sm-3">Conditions</dt>
-						<dd class="col-sm-9">
-							<span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span>
-						</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+		<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
+		<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
+		<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
+		<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
+		<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind, columnsName: info.printerColumns? info.printerColumns.name : '', columnsPath: info.printerColumns? info.printerColumns.path : '', scope: info.scope }}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
+		<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
+		<dt class="col-sm-3">Conditions</dt>
+		<dd class="col-sm-9">
+			<span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span>
+		</dd>
+	</c-metadata>
 	<!-- 2. names -->
 	<div class="row">
 		<div class="col-md-12">
@@ -70,11 +49,12 @@
 </div>
 </template>
 <script>
-
-import VueJsonTree from "@/components/jsontree";
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueJsonTree 		from "@/components/jsontree";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": {extends: VueJsonTree},
 	},
 	data() {
