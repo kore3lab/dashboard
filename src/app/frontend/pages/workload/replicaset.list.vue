@@ -92,7 +92,7 @@ export default {
 				{ key: "desired", label: "Desired", sortable: true },
 				{ key: "current", label: "Current", sortable: true },
 				{ key: "ready", label: "Ready", sortable: true },
-				{ key: "creationTimestamp", label: "Age" , sortable: true, formatter: this.getElapsedTime },
+				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			isBusy: false,
 			items: [],
@@ -152,4 +152,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

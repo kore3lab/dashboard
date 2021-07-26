@@ -29,7 +29,7 @@
 						<b-form inline>
 							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
 							<i class="text-secondary ml-2 mr-2">|</i>
-							<b-form-select size="sm" :options="ITEMS_PER_PAGE" v-model="itemsPerPage"></b-form-select>
+							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
 							<span class="text-sm align-middle ml-2">Total : {{ totalItems }}</span>
 						</b-form>
 					</div>
@@ -66,7 +66,6 @@
 import VueNavigator			from "@/components/navigator"
 import VueColumsSelector	from "@/components/columnsSelector"
 import VueView				from "@/pages/view";
-import {ITEMS_PER_PAGE}		from "@/static/constrants";
 
 export default {
 	components: {
@@ -88,7 +87,6 @@ export default {
 			],
 			isBusy: false,
 			items: [],
-			ITEMS_PER_PAGE: ITEMS_PER_PAGE,
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
 			totalItems: 0,
@@ -143,4 +141,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

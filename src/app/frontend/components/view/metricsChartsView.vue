@@ -23,7 +23,6 @@
 </template>
 <script>
 import VueChartJs		from "vue-chartjs";
-import {CHART_BG_COLOR} from "static/constrants";
 
 export default {
 	props:["value"],
@@ -104,13 +103,13 @@ export default {
 						this.data.cpu = {
 							labels: labels,
 							datasets: [
-								{ backgroundColor : CHART_BG_COLOR.cpu, label:"Usage", data: cpus }
+								{ backgroundColor : this.var("CHART_BG_COLOR").cpu, label:"Usage", data: cpus }
 							]
 						};
 						this.data.memory = {
 							labels: labels,
 							datasets: [
-								{ backgroundColor : CHART_BG_COLOR.memory, label:"Usage", data: memories }
+								{ backgroundColor : this.var("CHART_BG_COLOR").memory, label:"Usage", data: memories }
 							]
 						};
 						this.isEmpty = resp.data.metrics.length==0;
@@ -129,8 +128,8 @@ export default {
 								let requestCpus = []; 
 								for(let i=0; i<cpus.length; i++) requestCpus.push((resp.data.requests.cpu/1000).toFixed(3));
 								this.data.cpu.datasets.push({
-									backgroundColor: CHART_BG_COLOR.white,
-									borderColor: CHART_BG_COLOR.requests,
+									backgroundColor: this.var("CHART_BG_COLOR").background,
+									borderColor: this.var("CHART_BG_COLOR").requests,
 									label:'Requests',
 									pointRadius:0,
 									borderWidth:1,
@@ -142,9 +141,9 @@ export default {
 								let requestMemories = []; 
 								for(let i=0; i<cpus.length; i++) requestMemories.push(resp.data.requests.memory/(1024*1024));
 								this.data.memory.datasets.push({
-									backgroundColor : CHART_BG_COLOR.white,
-									borderColor: CHART_BG_COLOR.limits,
-									label:"Limits",
+									backgroundColor : this.var("CHART_BG_COLOR").background,
+									borderColor: this.var("CHART_BG_COLOR").requests,
+									label:"Requests",
 									pointRadius:0,
 									borderWidth:1,
 									borderDash: [2, 2],

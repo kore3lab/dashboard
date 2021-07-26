@@ -136,4 +136,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

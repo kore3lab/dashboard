@@ -1,101 +1,60 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-3">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-						<dt class="col-sm-3">Annotations</dt>
-						<dd class="col-sm-9">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-3">Labels</dt>
-						<dd class="col-sm-9">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt v-if="metadata.finalizers" class="col-sm-3">Finalizers</dt>
-						<dd v-if="metadata.finalizers" class="col-sm-9">
-							<span v-for="(val, idx) in metadata.finalizers" v-bind:key="idx">{{ val }}</span>
-						</dd>
-						<dt class="col-sm-3">UID</dt><dd class="col-sm-9">{{ metadata.uid }}</dd>
-						<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt>
-						<dd v-if="metadata.ownerReferences" class="col-sm-9">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-						<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="status.style">{{ status.type }}</dd>
-						<dt v-if="isQuota" class="col-sm-3">Resource Quotas</dt><dd v-if="isQuota" class="col-sm-9"><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
-						<dt v-if="isLimit" class="col-sm-3">Limit Ranges</dt><dd v-if="isLimit" class="col-sm-9"><span v-for="(val, idx) in limits" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+		<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt>
+		<dd v-if="metadata.ownerReferences" class="col-sm-9">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+		<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="{ 'text-success': status.phase=='Active' }">{{ status.phase }}</dd>
+		<dt class="col-sm-3">Resource Quotas</dt>
+		<dd class="col-sm-9"><span v-if="quotas.length==0">-</span><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
+		<dt class="col-sm-3">Limit Ranges</dt>
+		<dd class="col-sm-9"><span v-if="limits.length==0">-</span><span v-for="(val, idx) in limits" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
+	</c-metadata>
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
+	components: {
+		"c-metadata": { extends: VueMetadataView }
+	},
 	data() {
 		return {
 			metadata: {},
-			controller: [],
-			status: [],
+			controller: {},
+			status: {},
 			quotas: [],
-			limits: [],
-			isQuota: false,
-			isLimit: false,
+			limits: []
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.onSync(data)
+			this.status = data.status;
+			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
+
+			this.quotas = [];
+			this.$axios.get(this.getApiUrl("","resourcequotas",data.metadata.name))
+			.then(resp => {
+				resp.data.items.forEach(el =>{
+					this.quotas.push(el.metadata.name)
+				})
+			});
+
+			this.limits = [];
+			this.$axios.get(this.getApiUrl("","limitranges",data.metadata.name))
+			.then(resp => {
+				resp.data.items.forEach(el =>{
+					this.limits.push(el.metadata.name)
+				})
+			});
+
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
-	methods: {
-		onSync(data) {
-			this.status = this.getStatus(data.status.phase)
-			this.controller = this.getController(data.metadata.ownerReferences)
-			this.getQuotas(data.metadata.name)
-			this.getLimit(data.metadata.name)
-		},
-		getStatus(phase) {
-			let status
-			if(phase) {
-				status = phase
-				if(phase === 'Active') status = {type: phase, style: 'text-success'}
-				else status = {type: phase, style: 'text-secondary'}
-				return status
-			}
-		},
-		getQuotas(name) {
-			this.isQuota = false;
-			this.quotas = [];
-			this.$axios.get(this.getApiUrl("","resourcequotas",name))
-			.then(resp => {
-				resp.data.items.forEach(el =>{
-					this.isQuota = true
-					this.quotas.push(el.metadata.name)
-				})
-			})
-		},
-		getLimit(name) {
-			this.isLimit = false;
-			this.limits = [];
-			this.$axios.get(this.getApiUrl("","limitranges",name))
-			.then(resp => {
-				resp.data.items.forEach(el =>{
-					this.isLimit = true
-					this.limits.push(el.metadata.name)
-				})
-			})
-		},
-	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

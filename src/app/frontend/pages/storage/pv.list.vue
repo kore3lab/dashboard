@@ -46,10 +46,13 @@
 										</div>
 									</template>
 									<template v-slot:cell(storageClass)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink('storage.k8s.io','storageclasses','', data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(claim)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.value.ns, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink('','persistentvolumeclaims',data.value.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+									</template>
+									<template v-slot:cell(status)="data">
+										<span v-bind:class="{'text-success':data.value=='Available'||data.value=='Bound','text-warning':data.value=='Released'}">{{ data.value }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -124,9 +127,10 @@ export default {
 						resp.data.items.forEach(el => {
 							this.items.push({
 								name: el.metadata.name,
-								storageClass: this.getStorageClass(el.spec.storageClassName),
+								namespace: el.metadata.namespace,
+								storageClass: el.spec.storageClassName,
 								capacity: el.spec.capacity ? el.spec.capacity.storage: "",
-								claim: this.getClaim(el.spec),
+								claim: el.spec.claimRef,
 								reclaim: el.spec.persistentVolumeReclaimPolicy,
 								status: el.status.phase,
 								creationTimestamp: el.metadata.creationTimestamp
@@ -140,29 +144,10 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getStorageClass(name) {
-			return {
-				"name" : name,
-				"group" : "storage.k8s.io",
-				"rs" : "storageclasses"
-			}
-		},
-		getClaim(spec) {
-			if(spec.claimRef) {
-				return {
-					"name": spec.claimRef.name,
-					"ns": spec.claimRef.namespace,
-					"group" : "",
-					"rs" : "persistentvolumeclaims"
-				}
-				return ""
-			}
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

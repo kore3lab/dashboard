@@ -55,7 +55,7 @@
 										<span v-for="(value, name) in data.item.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
 									</template>
 									<template v-slot:cell(phase)="data">
-										<div v-bind:class="data.item.phase.style">{{ data.item.phase.status }}</div>
+										<span v-bind:class="{ 'text-success': data.item.phase=='Active' }">{{ data.item.phase }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -147,7 +147,7 @@ export default {
 						this.items.push({
 							name: el.metadata.name,
 							labels: el.metadata.labels,
-							phase: this.onPhase(el.status.phase),
+							phase: el.status.phase,
 							creationTimestamp: el.metadata.creationTimestamp
 						});
 					});
@@ -178,25 +178,10 @@ export default {
 
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		// status 확인
-		onPhase(phase) {
-			if (phase === "Active") {
-				return {
-					"status" : "Active",
-					"style" : "text-success"
-				}
-			} else {
-				return {
-					"status" : "Terminating",
-					"style" : "text-secondary"
-				}
-			}
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

@@ -1,48 +1,27 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<div class="row">
-		<div class="col-md-12">
-			<div class="card card-secondary card-outline">
-				<div class="card-body p-2">
-					<dl class="row mb-0">
-						<dt class="col-sm-2">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-						<dt class="col-sm-2">Annotations</dt>
-						<dd class="col-sm-10">
-							<ul class="list-unstyled mb-0">
-								<li v-for="(value, name) in metadata.annotations" v-bind:key="name">{{ name }}=<span class="font-weight-light">{{ value }}</span></li>
-							</ul>
-						</dd>
-						<dt class="col-sm-2">Labels</dt>
-						<dd class="col-sm-10">
-							<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
-						</dd>
-						<dt class="col-sm-2">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-					</dl>
-				</div>
-			</div>
-		</div>
-	</div>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10"></c-metadata>
 	<!-- 2. subsets -->
-	<div class="row">
+	<div v-if="subsets.length>0" class="row">
 		<div class="col-md-12">
 			<div class="card card-secondary card-outline">
 				<div class="card-header p-2"><h3 class="card-title">Subsets</h3></div>
 				<div class="card-body group">
 					<ul>
-						<li>
+						<li v-for="(subset, i) in subsets" v-bind:key="i">
 							<p class="title">Addresses</p>
-							<b-table striped hover small :items="address" :fields="adressesFields">
-								<template v-slot:cell(target)="data">
-									<a href="#" @click="$emit('navigate', getViewLink('', data.item.targetKind, data.item.targetNamespace, data.item.targetName))">{{ data.item.targetName }}</a>
-								</template>
-							</b-table>
-						</li>
-						<li>
+							<div  class="ml-3">
+								<b-table-lite :items="subset.addresses" :fields="adressesFields" class="subset">
+									<template v-slot:cell(targetRef)="data">
+										<a href="#" @click="$emit('navigate', getViewLink('', data.item.resource.resource, data.item.resource.namespace, data.item.resource.name))">{{ data.item.resource.name }}</a>
+									</template>
+								</b-table-lite>
+							</div>
 							<p class="title">Ports</p>
-							<b-table striped hover small :items="ports" :fields="portsFields"></b-table>
+							<div  class="ml-3">
+								<b-table-lite :items="subset.ports" :fields="portsFields"  class="subset"></b-table-lite>
+							</div>
 						</li>
 					</ul>
 				</div>
@@ -51,14 +30,15 @@
 	</div>
 	<!-- 3. evenets -->
 	<c-events class="row" v-model="metadata.uid"></c-events>
-
 </div>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
 	},
 	data() {
@@ -66,16 +46,16 @@ export default {
 			metadata: {},
 			address: [],
 			ports: [],
-			isSubset: false,
+			subsets: [],
 			adressesFields: [
-				{ key: "ip", label: "IP" },
-				{ key: "hostname", label: "Hostname" },
-				{ key: "target", label: "Target" },
+				{ key: "ip", label: "IP"},
+				{ key: "hostname", label: "Hostname"},
+				{ key: "targetRef", label: "Target"},
 			],
 			portsFields: [
-				{ key: "port", label: "Port" },
-				{ key: "name", label: "Name" },
-				{ key: "protocol", label: "Protocol" },
+				{ key: "port", label: "Port"},
+				{ key: "name", label: "Name"},
+				{ key: "protocol", label: "Protocol"},
 			],
 		}
 	},
@@ -83,57 +63,19 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.onSync(data)
+			this.subsets = data.subsets?data.subsets:[];
+			//populate - subset resource(for view link)
+			this.subsets.forEach(subset => {
+				if(subset.addresses)  {
+					subset.addresses.forEach(addr => {
+						addr.resource = this.getResource(addr.targetRef);
+					});
+				}
+			});
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
-	methods: {
-		onSync(data) {
-			this.getSubsets(data.subsets);
-		},
-		getSubsets(sub) {
-			if(sub) {
-				this.isSubset = true
-				let adr = sub[0].addresses
-				let port = sub[0].ports
-				let adrlist = []
-				let portlist = []
-				if(adr){
-					adr.forEach(el => {
-						adrlist.push({
-							ip: el.ip || '',
-							hostname: el.hostname || '',
-							targetName: el.targetRef ? el.targetRef.name : '',
-							targetNamespace: el.targetRef ? el.targetRef.namespace : '',
-							targetKind: this.getKind(el.targetRef) || '',
-						})
-					})
-				}
-
-				if(port) {
-					port.forEach(el => {
-						portlist.push({
-							port: el.port,
-							name: el.name,
-							protocol: el.protocol
-						})
-
-					})
-				}
-				this.address = adrlist
-				this.ports = portlist
-			} else this.isSubset = false
-		},
-		getKind(ref){
-			if(!ref) return
-			let k = ref.kind
-			let kind
-			let len = k.length
-			if(k[len-1] === 's') kind = k.toLowerCase() + 'es'
-			else kind = k.toLowerCase() + 's'
-			return kind
-		}
-	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

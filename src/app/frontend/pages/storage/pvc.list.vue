@@ -47,10 +47,12 @@
 										</div>
 									</template>
 									<template v-slot:cell(storageClass)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a>
+										<a href="#" @click="viewModel=getViewLink('storage.k8s.io','storageclasses','', data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(pods)="data">
-										<a href="#" v-for="(d, idx) in data.value" v-bind:key="idx" @click="viewModel=getViewLink('','pods',d.podNamespace, d.podName); isShowSidebar=true;">{{ d.podName }} </a>
+										<ul class="list-unstyled m-0 p-0">
+											<li v-for="(d, idx) in data.value" v-bind:key="idx"><a href="#" @click="viewModel=getViewLink('','pods',d.podNamespace, d.podName); isShowSidebar=true;">{{ d.podName }} </a></li>
+										</ul>
 									</template>
 									<template v-slot:cell(accessModes)="data">
 										<ul class="list-unstyled mb-0">
@@ -58,7 +60,7 @@
 										</ul>
 									</template>
 									<template v-slot:cell(status)="data">
-										<div v-bind:class="data.item.status.style" class="text-sm">{{ data.item.status.value }}</div>
+										<div v-bind:class="{'text-success': data.value=='Bound'}" class="text-sm">{{ data.value }}</div>
 									</template>
 								</b-table>
 							</div>
@@ -140,11 +142,11 @@ export default {
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
 								labels: el.metadata.labels,
-								status: this.getStatus(el.status.phase),
+								status: el.status.phase,
 								capacity: el.spec.resources.requests.storage ? el.spec.resources.requests.storage: "",
 								pods: this.getPvc(el.metadata.name),
 								accessModes: el.spec.accessModes,
-								storageClass: this.getStorageClass(el.spec.storageClassName),
+								storageClass: el.spec.storageClassName,
 								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
@@ -157,11 +159,10 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getStorageClass(name) {
+		formatterPods(value, key, item) {
 			return {
-				"name" : name,
-				"group" : "storage.k8s.io",
-				"rs" : "storageclasses"
+				name: item.name,
+				namespace: item.namepsace
 			}
 		},
 		// pod List 조회 이후 query_All 실행
@@ -201,25 +202,6 @@ export default {
 					this.pvcPod.push(pvclist)
 				}
 			}
-		},
-		// pvc 상태 체크
-		getStatus(status) {
-			if (status === "Bound") {
-				return {
-					"value": "Bound",
-					"style": "text-success",
-				}
-			} else if (status === "Pending") {
-				return {
-					"value": "Pending",
-					"style": "text-warning",
-				}
-			} else {
-				return {
-					"value": "Lost",
-					"style": "text-secondary",
-				}
-			}
 		}
 	},
 	beforeDestroy(){
@@ -227,4 +209,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

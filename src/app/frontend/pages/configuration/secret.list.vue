@@ -47,11 +47,11 @@
 										</div>
 									</template>
 									<template v-slot:cell(labels)="data">
-										<span v-for="(value, name) in data.item.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+										<span v-for="(value, name) in data.value" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
 									</template>
 									<template v-slot:cell(keys)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.keys" v-bind:key="name">{{ name }}  </li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }}  </li>
 										</ul>
 									</template>
 								</b-table>
@@ -130,7 +130,7 @@ export default {
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
 								labels: el.metadata.labels,
-								keys: this.getKeys(el),
+								keys: el.data?Object.keys(el.data):[],
 								type: el.type,
 								creationTimestamp: el.metadata.creationTimestamp
 							});
@@ -143,14 +143,10 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getKeys(el) {
-			if (el.data) return el.data
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

@@ -122,7 +122,7 @@ export default {
 								ready: this.getConditions(el),
 								creationTimestamp: el.metadata.creationTimestamp,
 								k8sVersion: el.status.nodeInfo.kubeletVersion,
-								taints: this.getTaints(el.spec),
+								taints: el.spec.taints ? el.spec.taints.length: 0,
 								roles: this.getRoles(el.metadata.labels),
 								usageCpu: this.getCpu(el.metadata.name),
 								usageMemory: this.getMemory(el.metadata.name),
@@ -150,11 +150,6 @@ export default {
 			}
 			condition.push(el.status.conditions.filter(con => con.type === "Ready")[0].status === "True" ? { "value" : "Ready", "style" : "text-success" } : { "value" : "NotReady", "style" : "text-secondary" })
 			return condition
-		},
-		getTaints(spec) {
-			if (spec.taints) {
-				return spec.taints.length
-			} else return 0
 		},
 		getRoles(labels) {
 			let roleLabels = Object.keys(labels).filter(key =>
@@ -197,4 +192,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

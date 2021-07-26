@@ -51,11 +51,6 @@
 											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
 										</ul>
 									</template>
-									<template v-slot:cell(images)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="image in data.item.images" v-bind:key="image">{{ image }}</li>
-										</ul>
-									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -130,8 +125,7 @@ export default {
 						this.items.push({
 							name: el.metadata.name,
 							namespace: el.metadata.namespace,
-							// images: el.containerImages,
-							pods: this.getPods(el.status),
+							pods: `${el.status.readyReplicas?el.status.readyReplicas:0}/${el.status.replicas?el.status.replicas:0}`,
 							replicas: el.spec.replicas,
 							creationTimestamp: el.metadata.creationTimestamp
 						});
@@ -144,15 +138,6 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getPods(status) {
-			let pods = [];
-			if (status.readyReplicas !== undefined) {
-				pods = `${status.readyReplicas}/${status.replicas}`
-			} else {
-				pods = "0/1"
-			}
-			return pods
 		}
 	},
 	beforeDestroy(){
@@ -160,4 +145,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

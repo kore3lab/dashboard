@@ -47,7 +47,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(jobStatus)="data">
-										<div v-bind:key="data.value" v-bind:class="[ data.value === 'Complete'? 'text-success' : 'text-warning' ]">{{ data.value }}</div>
+										<div v-bind:key="data.value" v-bind:class="{'text-success':data.value=='Complete', 'text-danger':data.value=='Failed'}">{{ data.value }}</div>
 									</template>
 								</b-table>
 							</div>
@@ -123,7 +123,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								completions: this.getCompletions(el),
+								completions: `${el.status.succeeded?el.status.succeeded:"0"} / ${el.spec.completions?el.spec.completions:"1"}`,
 								jobStatus: el.status.conditions? el.status.conditions[0].type : "Failed",
 								creationTimestamp: el.metadata.creationTimestamp
 							});
@@ -136,9 +136,6 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getCompletions(el) {
-			return `${el.status.succeeded?el.status.succeeded:"0"} / ${el.spec.completions}`
 		}
 	},
 	beforeDestroy(){
@@ -146,4 +143,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

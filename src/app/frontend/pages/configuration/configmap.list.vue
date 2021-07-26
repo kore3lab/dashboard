@@ -52,9 +52,7 @@
 										</ul>
 									</template>
 									<template v-slot:cell(keys)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.keys" v-bind:key="name">{{ name }}</li>
-										</ul>
+										<span v-for="(value, idx) in data.value" v-bind:key="idx" class="border-box">{{ value }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -129,7 +127,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								keys: this.getKeys(el),
+								keys: el.data? Object.keys(el.data): [],
 								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
@@ -141,11 +139,6 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getKeys(el) {
-			if (el.data) {
-				return el.data
-			}
 		}
 	},
 	beforeDestroy(){
@@ -153,4 +146,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

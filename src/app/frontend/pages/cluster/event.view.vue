@@ -15,7 +15,7 @@
 						<dt class="col-sm-3">First seen</dt><dd class="col-sm-9"><span v-if="info.firstSeen">{{ this.getTimestampString(info.firstSeen)}} ago ({{ info.firstSeen }})</span><span v-else>-</span></dd>
 						<dt class="col-sm-3">Last seen</dt><dd class="col-sm-9"><span v-if="info.lastSeen">{{ this.getTimestampString(info.lastSeen)}} ago ({{ info.lastSeen }})</span><span v-else>-</span></dd>
 						<dt class="col-sm-3">Count</dt><dd class="col-sm-9">{{ info.count ? info.count : '-' }}</dd>
-						<dt class="col-sm-3">Type</dt><dd class="col-sm-9"><span v-bind:class="info.type === 'Warning' ? 'text-danger' : ''">{{ info.type }}</span></dd>
+						<dt class="col-sm-3">Type</dt><dd class="col-sm-9"><span v-bind:class="{'text-warning':info.type=='Warning'}">{{ info.type }}</span></dd>
 					</dl>
 				</div>
 			</div>
@@ -27,11 +27,11 @@
 			<div class="card card-secondary card-outline m-0">
 				<div class="card-header p-2"><h3 class="card-title">Involved object</h3></div>
 				<div class="card-body p-2">
-					<b-table striped hover small :items="involvedObject" :fields="fields">
+					<b-table-lite striped hover small :items="involvedObject" :fields="fields">
 						<template v-slot:cell(name)="data">
-							<a href="#" @click="$emit('navigate', getViewLink(data.item.controllers.g, data.item.controllers.k, data.item.namespace, data.value))">{{ data.value }}</a>
+							<a href="#" @click="$emit('navigate', getViewLink(data.item.group, data.item.resource, data.item.namespace, data.value))">{{ data.value }}</a>
 						</template>
-					</b-table>
+					</b-table-lite>
 				</div>
 			</div>
 		</div>
@@ -44,7 +44,7 @@ export default {
 	data() {
 		return {
 			metadata: {},
-			info: [],
+			info: {},
 			involvedObject: [],
 			fields: [
 				{ key: "name", label: "Name" },
@@ -58,17 +58,7 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.onSync(data)
-		});
-		this.$nuxt.$emit("onCreated",'')
-	},
-	methods: {
-		onSync(data) {
-			this.info = this.getInfo(data)
-			this.involvedObject = this.getInvolved(data.involvedObject)
-		},
-		getInfo(data) {
-			return {
+			this.info = {
 				message: data.message,
 				reason: data.reason,
 				source: Object.entries(data.source).map(([_, value]) => `${value}`),
@@ -76,20 +66,13 @@ export default {
 				lastSeen: data.lastTimestamp,
 				count: data.count,
 				type: data.type,
-			}
-		},
-		getInvolved(io) {
-			let list = []
-			list.push({
-				name: io.name,
-				namespace: io.namespace,
-				kind: io.kind,
-				fieldPath: io.fieldPath,
-				controllers: this.getController(io),
-			})
-			return list
-		},
+			};
+			this.involvedObject = [this.getResource(data.involvedObject)];
+			this.involvedObject[0]["fieldPath"] = data.involvedObject["fieldPath"]
+		});
+		this.$nuxt.$emit("onCreated",'')
 	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

@@ -47,9 +47,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(status)="data">
-										<div class="list-unstyled mb-0" v-if="data.item.status">
-											<span v-for="(val, idx) in data.item.status" v-bind:key="idx" v-bind:class="val.style" class=" text-sm ml-1 ">{{ val.type }}</span>
-										</div>
+										<span v-for="(value, idx) in data.value" v-bind:key="idx" v-bind:class="{'text-success': value.type=='Available', 'text-primary': value.type=='Progressing'}" class="mr-1">{{ value.type }}</span>
 									</template>
 									<template #head(button)>
 										<div class="text-right">
@@ -100,7 +98,7 @@ export default {
 				{ key: "pods", label: "Pods", sortable: true  },
 				{ key: "replicas", label: "Replicas", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime  },
-				{ key: "status", label: "Status", sortable: true  },
+				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus },
 			],
 			isBusy: false,
 			items: [],
@@ -139,10 +137,10 @@ export default {
 						this.items.push({
 							name: el.metadata.name,
 							namespace: el.metadata.namespace,
-							pods: this.toPods(el.status),
+							pods: `${el.status.readyReplicas ? el.status.readyReplicas: 0}/${el.status.availableReplicas?el.status.availableReplicas:0}`,
 							replicas: el.status.replicas ? el.status.replicas : 0,
 							creationTimestamp: el.metadata.creationTimestamp,
-							status: this.toStatus(el.status.conditions),
+							status: el.status.conditions,
 						});
 					});
 					this.onFiltered(this.items);
@@ -150,35 +148,21 @@ export default {
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
-		toPods(status) {
-			let podsReady = 0
-			let podsLength = 0
-			if ( status.readyReplicas ) podsReady = status.readyReplicas
-			if ( status.availableReplicas ) podsLength = status.availableReplicas
-			return `${podsReady}/${podsLength}`
-		},
-		toStatus(conditions) {
-			if(!conditions) return
-			let condition = []
-			conditions.forEach(el => {
-				condition.push({
-					type: el.type,
-					style: this.checkStyle(el.type),
-				})
-			})
-			condition.sort(function(a,b) {
-				return a.type < b.type ? -1 : a.type > b.type ? 1 : 0;
-			})
-			return condition
-		},
-		checkStyle(t) {
-			if(t === 'Progressing') return 'text-primary'
-			if(t === 'Available') return 'text-success'
-			else return 'text-danger'
-		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
+		},
+		formatStatus(conditions, key, item) {
+			let list = []
+
+			if(conditions) {
+				list = Object.assign([], conditions);
+				list.sort(function(a,b) {
+					return a.type < b.type ? -1 : a.type > b.type ? 1 : 0;
+				})
+			}
+
+			return list
 		}
 	},
 	beforeDestroy(){

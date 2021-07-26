@@ -49,8 +49,10 @@
 									<template v-slot:cell(labels)="data">
 										<span v-for="(value, name) in data.item.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
 									</template>
-									<template v-slot:cell(bindings)="data">
-										<div v-for="(value, idx) in data.item.bindings" v-bind:key="idx">{{ value }}</div>
+									<template v-slot:cell(subjects)="data">
+										<ul class="list-unstyled mb-0">
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value.name }}</li>
+										</ul>
 									</template>
 								</b-table>
 							</div>
@@ -85,7 +87,7 @@ export default {
 			fieldsAll: [
 				{key: "name", label: "Name", sortable: true},
 				{key: "namespace", label: "Namespace", sortable: true},
-				{key: "bindings", label: "Bindings", sortable: true},
+				{key: "subjects", label: "Bindings", sortable: true},
 				{key: "labels", label: "Labels", sortable: true},
 				{key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime},
 			],
@@ -126,7 +128,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								bindings: this.getBindings(el),
+								subjects: el.subjects,
 								labels: el.metadata.labels,
 								creationTimestamp: el.metadata.creationTimestamp
 							});
@@ -143,20 +145,10 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getBindings(el) {
-			let bindingList = [];
-			if (el.subjects) {
-				for (let i = 0; i < el.subjects.length; i++) {
-					bindingList.push(el.subjects[i].name)
-				}
-			}
-			return bindingList
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

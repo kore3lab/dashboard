@@ -206,6 +206,11 @@ func GetWorkloadPodListWithMetrics(cluster string, namespace string, resource st
 		if err != nil {
 			return nil, err
 		}
+	} else if resource == "jobs" {
+		pods, _, err = GetJobPods(apiClient, namespace, name)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("unsupported resource '%s'", resource))
 	}
