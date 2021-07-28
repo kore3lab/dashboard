@@ -5,25 +5,25 @@
 			<div class="row">
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-warning">
-						<div class="inner"><h3>{{ summary.nodes.usage ? summary.nodes.usage: "NaN"}}</h3><p>Nodes</p></div>
+						<div class="inner"><h3>{{ Object.keys(nodes).length }}</h3><p>Nodes</p></div>
 						<div class="icon"><i class="fas fa-server"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-success">
-						<div class="inner"><h3>{{ Math.round(summary.cpu["percent"],0) }}<small>%</small></h3><p>CPU</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.percent["cpu"],0) }}<small>%</small></h3><p>CPU</p></div>
 						<div class="icon"><i class="fas fa-microchip"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-info">
-						<div class="inner"><h3>{{ Math.round(summary.memory["percent"],0) }}<small>%</small></h3><p>Memory</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.percent["memory"],0) }}<small>%</small></h3><p>Memory</p></div>
 						<div class="icon"><i class="fas fa-memory"></i></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-6">
 					<div class="small-box bg-secondary">
-						<div class="inner"><h3>{{ Math.round(summary.storage["percent"],0) }}<small>%</small></h3><p>Storage</p></div>
+						<div class="inner"><h3>{{ Math.round(summary.percent["storage"],0) }}<small>%</small></h3><p>Storage</p></div>
 						<div class="icon"><i class="fas fa-hdd"></i></div>
 					</div>
 				</div>
@@ -41,7 +41,7 @@
 							</div>
 						</div>
 						<div class="card-body p-0">
-							<b-table-simple small responsive borderless >
+							<b-table-simple v-show="!isBusy"  small responsive borderless >
 								<colgroup><col width="40%"><col><col><col><col><col><col><col><col><col></colgroup>
 								<b-thead><b-tr><b-th>Name</b-th><b-th>CPU</b-th><b-th>Memory</b-th><b-th>Storage</b-th><b-th>Pods</b-th></b-tr></b-thead>
 								<b-tbody>
@@ -52,24 +52,28 @@
 											<p class="text-muted text-sm font-weight-light ml-1">{{ nd.role }}</p>
 										</b-td>
 										<b-td>
-											<p class="text-lg">{{ nd.usage.cpu.percent }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(nd.usage.cpu.usage).toLocaleString() }}/{{ Number(nd.usage.cpu.allocatable).toLocaleString() }} m</p>
+											<p class="text-lg">{{ nd.metrics.percent.cpu }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(nd.metrics.usage.cpu).toLocaleString() }}/{{ Number(nd.metrics.allocatable.cpu).toLocaleString() }} m</p>
 										</b-td>
 										<b-td >
-											<p class="text-lg">{{ nd.usage.memory.percent }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.memory.usage/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.memory.allocatable/(1024*1024),2)).toLocaleString() }} MiB</p>
+											<p class="text-lg">{{ nd.metrics.percent.memory }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.metrics.usage.memory/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.metrics.allocatable.memory/(1024*1024),2)).toLocaleString() }} MiB</p>
 										</b-td>
 										<b-td>
-											<p class="text-lg">{{ nd.usage.storage.percent }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.usage.storage.usage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.usage.storage.allocatable/(1024*1024*1024),2)).toLocaleString() }} GiB</p>
+											<p class="text-lg">{{ nd.metrics.percent.storage }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.metrics.usage.storage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.metrics.allocatable.storage/(1024*1024*1024),2)).toLocaleString() }} GiB</p>
 										</b-td>
 										<b-td>
-											<p class="text-lg">{{ nd.usage.pod.percent }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ nd.usage.pod.usage }}/{{ nd.usage.pod.allocatable }} ea</p>
+											<p class="text-lg">{{ nd.metrics.percent.pods }}<small>%</small></p>
+											<p class="text-muted text-sm font-weight-light">{{ nd.metrics.usage.pods }}/{{ nd.metrics.allocatable.pods }} ea</p>
 										</b-td> 
 									</b-tr>
 								</b-tbody>
 							</b-table-simple>
+								<div v-show="isBusy" class="text-center text-success" style="line-height: 10rem;">
+									<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
+									<span class="text-lg align-middle">Loading...</span>
+								</div>
 						</div>
 					</div><!-- / Nodes -->
 				</div>
@@ -183,7 +187,7 @@ import VueChartJs		from "vue-chartjs"
 export default {
 	data() {
 		return {
-			summary: { nodes: {}, cpu: {}, memory: {}, storage: {} },
+			summary: { allocatable: {}, usage: {}, percent: {} },
 			nodes: {},
 			workloads: { daemonset: {}, deployment: {}, replicaset: {}, statefulset: {}, pod: {} },
 			chart: {
@@ -216,7 +220,8 @@ export default {
 				},
 				data: { cpu: {}, memory: {} }
 			},
-			timer: 0
+			timer: 0,
+			isBusy: true
 		}
 	},
 	layout: "default",
@@ -250,12 +255,29 @@ export default {
 		this.$nuxt.$on("navbar-context-selected", () => {
 			let ctx = this.currentContext();
 			if(!ctx) return;
+			// workloads - available/ready
 			this.$axios.get(`/api/clusters/${ctx}/dashboard`)
 				.then((resp) => {
-					this.$data.summary = resp.data.summary;
-					this.$data.nodes = resp.data.nodes;
-					this.$data.workloads = resp.data.workloads;
+					this.workloads = resp.data;
+				})
+				.catch(e => { this.msghttp(e);});
 
+			// nodes & summary
+			this.$axios.get(`/api/clusters/${ctx}/nodes`)
+				.then((resp) => {
+					this.nodes = resp.data.nodes;
+					this.summary = resp.data.summary;
+				})
+				.catch(e => { 
+					this.msghttp(e);
+				})
+				.finally(()=> {
+					this.isBusy = false;
+				});
+
+			// metrics
+			this.$axios.get(`/api/clusters/${ctx}/metrics`)
+				.then((resp) => {
 					if (resp.data.metrics ) {
 						let labels = [], cpus = [], memories = [];
 						resp.data.metrics.forEach(d => {
@@ -265,16 +287,16 @@ export default {
 							memories.push(Math.round(d.memory/(1024*1024)));
 
 						});
-						this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.cpu.allocatable/1000;
-						this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.summary.memory.allocatable/(1024*1024);
+						this.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.allocatable.cpu/1000;
+						this.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.allocatable.memory/(1024*1024);
 
-						this.$data.chart.data.cpu = {
+						this.chart.data.cpu = {
 							labels: labels,
 							datasets: [
 								{ backgroundColor : this.var("CHART_BG_COLOR").cpu, data: cpus }
 							]
 						};
-						this.$data.chart.data.memory = {
+						this.chart.data.memory = {
 							labels: labels,
 							datasets: [
 								{ backgroundColor : this.var("CHART_BG_COLOR").memory, data: memories }
