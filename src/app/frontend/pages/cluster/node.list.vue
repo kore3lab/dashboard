@@ -40,17 +40,14 @@
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
-									<template v-slot:cell(ready)="data">
-										<span v-for="(value, idx) in data.item.ready" v-bind:key="idx" v-bind:class="value.style" class="mr-1" >{{ value.value }}</span>
+									<template v-slot:cell(cpu)="data">
+										<b-progress :value="data.value" :max="100" variant="info" show-value class="mb-3"></b-progress>
 									</template>
-									<template v-slot:cell(usageCpu)="data">
-										<b-progress :value="data.item.usageCpu" :max="100" variant="info" show-value class="mb-3"></b-progress>
+									<template v-slot:cell(memory)="data">
+										<b-progress :value="data.value" :max="100" variant="info" show-value class="mb-3"></b-progress>
 									</template>
-									<template v-slot:cell(usageMemory)="data">
-										<b-progress :value="data.item.usageMemory" :max="100" variant="info" show-value class="mb-3"></b-progress>
-									</template>
-									<template v-slot:cell(usageDisk)="data">
-										<b-progress :value="data.item.usageDisk" :max="100" variant="info" show-value class="mb-3"></b-progress>
+									<template v-slot:cell(storage)="data">
+										<b-progress :value="data.value" :max="100" variant="info" show-value class="mb-3"></b-progress>
 									</template>
 								</b-table>
 							</div>
@@ -82,14 +79,14 @@ export default {
 			fields: [],
 			fieldsAll: [
 				{ key: "name", label: "Name", sortable: true },
-				{ key: "usageCpu", label: "CPU", sortable: true  },
-				{ key: "usageMemory", label: "Memory", sortable: true  },
-				{ key: "usageDisk", label: "Disk", sortable: true },
-				{ key: "taints", label: "Taints", sortable: true },
 				{ key: "roles", label: "Roles", sortable: true },
-				{ key: "k8sVersion", label: "Version", sortable: true },
+				{ key: "cpu", label: "CPU", sortable: true  },
+				{ key: "memory", label: "Memory", sortable: true  },
+				{ key: "storage", label: "Storage", sortable: true },
+				{ key: "pods", label: "Pods", sortable: true },
+				{ key: "version", label: "Version", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "ready", label: "Status", sortable: true },
+				{ key: "status", label: "Status", sortable: true },
 			],
 			isBusy: false,
 			items: [],
@@ -102,7 +99,7 @@ export default {
 	layout: "default",
 	created() {
 		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.onUsage()
+			this.query_All()
 		} );
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
@@ -113,22 +110,25 @@ export default {
 		},
 		// 조회
 		query_All() {
-			this.$axios.get(this.getApiUrl("","nodes"))
+			this.isBusy = true;
+			this.$axios.get(`/api/clusters/${this.currentContext()}/nodes`)
 					.then((resp) => {
 						this.items = [];
-						resp.data.items.forEach(el => {
-							this.items.push({
-								name: el.metadata.name,
-								ready: this.getConditions(el),
-								creationTimestamp: el.metadata.creationTimestamp,
-								k8sVersion: el.status.nodeInfo.kubeletVersion,
-								taints: el.spec.taints ? el.spec.taints.length: 0,
-								roles: this.getRoles(el.metadata.labels),
-								usageCpu: this.getCpu(el.metadata.name),
-								usageMemory: this.getMemory(el.metadata.name),
-								usageDisk: this.getDisk(el.metadata.name),
-							});
-						});
+						if(resp.data.nodes) {
+							for(let n in resp.data.nodes) {
+								this.items.push({
+									name: n,
+									cpu: resp.data.nodes[n].metrics.percent.cpu,
+									memory: resp.data.nodes[n].metrics.percent.memory,
+									storage: resp.data.nodes[n].metrics.percent.storage,
+									pods: `${resp.data.nodes[n].metrics.usage.pods}/${resp.data.nodes[n].metrics.allocatable.pods}`,
+									version: resp.data.nodes[n].version,
+									roles: resp.data.nodes[n].role,
+									creationTimestamp: resp.data.nodes[n].creationTimestamp,
+									status: resp.data.nodes[n].status
+								});
+							}
+						}
 						this.onFiltered(this.items);
 					})
 					.catch(e => { this.msghttp(e);})
@@ -136,55 +136,6 @@ export default {
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
-		},
-
-		// node condition 체크
-		getConditions(el) {
-			let condition = [];
-			if (el.spec.unschedulable) {
-				condition.push({
-							"value": "SchedulingDisabled",
-							"style": "text-warning"
-						}
-				)
-			}
-			condition.push(el.status.conditions.filter(con => con.type === "Ready")[0].status === "True" ? { "value" : "Ready", "style" : "text-success" } : { "value" : "NotReady", "style" : "text-secondary" })
-			return condition
-		},
-		getRoles(labels) {
-			let roleLabels = Object.keys(labels).filter(key =>
-					key.includes("node-role.kubernetes.io")
-			).map(key => key.match(/([^/]+$)/)[0]);
-
-			if (labels["kubernetes.io/role"] !== undefined) {
-				roleLabels.push(labels["kubernetes.io/role"]);
-			}
-
-			return roleLabels.join(", ");
-		},
-		// node cpu,memory 사용량 먼저 읽은 후 전체리스트 조회
-		onUsage() {
-			this.isBusy = true;
-			this.$axios.get(`/api/clusters/${this.currentContext()}/dashboard`)
-					.then((resp) => {
-						this.metrics = resp.data.nodes
-					}).finally(()=> { this.query_All()} )
-		},
-		getCpu(name) {
-			if(!this.metrics[name]) return
-
-			return this.metrics[name].usage.cpu.percent
-
-		},
-		getMemory(name) {
-			if(!this.metrics[name]) return
-
-			return this.metrics[name].usage.memory.percent
-		},
-		getDisk(name) {
-			if(!this.metrics[name]) return
-
-			return this.metrics[name].usage.storage.percent
 		}
 	},
 	beforeDestroy(){

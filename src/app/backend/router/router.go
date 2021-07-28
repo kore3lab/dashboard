@@ -58,13 +58,15 @@ func CreateUrlMappings() {
 	// custom API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER", authenticate())
 	{
-		clustersAPI.GET("/nodes/:NAME/metrics", apis.GetNodeMetrics)                               // get node metrics
-		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/metrics", apis.GetMetrics)         // get metrics (pod, deployment, statefulset, daemonset, replicaset)
-		clustersAPI.GET("/nodes/:NAME/pods", apis.GetNodePodListWithMetrics)                       // get node pod list
-		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/pods", apis.GetPodListWithMetrics) // get pod list (deployment, statefulset, daemonset, replicaset)
-		clustersAPI.GET("/topology", apis.Topology)                                                // get cluster topology graph
-		clustersAPI.GET("/topology/namespaces/:NAMESPACE", apis.Topology)                          // get namespace topology graph
-		clustersAPI.GET("/dashboard", apis.Dashboard)                                              // get dashboard
+		clustersAPI.GET("/metrics", apis.GetClusterMetrics)                                                // get metrics (cluster)
+		clustersAPI.GET("/nodes/:NAME/metrics", apis.GetNodeMetrics)                                       // get metrics (node)
+		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/metrics", apis.GetWorkloadMetrics)         // get metrics (workload - pod, deployment, statefulset, daemonset, replicaset)
+		clustersAPI.GET("/nodes/:NAME/pods", apis.GetNodePodListWithMetrics)                               // get pod list in (node)
+		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/pods", apis.GetWorkloadPodListWithMetrics) // get pod list in (workload - deployment, statefulset, daemonset, replicaset)
+		clustersAPI.GET("/topology", apis.Topology)                                                        // get topology graph (cluster)
+		clustersAPI.GET("/topology/namespaces/:NAMESPACE", apis.Topology)                                  // get topology graph (namespace)
+		clustersAPI.GET("/dashboard", apis.Dashboard)                                                      // get dashboard
+		clustersAPI.GET("/nodes", apis.GetNodeListWithUsage)                                               // get node-list
 	}
 
 	// RAW-API > POST/PUT (apply, patch)

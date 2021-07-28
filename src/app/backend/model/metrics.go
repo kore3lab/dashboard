@@ -11,24 +11,63 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type resources struct {
+type metric struct {
 	CPU    int64 `json:"cpu"`
 	Memory int64 `json:"memory"`
 }
 
 type CumulativeMetrics struct {
-	Limits   resources     `json:"limits"`
-	Requests resources     `json:"requests"`
+	Limits   metric        `json:"limits"`
+	Requests metric        `json:"requests"`
 	Metrics  []interface{} `json:"metrics"`
 }
 
 type NodeCumulativeMetrics struct {
-	Allocatable resources     `json:"allocatable:"`
-	Capacity    resources     `json:"capacity"`
+	Allocatable metric        `json:"allocatable"`
+	Capacity    metric        `json:"capacity"`
 	Metrics     []interface{} `json:"metrics"`
 }
 
-// get pod list with metrics
+// get cluster metrics
+func GetClusterCumulativeMetrics(cluster string) (*NodeCumulativeMetrics, error) {
+
+	clientSet, err := config.Cluster.Client(cluster)
+	if err != nil {
+		return nil, err
+	}
+	apiClient, err := clientSet.NewKubernetesClient()
+	if err != nil {
+		return nil, err
+	}
+	metricsClient := clientSet.NewCumulativeMetricsClient()
+
+	result := NodeCumulativeMetrics{}
+
+	// metrics
+	metrics, err := metricsClient.Get(client.CumulativeMetricsResourceSelector{})
+	if err != nil {
+		return nil, err
+	}
+	result.Metrics = metrics
+
+	// allocate, capacity
+	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), metaV1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, nd := range nodeList.Items {
+		result.Allocatable.CPU += nd.Status.Allocatable.Cpu().MilliValue()
+		result.Allocatable.Memory += nd.Status.Allocatable.Memory().Value()
+		result.Capacity.CPU += nd.Status.Capacity.Cpu().MilliValue()
+		result.Capacity.Memory += nd.Status.Capacity.Memory().Value()
+	}
+
+	return &result, nil
+
+}
+
+// get node metrics
 func GetNodeCumulativeMetrics(cluster string, name string) (*NodeCumulativeMetrics, error) {
 
 	clientSet, err := config.Cluster.Client(cluster)
@@ -62,8 +101,8 @@ func GetNodeCumulativeMetrics(cluster string, name string) (*NodeCumulativeMetri
 	return &result, nil
 }
 
-// get pod list with metrics
-func GetCumulativeMetrics(cluster string, namespace string, resource string, name string) (*CumulativeMetrics, error) {
+// get workloads metrics
+func GetWorkloadCumulativeMetrics(cluster string, namespace string, resource string, name string) (*CumulativeMetrics, error) {
 
 	clientSet, err := config.Cluster.Client(cluster)
 	if err != nil {

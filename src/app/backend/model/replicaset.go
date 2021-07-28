@@ -43,3 +43,20 @@ func GetReplicaSetMatchLabels(k8sClient *kubernetes.Clientset, namespace string,
 	return rsList, nil
 
 }
+
+// replicaset's available-ready count in a cluster
+func GetReplicaSetsReady(apiClient *kubernetes.Clientset, options metaV1.ListOptions) (available int, ready int, err error) {
+
+	list, err := apiClient.AppsV1().ReplicaSets("").List(context.TODO(), options)
+	if err != nil {
+		return available, ready, err
+	}
+	available = len(list.Items)
+	for _, m := range list.Items {
+		if m.Status.Replicas == m.Status.ReadyReplicas {
+			ready += 1
+		}
+	}
+	return available, ready, err
+
+}

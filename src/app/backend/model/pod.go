@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/kore3lab/dashboard/pkg/lang"
-	"k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -23,7 +23,7 @@ type Pod struct {
 	} `json:"metrics"`
 }
 
-func ToPodList(pods []v1.Pod, metricsClient *versioned.Clientset) []Pod {
+func ToPodList(pods []coreV1.Pod, metricsClient *versioned.Clientset) []Pod {
 
 	podList := []Pod{}
 
@@ -50,7 +50,7 @@ func ToPodList(pods []v1.Pod, metricsClient *versioned.Clientset) []Pod {
 }
 
 // return a subset of pods by given labelSelector
-func GetPodsMatchLabels(k8sClient *kubernetes.Clientset, namespace string, selector labels.Selector) (*v1.PodList, error) {
+func GetPodsMatchLabels(k8sClient *kubernetes.Clientset, namespace string, selector labels.Selector) (*coreV1.PodList, error) {
 
 	podList, err := k8sClient.CoreV1().Pods(namespace).List(context.TODO(), metaV1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
@@ -58,5 +58,25 @@ func GetPodsMatchLabels(k8sClient *kubernetes.Clientset, namespace string, selec
 	}
 
 	return podList, nil
+
+}
+
+// deployment's available-ready count in a cluster
+func GetPodsReady(apiClient *kubernetes.Clientset, options metaV1.ListOptions) (available int, ready int, err error) {
+
+	list, err := apiClient.CoreV1().Pods("").List(context.TODO(), options)
+	if err != nil {
+		return available, ready, err
+	}
+	available = len(list.Items)
+	for _, m := range list.Items {
+		if m.Spec.NodeName != "" {
+			if m.Status.Phase == coreV1.PodRunning {
+				ready += 1
+			}
+		}
+	}
+
+	return available, ready, err
 
 }
