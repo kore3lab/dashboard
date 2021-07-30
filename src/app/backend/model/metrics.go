@@ -7,26 +7,9 @@ import (
 
 	"github.com/kore3lab/dashboard/pkg/client"
 	"github.com/kore3lab/dashboard/pkg/config"
-	"k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-type metric struct {
-	CPU    int64 `json:"cpu"`
-	Memory int64 `json:"memory"`
-}
-
-type CumulativeMetrics struct {
-	Limits   metric        `json:"limits"`
-	Requests metric        `json:"requests"`
-	Metrics  []interface{} `json:"metrics"`
-}
-
-type NodeCumulativeMetrics struct {
-	Allocatable metric        `json:"allocatable"`
-	Capacity    metric        `json:"capacity"`
-	Metrics     []interface{} `json:"metrics"`
-}
 
 // get cluster metrics
 func GetClusterCumulativeMetrics(cluster string) (*NodeCumulativeMetrics, error) {
@@ -114,14 +97,14 @@ func GetWorkloadCumulativeMetrics(cluster string, namespace string, resource str
 		return nil, err
 	}
 
-	var pods []v1.Pod
-	var podSpec *v1.PodSpec
+	var pods []coreV1.Pod
+	var podSpec *coreV1.PodSpec
 	if resource == "pods" {
 		pod, err := apiClient.CoreV1().Pods(namespace).Get(context.TODO(), name, metaV1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
-		pods = []v1.Pod{*pod}
+		pods = []coreV1.Pod{*pod}
 		podSpec = &pod.Spec
 	} else if resource == "deployments" {
 		pods, podSpec, err = GetDeploymentPods(apiClient, namespace, name)
@@ -180,7 +163,7 @@ func GetWorkloadCumulativeMetrics(cluster string, namespace string, resource str
 }
 
 // get pod list with metrics
-func GetNodePodListWithMetrics(cluster string, name string) ([]Pod, error) {
+func GetNodePodListWithMetrics(cluster string, name string) (interface{}, error) {
 
 	clientSet, err := config.Cluster.Client(cluster)
 	if err != nil {
@@ -202,12 +185,16 @@ func GetNodePodListWithMetrics(cluster string, name string) ([]Pod, error) {
 		return nil, err
 	}
 
-	return ToPodList(pods, metricsClient), nil
+	return struct {
+		Pods []Pod `json:"pods"`
+	}{
+		Pods: ToPodList(pods, metricsClient),
+	}, nil
 
 }
 
 // get pod list with metrics
-func GetWorkloadPodListWithMetrics(cluster string, namespace string, resource string, name string) ([]Pod, error) {
+func GetWorkloadPodListWithMetrics(cluster string, namespace string, resource string, name string) (interface{}, error) {
 
 	client, err := config.Cluster.Client(cluster)
 	if err != nil {
@@ -224,7 +211,7 @@ func GetWorkloadPodListWithMetrics(cluster string, namespace string, resource st
 		return nil, err
 	}
 
-	var pods []v1.Pod
+	var pods []coreV1.Pod
 	if resource == "deployments" {
 		pods, _, err = GetDeploymentPods(apiClient, namespace, name)
 		if err != nil {
@@ -254,6 +241,10 @@ func GetWorkloadPodListWithMetrics(cluster string, namespace string, resource st
 		return nil, errors.New(fmt.Sprintf("unsupported resource '%s'", resource))
 	}
 
-	return ToPodList(pods, metricsClient), nil
+	return struct {
+		Pods []Pod `json:"pods"`
+	}{
+		Pods: ToPodList(pods, metricsClient),
+	}, nil
 
 }

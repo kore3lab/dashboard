@@ -118,7 +118,7 @@ export default {
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
 			],
-			isBusy: false,
+			isBusy: true,
 			origin: [],
 			items: [],
 			containerStatuses: [],

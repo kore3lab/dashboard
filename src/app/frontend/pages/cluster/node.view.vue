@@ -65,8 +65,8 @@ export default {
 
 			let regexp = /\B(?=(\d{3})+(?!\d))/g;
 			this.info = {
-				capacity: `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.capacity.pods}`,
-				allocatable: `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024*1024)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.allocatable.pods}`,
+				capacity: `CPU: ${data.status.capacity.cpu}, Memory: ${(this.tranMemory(data.status.capacity.memory)/(1024**2)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.capacity.pods}`,
+				allocatable: `CPU: ${data.status.allocatable.cpu}, Memory: ${(this.tranMemory(data.status.allocatable.memory)/(1024**2)).toFixed(2).replace(regexp, ',')+'Mi'}, Pods: ${data.status.allocatable.pods}`,
 				addresses: data.status.addresses,
 				os: `${data.status.nodeInfo.operatingSystem} (${data.status.nodeInfo.architecture})`,
 				osImage: data.status.nodeInfo.osImage,
@@ -83,9 +83,9 @@ export default {
 		tranMemory(memory) {
 			let mem;
 			if (memory.includes('Gi')){
-				mem = Number(memory.slice(0,-2))*1024*1024*1024
+				mem = Number(memory.slice(0,-2))*1024**3
 			} else if(memory.includes('Mi')) {
-				mem = Number(memory.slice(0,-2))*1024*1024
+				mem = Number(memory.slice(0,-2))*1024**2
 			} else if(memory.includes('Ki')){
 				mem = Number(memory.slice(0,-2))*1024
 			} else {

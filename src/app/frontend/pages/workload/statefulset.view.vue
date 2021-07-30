@@ -3,32 +3,7 @@
 	<!-- 1. graph -->
 	<c-charts class="row" v-model="selectUrl"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
-		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
-		<dt v-if="info.selector" class="col-sm-2">Selector</dt>
-		<dd v-if="info.selector" class="col-sm-10">
-			<span v-for="(value, key) in info.selector" v-bind:key="key" class="border-box background">{{key}}={{value}}</span>
-		</dd>
-		<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt>
-		<dd v-if="info.nodeSelector" class="col-sm-10">
-			<span v-for="(value, key) in info.nodeSelector" v-bind:key="key" class="border-box background">{{key}}={{value}}</span>
-		</dd>
-		<dt class="col-sm-2">Images</dt>
-		<dd class="col-sm-10">
-			<ul class="list-unstyled">
-				<li v-for="(val, idx) in info.image" v-bind:key="idx">{{ val }}</li>
-			</ul>
-		</dd>
-		<dt v-if="info.isToleration" class="col-sm-2">Tolerations</dt>
-		<dd v-if="info.isToleration" class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="isTolerations=!isTolerations">{{isTolerations ? 'Hide' : 'Show'}}</a></dd>
-		<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="info.tolerations"></b-table></b-collapse>
-
-		<dt v-show="info.isAffinity" class="col-sm-2">Affinities</dt>
-		<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="isAffinities=!isAffinities">{{isAffinities ? 'Hide' : 'Show'}}</a>
-			<b-collapse id="affi-json"><c-jsontree v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
-		</dd>
-	</c-metadata>
+	<c-metadata v-model="metadata" :workload="spec" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])"></c-metadata>
 	<!-- 3. pods -->
 	<c-podlist class="row" v-model="selectUrl" @navigate="$emit('navigate',arguments[0])"></c-podlist>
 	<!-- 3. events -->
@@ -37,7 +12,6 @@
 </template>
 <script>
 import VueMetadataView	from "@/components/view/metadataView.vue";
-import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
 import VueChartsView	from "@/components/view/metricsChartsView.vue";
 import VuePodListView	from "@/components/view/podListView.vue";
@@ -45,7 +19,6 @@ import VuePodListView	from "@/components/view/podListView.vue";
 export default {
 	components: {
 		"c-metadata": { extends: VueMetadataView },
-		"c-jsontree": { extends: VueJsonTree },
 		"c-events": { extends: VueEventsView },
 		"c-charts": { extends: VueChartsView },
 		"c-podlist": { extends: VuePodListView }
@@ -54,61 +27,19 @@ export default {
 		return {
 			metadata: {},
 			selectUrl: "",
-			info: [],
-			controller: {},
-			isTolerations: false,
-			isAffinities: false
+			spec: {}
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
+			this.spec = data.spec;
 			this.selectUrl = `namespaces/${data.metadata.namespace}/statefulsets/${data.metadata.name}`;
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
-			this.info = this.getInfo(data);
 		});
-		this.$nuxt.$emit("onCreated",'')
+		this.$nuxt.$emit("onCreated",''); 
 	},
-	methods: {
-		getInfo(data) {
-			let tolerations = [];
-			let affinity = [];
-			let image = [];
-			let bToleration = false;
-			let bAffinity = false;
-
-			if(data.spec.template.spec.containers) {
-				data.spec.template.spec.containers.forEach(el =>{
-					image.push(el.image)
-				})
-			}
-			if(data.spec.template.spec.tolerations) {
-				data.spec.template.spec.tolerations.forEach(el =>{
-					tolerations.push({
-						key: el.key || '',
-						operator: el.operator || '',
-						effect: el.effect || '',
-						seconds: el.tolerationSeconds || '',
-					})
-					bToleration = true;
-				})
-			}
-			if(data.spec.template.spec.affinity && Object.keys(data.spec.template.spec.affinity).length !== 0) {
-				affinity = data.spec.template.spec.affinity;
-				bAffinity = true;
-			}
-			return {
-				selector: data.spec.selector.matchLabels || '',
-				nodeSelector: data.spec.template.spec.nodeSelector || '',
-				image: image,
-				tolerations: tolerations,
-				affinities: Object.assign({},affinity),
-				isAffinity: bAffinity,
-				isToleration: bToleration,
-			}
-		}
-	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

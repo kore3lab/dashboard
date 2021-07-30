@@ -3,13 +3,14 @@
 	<!-- 1. chart -->
 	<c-charts class="row" v-model="chartsUrl"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
-		<dt class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
-		<dt class="col-sm-2">Status</dt><dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
+	<c-metadata v-model="metadata" :workload="spec" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+		<dt class="col-sm-2">Status</dt>
+		<dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
 		<dt class="col-sm-2">Node</dt>
-		<dd v-if="nodeName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', nodeName))">{{ nodeName}}</a></dd>
-		<dd v-if="!nodeName" class="col-sm-10">-</dd>
+		<dd class="col-sm-10">
+			<a v-if="nodeName" href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', nodeName))">{{ nodeName }}</a>
+			<span v-if="!nodeName">-</span>
+		</dd>
 		<dt class="col-sm-2">Pod IP</dt>
 		<dd class="col-sm-10">
 			<ul class="list-unstyled mb-0">
@@ -22,28 +23,9 @@
 		<dd v-if="info.conditions" class="col-sm-10">
 			<span v-for="(v, k) in info.conditions" v-bind:key="k" class="border-box">{{ v.type }}</span>
 		</dd>
-		<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt>
-		<dd v-if="info.nodeSelector" class="col-sm-10">
-			<span v-for="(v, k) in info.nodeSelector" v-bind:key="k" class="border-box  background">{{ k }}: {{ v }}</span>
-		</dd>
-		<dt class="col-sm-2">Tolerations</dt>
-		<dd class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}
-			<a href="#" class="float-right " @click="isTolerations=!isTolerations">{{isTolerations?'Hide':'Show'}}</a>
-		</dd>
-		<b-collapse class="col-sm-12" v-model="isTolerations">
-			<b-table-lite :items="info.tolerations" class="subset"></b-table-lite>
-		</b-collapse>
-
-		<dt v-show="Object.keys(affinities).length>0" class="col-sm-2">Affinities</dt>
-		<dd v-show="Object.keys(affinities).length>0" class="col-sm-10">{{ Object.keys(affinities).length }}
-			<a href="#" class="float-right " @click="isAffinities=!isAffinities">{{isAffinities?'Hide':'Show'}}</a>
-			<b-collapse v-model="isAffinities">
-				<c-jsontree v-model="affinities" class="card-body p-2 border"></c-jsontree>
-			</b-collapse>
-		</dd>
 		<dt v-if="info.secret" class="col-sm-2">Secrets</dt>
 		<dd v-if="info.secret" class="col-sm-10" >
-			<ul class="list-unstyled">
+			<ul class="list-unstyled mb-0">
 				<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
 					<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d.secret.secretName))">{{ d.secret.secretName }}</a>
 				</li>
@@ -206,38 +188,32 @@ export default {
 		return {
 			nodeName: "",
 			metadata: {},
+			spec: {},
 			chartsUrl: "",
 			volumes: [],
 			initContainers: [],
 			containers: [],
 			status: [],
 			metrics: [],
-			controller: {},
-			info: [],
-			affinities: {},
-			isTolerations: false,
-			isAffinities: false
+			info: {}
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if (!data) return
 			this.metadata = data.metadata;
+			this.spec = data.spec;
 			this.chartsUrl = `namespaces/${data.metadata.namespace}/pods/${data.metadata.name}`;
 			this.nodeName = data.spec.nodeName;
 			this.containers = this.getContainers(data) || {};
 			this.status = this.toPodStatus(data.metadata.deletionTimestamp, data.status);
-			this.controller = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
 			this.info = {
 				podIP: data.status.podIPs || ["-"],
 				priorityClass: data.spec.priorityClassName || '-',
 				qosClass: data.status.qosClass || '-',
 				conditions: data.status.conditions || [],
-				nodeSelector: data.spec.nodeSelector,
-				tolerations: data.spec.tolerations || [],
 				secret: data.spec.volumes? data.spec.volumes.filter(el=>{return el.secret}): []
 			};
-			this.affinities = data.spec.affinity || {},
 			this.initContainers = this.getInitContainers(data);
 
 			// volumns

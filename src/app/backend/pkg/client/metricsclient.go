@@ -13,7 +13,6 @@ const (
 	METRICS_RESOURCE_POD     = 3
 )
 
-// type resourceVerber struct {
 type CumulativeMetricsClient struct {
 	metricsScraperUrl string
 	context           string
@@ -24,6 +23,12 @@ type CumulativeMetricsResourceSelector struct {
 	Namespace string
 	Pods      []string
 	Function  string
+}
+
+type CumulativeMetricUnit struct {
+	CPU       int64  `json:"cpu"`
+	Memory    int64  `json:"memory"`
+	Timestamp string `json:"timestamp"`
 }
 
 func (self *CumulativeMetricsResourceSelector) getUrl() string {
@@ -41,9 +46,9 @@ func NewCumulativeMetricsClient(metricsScraperUrl string, ctx string) *Cumulativ
 	return &CumulativeMetricsClient{metricsScraperUrl: metricsScraperUrl, context: ctx}
 }
 
-func (self *CumulativeMetricsClient) Get(selector CumulativeMetricsResourceSelector) ([]interface{}, error) {
+func (self *CumulativeMetricsClient) Get(selector CumulativeMetricsResourceSelector) ([]CumulativeMetricUnit, error) {
 
-	result := []interface{}{}
+	result := []CumulativeMetricUnit{}
 
 	_, err := resty.New().R().
 		SetHeader("Content-Type", "application/json").

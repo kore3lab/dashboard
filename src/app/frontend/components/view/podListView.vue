@@ -1,5 +1,5 @@
 <template>
-<div v-if="items.length>0" class="row">
+<div v-if="items && items.length>0" class="row">
 	<div class="col-md-12">
 		<div class="card card-secondary card-outline">
 			<div class="card-header p-2"><h3 class="card-title">Pods</h3></div>
@@ -18,7 +18,7 @@
 						<span>{{ data.item.metrics.cpu | formatNumber }} m</span>
 					</template>
 					<template v-slot:cell(memory)="data">
-						<span>{{ (data.item.metrics.memory/(1024*1024)).toFixed(2) | formatNumber}} Mi</span>
+						<span>{{ (data.item.metrics.memory/(1024**2)).toFixed(2) | formatNumber}} Mi</span>
 					</template>
 					<template v-slot:cell(status)="data">
 						<span v-bind:class="{'text-success':data.value=='Completed'||data.value=='Running'}">{{ data.value }}</span>
@@ -44,7 +44,7 @@ export default {
 				{ key: "cpu", label: "CPU", sortable: true, thClass:"text-right", tdClass:"text-right" },
 				{ key: "memory", label: "Memory", sortable: true, thClass:"text-right", tdClass:"text-right" },
 				{ key: "status", label: "Status" },
-			],
+			]
 		}
 	},
 	watch: {
@@ -52,7 +52,7 @@ export default {
 			this.isBusy = true;
 			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}/pods`)
 				.then(resp => {
-					this.items = resp.data
+					this.items = resp.data.pods;
 				}).catch(e => {
 					this.msghttp(e);
 					this.items = [];

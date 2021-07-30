@@ -94,7 +94,7 @@ export default {
 				{ key: "ready", label: "Ready", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
-			isBusy: false,
+			isBusy: true,
 			items: [],
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
