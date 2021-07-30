@@ -53,19 +53,19 @@
 										</b-td>
 										<b-td>
 											<p class="text-lg">{{ nd.metrics.percent.cpu }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(nd.metrics.usage.cpu).toLocaleString() }}/{{ Number(nd.metrics.allocatable.cpu).toLocaleString() }} m</p>
+											<p class="text-muted text-sm font-weight-light">{{ nd.metrics.usage.cpu/1000 | formatNumber }}/{{ nd.metrics.allocatable.cpu/1000  | formatNumber }} Core</p>
 										</b-td>
 										<b-td >
 											<p class="text-lg">{{ nd.metrics.percent.memory }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.metrics.usage.memory/(1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.metrics.allocatable.memory/(1024*1024),2)).toLocaleString() }} MiB</p>
+											<p class="text-muted text-sm font-weight-light">{{ (nd.metrics.usage.memory/(1024**3)).toFixed(2) | formatNumber }}/{{ Math.round(nd.metrics.allocatable.memory/(1024**3),2)  | formatNumber }} GiB</p>
 										</b-td>
 										<b-td>
 											<p class="text-lg">{{ nd.metrics.percent.storage }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ Number(Math.round(nd.metrics.usage.storage/(1024*1024*1024),2)).toLocaleString() }}/{{ Number(Math.round(nd.metrics.allocatable.storage/(1024*1024*1024),2)).toLocaleString() }} GiB</p>
+											<p class="text-muted text-sm font-weight-light">{{ (nd.metrics.usage.storage/(1024**3)).toFixed(2) | formatNumber }}/{{ Math.round(nd.metrics.allocatable.storage/(1024**3),2) | formatNumber }} GiB</p>
 										</b-td>
 										<b-td>
 											<p class="text-lg">{{ nd.metrics.percent.pods }}<small>%</small></p>
-											<p class="text-muted text-sm font-weight-light">{{ nd.metrics.usage.pods }}/{{ nd.metrics.allocatable.pods }} ea</p>
+											<p class="text-muted text-sm font-weight-light">{{ nd.metrics.usage.pods | formatNumber }}/{{ nd.metrics.allocatable.pods | formatNumber }} ea</p>
 										</b-td> 
 									</b-tr>
 								</b-tbody>
@@ -102,7 +102,7 @@
 					<div class="info-box">
 						<div class="info-box-content">
 							<span class="info-box-text">Daemon Sets</span>
-							<span class="info-box-number">{{ workloads.daemonset.ready }} / {{ workloads.daemonset.available }}</span>
+							<span class="info-box-number">{{ workloads.daemonset.ready | formatNumber }} / {{ workloads.daemonset.available | formatNumber }}</span>
 						</div>
 						<nuxt-link to="/workload/daemonset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
@@ -111,7 +111,7 @@
 					<div class="info-box">
 						<div class="info-box-content">
 							<span class="info-box-text">Deployments</span>
-							<span class="info-box-number">{{ workloads.deployment.ready }} / {{ workloads.deployment.available }}</span>
+							<span class="info-box-number">{{ workloads.deployment.ready | formatNumber }} / {{ workloads.deployment.available | formatNumber }}</span>
 						</div>
 						<nuxt-link to="/workload/deployment.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
@@ -120,7 +120,7 @@
 					<div class="info-box">
 						<div class="info-box-content">
 							<span class="info-box-text">Replica Sets</span>
-							<span class="info-box-number">{{ workloads.replicaset.ready }} / {{ workloads.replicaset.available }}</span>
+							<span class="info-box-number">{{ workloads.replicaset.ready | formatNumber }} / {{ workloads.replicaset.available | formatNumber }}</span>
 						</div>
 						<nuxt-link to="/workload/replicaset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
@@ -129,7 +129,7 @@
 					<div class="info-box">
 						<div class="info-box-content">
 							<span class="info-box-text">Stateful Sets</span>
-							<span class="info-box-number">{{ workloads.statefulset.ready }} / {{ workloads.statefulset.available }}</span>
+							<span class="info-box-number">{{ workloads.statefulset.ready | formatNumber }} / {{ workloads.statefulset.available | formatNumber }}</span>
 						</div>
 						<nuxt-link to="/workload/statefulset.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
@@ -138,7 +138,7 @@
 					<div class="info-box">
 						<div class="info-box-content">
 							<span class="info-box-text">Pods</span>
-							<span class="info-box-number">{{ workloads.pod.ready }} / {{ workloads.pod.available }}</span>
+							<span class="info-box-number">{{ workloads.pod.ready | formatNumber }} / {{ workloads.pod.available | formatNumber }}</span>
 						</div>
 						<nuxt-link to="/workload/pod.list" class="btn btn-md text-info"><i class="fas fa-arrow-circle-right"></i></nuxt-link>
 					</div>
@@ -150,6 +150,10 @@
 					<div class="card">
 						<div class="card-header border-0">
 							<h3 class="card-title">CPU Usages</h3>
+							<div class="text-right">
+								<span v-if="allocatable.cpu>0" class="border-box background">allocatable : {{ allocatable.cpu  | formatNumber }}</span>
+								<span class="border-box">Cores</span>
+							</div>
 						</div>
 						<div class="card-body">
 							<div class="chart">
@@ -162,6 +166,10 @@
 					<div class="card">
 						<div class="card-header border-0">
 							<h3 class="card-title">Memory Usages</h3>
+							<div class="text-right">
+								<span v-if="allocatable.memory>0" class="border-box background">allocatable : {{ allocatable.memory.toFixed(2) | formatNumber }}</span>
+								<span class="border-box">GiB</span>
+							</div>
 						</div>
 						<div class="card-body">
 							<div class="chart">
@@ -193,33 +201,55 @@ export default {
 			chart: {
 				options: {
 					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: false },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value}} }]
-						}
-					},
-					memory: {
 						tooltips: {
 							callbacks: {
 								label: function(data) {
-									return (data.yLabel).toFixed(2) + "Mi"
+									return ` ${data.yLabel} core`
 								}
 							}
 						},
 						maintainAspectRatio : false, responsive : true, legend: { display: false },
 						scales: {
 							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
-										if(value === 0) return value
-										let regexp = /\B(?=(\d{3})+(?!\d))/g;
-										return value.toString().replace(regexp, ',')+'Mi';}
-								}}]
+							yAxes: [{
+								gridLines : {display : false},
+								ticks: {
+									beginAtZero: true,
+									suggestedMax: 0,
+									callback: (value) => {
+										return this.formatNumber(value);
+									}
+								}
+							}]
+						}
+					},
+					memory: {
+						tooltips: {
+							callbacks: {
+								label: function(data) {
+									return ` ${data.yLabel} Gi`
+								}
+							}
+						},
+						maintainAspectRatio : false, responsive : true, legend: { display: false },
+						scales: {
+							xAxes: [{ gridLines : {display : false}}],
+							yAxes: [{
+								gridLines : {display : false},  
+								ticks: { 
+									beginAtZero: true,
+									suggestedMax: 0,
+									callback: (value) => {
+										return this.formatNumber(value);
+									}
+								}
+							}]
 						}
 					}
 				},
 				data: { cpu: {}, memory: {} }
 			},
+			allocatable: {cpu: 0, memory: 0},
 			timer: 0,
 			isBusy: true
 		}
@@ -284,11 +314,15 @@ export default {
 							let dt = new Date(d.timestamp);
 							labels.push(`${dt.getHours()}:${dt.getMinutes()}m`);
 							cpus.push((d.cpu/1000).toFixed(3));
-							memories.push(Math.round(d.memory/(1024*1024)));
+							memories.push((d.memory/1024**3).toFixed(2));
 
 						});
-						this.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = resp.data.allocatable.cpu/1000;
-						this.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = resp.data.allocatable.memory/(1024*1024);
+						this.allocatable = {
+							cpu: resp.data.allocatable ? resp.data.allocatable.cpu/1000: 0,
+							memory: resp.data.allocatable ? resp.data.allocatable.memory/1024**3: 0,
+						};
+						this.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = this.allocatable.cpu || 1;
+						this.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = this.allocatable.memory || 1; 
 
 						this.chart.data.cpu = {
 							labels: labels,

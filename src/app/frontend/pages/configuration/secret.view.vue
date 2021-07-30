@@ -1,9 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
-		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ origin.type }}</dd>
 	</c-metadata>
 	<!-- 2. data -->
@@ -46,7 +44,6 @@ export default {
 			metadata: {},
 			info: [],
 			origin: [],
-			controller: {},
 			secretData: [],
 			isShow: [],
 			fields: [
@@ -66,7 +63,6 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]):{};
 			this.secretData = this.getData(data.data);
 		},
 		getData(data) {

@@ -1,10 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
-		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
-	</c-metadata>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])"></c-metadata>
 	<!-- 2. data -->
 	<div v-show="configData" class="row">
 		<div class="col-md-12">
@@ -40,7 +37,6 @@ export default {
 			metadata: {},
 			info: [],
 			origin: [],
-			controller: {},
 			configData: [],
 			fields: [
 				{ key: "name", label: "Name" },
@@ -59,7 +55,6 @@ export default {
 	},
 	methods: {
 		onSync(data) {
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
 			this.configData = this.getData(data.data);
 		},
 		getData(data) {

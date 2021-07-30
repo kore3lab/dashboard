@@ -1,18 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
-		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
-		<dt v-if="info.selector" class="col-sm-2">Selector</dt>
-		<dd v-if="info.selector" class="col-sm-10">
-			<span v-for="(value, key) in info.selector" v-bind:key="key" class="border-box background">{{ value }}</span>
-		</dd>
-		<dt v-if="info.nodeSelector" class="col-sm-2">Node Selector</dt>
-		<dd v-if="info.nodeSelector" class="col-sm-10">
-			<span v-for="(value, key) in info.nodeSelector" v-bind:key="key" class="border-box background">{{key}}={{value}}</span>
-		</dd>
-		<dt class="col-sm-2">Image</dt><dd class="col-sm-10">{{ info.image }}</dd>
+	<c-metadata v-model="metadata" :workload="spec" dtCols="2" ddCols="10"  @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Conditions</dt>
 		<dd class="col-sm-10">
 			<span v-for="(value, idx) in info.conditions" v-bind:key="idx" v-bind:class="{'badge-success':value.type=='Complete', 'badge-danger':value.type=='Failed'}" class="badge font-weight-light text-sm mb-1 mr-1"> {{ value.type }} </span>
@@ -41,29 +30,25 @@ export default {
 		return {
 			metadata: {},
 			selectUrl: "",
-			info: {},
-			controller: {}
+			spec: {},
+			info: {}
 		}
 	},
 	mounted() {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
+			this.spec = data.spec;
 			this.selectUrl = `namespaces/${data.metadata.namespace}/jobs/${data.metadata.name}`;
 			this.info = {
-				selector: this.stringifyLabels(data.spec.selector? data.spec.selector.matchLabels : ''),
-				image: data.spec.template.spec.containers[0].image,
-				nodeSelector: data.spec.template.spec.nodeSelector || '',
 				conditions: data.status.conditions?data.status.conditions.filter(el=>{return el.status === 'True'}):[],
 				completions: data.spec.completions,
 				parallelism: data.spec.parallelism,
 			};
-			this.controller = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
-	methods: {
-	},
+	methods: {},
 	beforeDestroy(){
 		this.$nuxt.$off("onReadCompleted");
 	},

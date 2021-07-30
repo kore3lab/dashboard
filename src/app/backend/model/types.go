@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/kore3lab/dashboard/pkg/client"
+)
 
 // base
 type Model struct {
@@ -33,6 +37,29 @@ func NewStatus(code int) *Status {
 	return &Status{
 		Kind: KIND_STAUTS,
 		Code: code}
+}
+
+// metrics
+type MetricUnit struct {
+	CPU    int64 `json:"cpu"`
+	Memory int64 `json:"memory"`
+}
+type MetricsUsage struct {
+	Limits   MetricUnit `json:"limits"`
+	Requests MetricUnit `json:"requests"`
+	Usage    MetricUnit `json:"usage"`
+}
+
+type CumulativeMetrics struct {
+	Limits   MetricUnit                    `json:"limits"`
+	Requests MetricUnit                    `json:"requests"`
+	Metrics  []client.CumulativeMetricUnit `json:"metrics"`
+}
+
+type NodeCumulativeMetrics struct {
+	Allocatable MetricUnit                    `json:"allocatable"`
+	Capacity    MetricUnit                    `json:"capacity"`
+	Metrics     []client.CumulativeMetricUnit `json:"metrics"`
 }
 
 // "proxy" > "stats/summary"  (using dashboard)

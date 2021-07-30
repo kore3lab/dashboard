@@ -1,10 +1,9 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
 		<dt v-if="imagePullSecrets.length>0" class="col-sm-3">ImagePullSecrets</dt>
 		<dd v-if="imagePullSecrets.length>0" class="col-sm-9"><span v-for="(value, idx) in imagePullSecrets" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('','secrets',metadata.namespace,value.name))">{{ value.name }}</a></span></dd>
-		<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt><dd v-if="metadata.ownerReferences" class="col-sm-9">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
 	</c-metadata>
 	<!-- 2. mountable secrets -->
 	<div class="row">
@@ -47,7 +46,6 @@ export default {
 	data() {
 		return {
 			metadata: {},
-			controller: {},
 			imagePullSecrets: [],
 			secrets: [],
 			isShow: {},
@@ -57,7 +55,6 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.controller = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
 			this.imagePullSecrets = data.imagePullSecrets? data.imagePullSecrets: [];
 			this.secrets = this.secrets ?this.getSecrets(data.secrets):[];
 		});

@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
 		<dt v-if="metadata.finalizers" class="col-sm-3">Finalizers</dt>
 		<dd v-if="metadata.finalizers" class="col-sm-9">
 			<ul class="list-unstyled mb-0">
@@ -25,8 +25,8 @@
 				<div class="card-header p-2"><h3 class="card-title">Host Path</h3></div>
 				<div class="card-body p-2">
 					<dl class="row mb-0">
-						<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ hostPath.type ? hostPath.type : '-' }}</dd>
-						<dt class="col-sm-2">Path</dt><dd class="col-sm-10">{{ hostPath.path }}</dd>
+						<dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ hostPath.type ? hostPath.type : '-' }}</dd>
+						<dt class="col-sm-3">Path</dt><dd class="col-sm-9">{{ hostPath.path }}</dd>
 					</dl>
 				</div>
 			</div>
@@ -39,8 +39,8 @@
 				<div class="card-header p-2"><h3 class="card-title">Network File System</h3></div>
 				<div class="card-body p-2">
 					<dl class="row mb-0">
-						<dt class="col-sm-2">Server</dt><dd class="col-sm-10">{{ nfs["server"] }}</dd>
-						<dt class="col-sm-2">Path</dt><dd class="col-sm-10">{{ nfs["path"] }}</dd>
+						<dt class="col-sm-3">Server</dt><dd class="col-sm-9">{{ nfs["server"] }}</dd>
+						<dt class="col-sm-3">Path</dt><dd class="col-sm-9">{{ nfs["path"] }}</dd>
 					</dl>
 				</div>
 			</div>
@@ -53,13 +53,13 @@
 				<div class="card-header p-2"><h3 class="card-title">FlexVolume</h3></div>
 				<div class="card-body p-2">
 					<dl class="row mb-0">
-						<dt class="col-sm-2">Driver</dt><dd class="col-sm-2">{{ flexVolume.driver }}</dd>
+						<dt class="col-sm-3">Driver</dt><dd class="col-sm-9">{{ flexVolume.driver }}</dd>
 					</dl>
 					<dl class="row mb-0">
-						<dt class="col-sm-2" v-if="flexVolume.fsType">Type</dt>
-						<dd class="col-sm-10" v-if="flexVolume.fsType">{{ flexVolume.fsType }}</dd>
-						<dt class="col-sm-2" v-if="flexVolume.options">Options</dt>
-						<dd class="col-sm-10" v-if="flexVolume.options">{{ flexVolume.options }}</dd>
+						<dt class="col-sm-3" v-if="flexVolume.fsType">Type</dt>
+						<dd class="col-sm-9" v-if="flexVolume.fsType">{{ flexVolume.fsType }}</dd>
+						<dt class="col-sm-3" v-if="flexVolume.options">Options</dt>
+						<dd class="col-sm-9" v-if="flexVolume.options">{{ flexVolume.options }}</dd>
 					</dl>
 				</div>
 			</div>
@@ -72,9 +72,9 @@
 				<div class="card-header p-2"><h3 class="card-title">Claim</h3></div>
 				<div class="card-body p-2">
 					<dl class="row mb-0">
-						<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ claim.kind }}</dd>
-						<dt class="col-sm-2">Name</dt><dd class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink(claim.group, claim.resource, claim.namespace, claim.name ))">{{ claim.name }}</a></dd>
-						<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ claim.namespace }}</dd>
+						<dt class="col-sm-3">Type</dt><dd class="col-sm-9">{{ claim.kind }}</dd>
+						<dt class="col-sm-3">Name</dt><dd class="col-sm-9"><a href="#" @click="$emit('navigate', getViewLink(claim.group, claim.resource, claim.namespace, claim.name ))">{{ claim.name }}</a></dd>
+						<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ claim.namespace }}</dd>
 					</dl>
 				</div>
 			</div>

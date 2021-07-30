@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1.metdata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Schedule</dt><dd class="col-sm-10">{{ info.schedule }}</dd>
 		<dt class="col-sm-2">Active</dt><dd class="col-sm-10">{{ info.active }}</dd>
 		<dt class="col-sm-2">Suspend</dt><dd class="col-sm-10">{{ info.suspend }}</dd>
@@ -78,7 +78,6 @@ export default {
 						}
 					})
 					this.jobs = list;
-					console.log(this.jobs);
 				}).catch(e => {
 					this.msghttp(e);
 					this.jobs = [];

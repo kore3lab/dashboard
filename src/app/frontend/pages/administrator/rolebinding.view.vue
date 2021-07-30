@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10"></c-metadata>
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])"></c-metadata>
 	<!-- 2. reference -->
 	<div class="row">
 		<div class="col-md-12">
@@ -46,7 +46,6 @@ export default {
 	data() {
 		return {
 			metadata: {},
-			controller: {},
 			roleRefs: [],
 			bindings: [],
 			fields: [
@@ -65,7 +64,6 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.controller = data.metadata.ownerReferences ? this.getResource(data.metadata.ownerReferences[0]):{};
 			this.roleRefs = [data.roleRef];
 			this.bindings = data.subjects;
 		});

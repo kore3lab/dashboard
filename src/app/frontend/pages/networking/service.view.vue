@@ -1,13 +1,11 @@
 <template>
 <div>
 	<!-- 1. metadta -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Selector</dt>
 		<dd class="col-sm-10">
 			<span v-for="(val, idx) in info.selector" v-bind:key="idx" class="border-box background">{{ val }}</span>
 		</dd>
-		<dt v-if="metadata.ownerReferences" class="col-sm-2">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
 		<dt class="col-sm-2">Type</dt><dd class="col-sm-10">{{ info.type }}</dd>
 		<dt class="col-sm-2">Session Affinity</dt><dd class="col-sm-10">{{ info.sessionAffinity }}</dd>
 	</c-metadata>
@@ -20,7 +18,7 @@
 					<dl class="row mb-0">
 						<dt class="col-sm-2">Cluster IP</dt><dd class="col-sm-10">{{ connection.clusterIP }}</dd>
 						<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">
-						<ul class="list-unstyled">
+						<ul class="list-unstyled mb-0">
 							<li v-for="(val,idx) in connection.ports" v-bind:key="idx">{{ val }}</li>
 						</ul>
 					</dd>
@@ -67,7 +65,6 @@ export default {
 			info: [],
 			connection: [],
 			endpoints: [],
-			controller: {},
 			isEndpoint: false,
 			fields: [
 				{ key: "name", label: "Name" },
@@ -79,7 +76,6 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]):{};
 			this.info = {
 				selector: data.spec.selector? this.stringifyLabels(data.spec.selector):[] ,
 				type: data.spec.type || "",

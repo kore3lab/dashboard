@@ -1,9 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
-		<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-9">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
 		<dt v-if="selector" class="col-sm-3">Selector</dt>
 		<dd v-if="selector" class="col-sm-9">
 			<span v-for="(value, name) in selector" v-bind:key="name" class="border-box background">{{ value }}</span>
@@ -26,8 +24,7 @@ export default {
 		return {
 			metadata: {},
 			info: {},
-			selector: {},
-			controller: {}
+			selector: {}
 		}
 	},
 	mounted() {
@@ -40,7 +37,6 @@ export default {
 				currentHealthy: data.status.currentHealthy,
 				desiredHealthy: data.status.desiredHealthy,
 			}
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
 			this.selector = this.stringifyLabels(data.spec.selector.matchLabels);
 		});
 		this.$nuxt.$emit("onCreated",'')

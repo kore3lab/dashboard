@@ -1,9 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
-		<dt v-if="metadata.ownerReferences" class="col-sm-3">Controlled By</dt>
-		<dd v-if="metadata.ownerReferences" class="col-sm-9">{{ controller.kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.group, controller.resource, metadata.namespace, controller.name))">{{ controller.name }}</a></dd>
+	<c-metadata v-model="metadata" dtCols="3" ddCols="9"  @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="{ 'text-success': status.phase=='Active' }">{{ status.phase }}</dd>
 		<dt class="col-sm-3">Resource Quotas</dt>
 		<dd class="col-sm-9"><span v-if="quotas.length==0">-</span><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
@@ -22,7 +20,6 @@ export default {
 	data() {
 		return {
 			metadata: {},
-			controller: {},
 			status: {},
 			quotas: [],
 			limits: []
@@ -33,8 +30,6 @@ export default {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.status = data.status;
-			this.controller = data.metadata.ownerReferences? this.getResource(data.metadata.ownerReferences[0]): {};
-
 			this.quotas = [];
 			this.$axios.get(this.getApiUrl("","resourcequotas",data.metadata.name))
 			.then(resp => {

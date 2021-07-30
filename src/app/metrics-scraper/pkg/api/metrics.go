@@ -71,7 +71,7 @@ func podHandler(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 
 		// customized by kore-board
-		cluster := vars["Cluster"]
+		cluster := vars["CLUSTER"]
 		if cluster == "" {
 			cluster = config.Value.DefaultContext
 		}

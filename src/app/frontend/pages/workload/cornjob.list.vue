@@ -89,7 +89,7 @@ export default {
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime }
 			],
 			fields: [],
-			isBusy: false,
+			isBusy: true,
 			items: [],
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,

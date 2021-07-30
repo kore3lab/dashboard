@@ -1,19 +1,23 @@
 import Vue from "vue";
 const CONSTRANTS = {
 	"ITEMS_PER_PAGE" : [{text:"10",value:10}, {text:"20",value:20}, {text:"30",value:30}, {text:"50",value:50}, {text:"100",value:100}],
+	"CHART_BORDER_COLOR" : {
+		requests: "#999",
+	},
 	"CHART_BG_COLOR" : {
-		cpu: "rgba(119,149,233,0.9)",
-		memory:	"rgba(179,145,208,1)",
-		requests: "#6c757d",
-		limits: "#6c757d",
+		cpu: "rgba(119,149,233,0.5)",
+		memory:	"rgba(179,145,208,0.5)",
+		requests: "rgba(108, 117, 125,0.2)",
 		background: "#fff",
 	}
 }
 
 Vue.filter("formatNumber", (value) => {
-	if(value === 0) return value
-	let regexp = /\B(?=(\d{3})+(?!\d))/g;
-	return value.toString().replace(regexp, ',');
+	try {
+		return Number(value).toLocaleString();
+	} catch {
+		return "NaN";
+	}
 });
 
 Vue.mixin({
@@ -88,6 +92,13 @@ Vue.mixin({
 			if (interval > 1) return Math.floor(interval) + " minutes";
 
 			return Math.floor(seconds) + " seconds";
+		},
+		formatNumber(value, decimal) {
+			try {
+				return Number(decimal ? Number.parseFloat(value.toFixed(decimal)): value).toLocaleString();
+			} catch {
+				return "NaN";
+			}
 		},
 		toPodStatus(deletionTimestamp, status) {
 			// 삭제
