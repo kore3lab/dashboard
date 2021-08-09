@@ -51,7 +51,7 @@
 									</template>
 									<template v-slot:cell(keys)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }}  </li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx" class="border-box">{{ value }}  </li>
 										</ul>
 									</template>
 								</b-table>

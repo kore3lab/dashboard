@@ -42,7 +42,6 @@ export default {
 			te: '',
 			dataValue: [],
 			metadata: {},
-			info: [],
 			origin: [],
 			secretData: [],
 			isShow: [],
@@ -57,20 +56,16 @@ export default {
 			if(!data) return
 			this.origin = data;
 			this.metadata = data.metadata;
-			this.onSync(data)
+			this.secretData = this.getData(data.data);
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		onSync(data) {
-			this.secretData = this.getData(data.data);
-		},
 		getData(data) {
 			if(!data) return false
 			let list = [];
 			let i=0;
-			let key = Object.keys(data)
-			key.forEach(el => {
+			Object.keys(data).forEach(el => {
 				this.isShow[i] = true;
 				this.dataValue.push(data[el])
 				list.push({

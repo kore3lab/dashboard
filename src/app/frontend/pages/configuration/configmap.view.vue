@@ -49,19 +49,15 @@ export default {
 			if(!data) return
 			this.origin = data;
 			this.metadata = data.metadata;
-			this.onSync(data)
+			this.configData = this.getData(data.data);
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		onSync(data) {
-			this.configData = this.getData(data.data);
-		},
 		getData(data) {
 			if(!data) return false
 			let list = [];
-			let key = Object.keys(data)
-			key.forEach(el => {
+			Object.keys(data).forEach(el => {
 				list.push({
 					key: el,
 					val: data[el]

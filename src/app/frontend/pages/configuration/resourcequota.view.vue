@@ -5,8 +5,10 @@
 		<dt class="col-sm-2">Quotas</dt>
 		<dd class="col-sm-10">
 			<ul v-for="(val, idx) in quotas" v-bind:key="idx" class="list-unstyled mb-0">
-				<li><span>{{ val.name }}</span> <span class="float-right">{{ val.current }} / {{ val.temp | formatNumber }}</span></li>
-				<b-progress :value="val.current" :max="val.max" show-value class="mb-3"></b-progress>
+				<li><span>{{ val.name }}</span> <span class="float-right">{{ val.current }} / {{ val.max }} </span></li>
+				<b-progress :max="val.max">
+					<b-progress-bar :value="val.current" :label="`${((parseInt(val.current) / parseInt(val.max)) * 100).toFixed(0)}%`"></b-progress-bar>
+				</b-progress>
 			</ul>
 		</dd>
 	</c-metadata>
@@ -47,15 +49,12 @@ export default {
 		this.$nuxt.$on("onReadCompleted", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
-			this.onSync(data)
+			this.quotas = this.getQuotas(data.status)
+			this.scopeSelector = this.getScope(data.spec.scopeSelector)
 		});
 		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		onSync(data) {
-			this.quotas = this.getQuotas(data.status)
-			this.scopeSelector = this.getScope(data.spec.scopeSelector)
-		},
 		getQuotas(status) {
 			let list = [];
 			let temp;
@@ -65,39 +64,10 @@ export default {
 					.map(([name, value]) => {
 						let current = this.transformUnit(name, used[name]);
 						let max = this.transformUnit(name, value);
-						temp = max
-						let usage = max === 0 ? 100 : Math.ceil(current / max * 100);
-						if(name === 'cpu') {
-							temp = Number(max)
-							if(temp >= 1000) {
-								temp = max / 1000
-								temp+='k'
-							}
-						}
-						if(name === 'memory' || name ==='storage') {
-							temp = Number(max)
-							if(temp >= 1024) {
-								temp = temp / 1024
-								if( temp >= 1024) {
-									temp = temp / 1024
-									if( temp >= 1024) {
-										temp = temp / 1024
-										if ( temp >= 1024) {
-											max = temp / 1024
-											if (temp >= 1024) {
-												temp = temp / 1024
-											} else temp += 'Ti'
-										} else temp += 'Gi'
-									} else temp += 'Mi'
-								} else temp += 'Ki'
-							}
-						}
 						list.push({
 							name: name,
 							current: current,
-							max: max,
-							usage: usage,
-							temp: temp,
+							max: max
 						})
 					})
 			return list
@@ -119,51 +89,34 @@ export default {
 		},
 		transformUnit(name, value) {
 			if(name.includes('memory') || name.includes('storage')) {
-				return this.unitsToBytes(value);
+				return this.unitsToBytes(name, value);
 			}
 			if(name.includes('cpu')) {
-				return this.cpuUnitsToNumber(value);
+				return this.cpuUnitsToNumber(value) + "m";
 			}
-			return this.metricUnitsToNumber(value);
+			return value;
 		},
-		metricUnitsToNumber(value) {
-			const base = 1000;
-			const suffixes = ["k", "m", "g", "t", "p"];
-
-			const suffix = value.toLowerCase().slice(-1);
-			const index = suffixes.indexOf(suffix);
-
-			return parseInt(
-				(parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
-			);
-		},
-		cpuUnitsToNumber(cpu) {
+		
+		cpuUnitsToNumber(value) {
 			const thousand = 1000;
 			const million = thousand * thousand;
-			const shortBillion = thousand * million;
+			const cpuNum = parseInt(value);
+			
+			if (value.includes("k")) return cpuNum * million;
+			if (value.includes("m")) return cpuNum;
+			if (value.includes("u")) return cpuNum / thousand;
+			if (value.includes("n")) return cpuNum / million;
 
-			const cpuNum = parseInt(cpu);
-			if (cpu.includes("k")) return cpuNum * thousand;
-			if (cpu.includes("m")) return cpuNum / thousand;
-			if (cpu.includes("u")) return cpuNum / million;
-			if (cpu.includes("n")) return cpuNum / shortBillion;
-
-			return parseFloat(cpu);
+			return cpuNum * thousand;
 		},
-		unitsToBytes(value) {
+		unitsToBytes(name, value) {
 			const base = 1024;
 			const suffixes = ["K", "M", "G", "T", "P", "E"];
-
-			if (!suffixes.some(suffix => value.includes(suffix))) {
-				return parseFloat(value);
-			}
-
 			const suffix = value.replace(/[0-9]|i|\./g, "");
 			const index = suffixes.indexOf(suffix);
-
-			return parseInt(
-				(parseFloat(value) * Math.pow(base, index + 1)).toFixed(1)
-			);
+			const val = name.includes('memory') ? parseFloat(value) * Math.pow(base, index-1) + "Mi" : parseFloat(value) * Math.pow(base, index-2) + "Gi";
+			
+			return val;
 		},
 	},
 	beforeDestroy(){
