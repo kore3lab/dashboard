@@ -10,25 +10,11 @@
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
-						<nuxt-link :to="{path: '/terminal', query: {termtype: 'pod',pod: name, namespace: raw.metadata.namespace, cluster: currentContext()}}" v-show="isTerminal" target="_blank">
-							<button id="terminal" class="btn btn-tool" v-show="isTerminal"><i class="fas fa-terminal"></i></button>
-						</nuxt-link>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
 					</span>
 					<button type="button" class="btn btn-tool" @click="$emit('close')"><i class="fas fa-times"></i></button>
 				</div>
 			</div>
-			<b-popover triggers="hover" target="terminal" placement="bottomleft" boundary="window" boundary-padding="0">
-				<ul class="list-unstyled m-0">
-					<li v-for="(val,idx) in containers" v-bind:key="idx" class="mb-1">
-						<span v-if="val.status.value === 'running'">
-							<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: name, namespace: raw.metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
-							<button type="button" class="btn btn-tool"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</button>
-							</nuxt-link>
-						</span>
-					</li>
-				</ul>
-			</b-popover>
 			<!-- error message-->
 			<div class="col-md-12 mt-5 lh-vh-50" v-show="errorcheck"><p class="align-middle text-sm-center">Resource loading has failed: <b>{{ errorMessage }}</b></p></div>
 
@@ -110,12 +96,9 @@ export default {
 			url: "",
 			origin: { metadata: {}, spec: {} },
 			raw: { metadata: {}, spec: {} },
-			containers: [],
-			containerCount: 0,
 			deleteLink: '',
 			isYaml: false,
 			isJSON: false,
-			isTerminal: false,
 			deleteOverlay: {
 				visible : false,
 				processing : false,
@@ -191,15 +174,6 @@ export default {
 			this.isCreated = true;
 			this.onSync()
 		})
-		this.$nuxt.$on('Containers', (data) => {
-			this.containerCount = 0
-			this.containers = data
-			if(!data) return
-			data.forEach(el => {
-				if(el.status.value === 'running') this.containerCount++;
-			})
-			if(this.containerCount === 0) this.isTerminal = false;
-		})
 	},
 	beforeUpdate() {
 		let el = document.getElementsByTagName("body")
@@ -232,7 +206,6 @@ export default {
 					else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
 					else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
 					else this.raw.spec = resp.data.spec || {};
-					this.isTerminal = this.title === 'Pod';
 					if (this.isCreated) {
 						this.$nuxt.$emit("onReadCompleted", this.origin);
 						this.$nuxt.$emit('resetHistory',this.raw);
@@ -327,7 +300,6 @@ export default {
 	},
 	beforeDestroy(){
 		this.$nuxt.$off("onCreated",'')
-		this.$nuxt.$off('Containers','')
 	}
 }
 
