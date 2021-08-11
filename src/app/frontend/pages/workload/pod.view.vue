@@ -14,7 +14,8 @@
 		<dt class="col-sm-2">Pod IP</dt>
 		<dd class="col-sm-10">
 			<ul class="list-unstyled mb-0">
-				<li v-for="(v, k) in info.podIP" v-bind:key="k" class="mb-1">{{ v.ip }}</li>
+				<li v-if="typeof info.podIP == 'string'" class="mb-1">{{ info.podIP }}</li>
+				<li else v-for="(v, k) in info.podIP" v-bind:key="k" class="mb-1">{{ v.ip }}</li>
 			</ul>
 		</dd>
 		<dt class="col-sm-2">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
@@ -41,9 +42,9 @@
 				<div class="card-body group">
 					<ul>
 						<li v-for="(val, idx) in initContainers" v-bind:key="idx">
-							<div class="title"><b-badge :variant="val.status.badge" class="mr-1">&nbsp;</b-badge><span>{{ val.name }}</span></div>
+							<div class="title"><span v-bind:class=" {'badge-success': (val.status.value=='running' || val.status.value=='complete' || val.status.value=='ready'), 'badge-danger':val.status.value=='failed', 'badge-secondary':(val.status.value=='unknown' || val.status.value=='terminated'),'badge-warning':(val.status.value=='pending' || val.status.value=='waiting')}" class="badge mr-1">&nbsp;</span>{{ val.name }}</div>
 							<dl class="row">
-								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
+								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="{'text-success': (val.status.value =='running' || val.status.value=='complete' || val.status.value=='ready'), 'text-danger':val.status.value=='failed', 'text-warning': (val.status.value=='pending' || val.status.value=='waiting'),'text-secondary' :(val.status.value=='unknown' || val.status.value=='terminated')}" > {{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
 								<dt v-if="val.lastState" class="col-sm-2">Last Status</dt>
 								<dd v-if="val.lastState" class="col-sm-10">
 									<ul class="list-unstyled mb-0">
@@ -68,8 +69,8 @@
 								<dt class="col-sm-2">Mounts</dt>
 								<dd class="col-sm-10">
 									<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
-										<li style="font-weight-bold">{{ m.path }}</li>
-										<li>from {{ m.name }}({{m.ro}})</li>
+										<li style="font-weight-bold">{{ m.mountPath }}</li>
+										<li>from {{ m.name }}({{m.readOnly ? "ro" : "rw"}})</li>
 									</ul>
 								</dd>
 								<dt v-if="val.command" class="col-sm-2">Command</dt><dd v-if="val.command" class="col-sm-10">{{ val.command }}</dd>
@@ -89,9 +90,16 @@
 				<div class="card-body group">
 					<ul>
 						<li v-for="(val, idx) in containers" v-bind:key="idx">
-							<div class="title"><b-badge :variant="val.status.badge" class="mr-1">&nbsp;</b-badge>{{ val.name }}</div>
+							<div class="title">
+								<span v-bind:class=" {'badge-success': (val.status.value=='running' || val.status.value=='complete' || val.status.value=='ready'), 'badge-danger':val.status.value=='failed', 'badge-secondary':(val.status.value=='unknown' || val.status.value=='terminated'),'badge-warning':(val.status.value=='pending' || val.status.value=='waiting')}" class="badge mr-1">&nbsp;</span>{{ val.name }}
+								<span v-if="val.status.value === 'running'">
+									<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: metadata.name, namespace: metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
+										<button id="terminal" class="btn btn-tool" ><i class="fas fa-terminal" style="color:black"></i></button>
+									</nuxt-link>
+								</span>
+							</div>
 							<dl class="row">
-								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
+								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="{'text-success': (val.status.value =='running' || val.status.value=='complete' || val.status.value=='ready'), 'text-danger':val.status.value=='failed', 'text-warning': (val.status.value=='pending' || val.status.value=='waiting'),'text-secondary' :(val.status.value=='unknown' || val.status.value=='terminated')}" > {{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
 								<dt v-if="val.lastState" class="col-sm-2">Last Status</dt>
 								<dd v-if="val.lastState" class="col-sm-10">
 									<ul class="list-unstyled mb-0">
@@ -102,7 +110,7 @@
 								<dt v-if="val.ports" class="col-sm-2">Ports</dt>
 								<dd v-if="val.ports" class="col-sm-10">
 									<ul class="list-unstyled mb-0">
-										<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.port }}/{{ p.protocol }}</li>
+										<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.containerPort }}/{{ p.protocol }}</li>
 									</ul>
 								</dd>
 								<dt class="col-sm-2">Environment</dt>
@@ -115,8 +123,8 @@
 								<dt class="col-sm-2">Mounts</dt>
 								<dd class="col-sm-10">
 									<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
-										<li class="font-weight-bold">{{ m.path }}</li>
-										<li>from {{ m.name }}({{m.ro}})</li>
+										<li class="font-weight-bold">{{ m.mountPath }}</li>
+										<li>from {{ m.name }}({{m.readOnly ? "ro" : "rw"}})</li>
 									</ul>
 								</dd>
 								<dt v-if="val.command" class="col-sm-2">Command</dt><dd v-if="val.command" class="col-sm-10">{{ val.command }}</dd>
@@ -208,13 +216,13 @@ export default {
 			this.containers = this.getContainers(data) || {};
 			this.status = this.toPodStatus(data.metadata.deletionTimestamp, data.status);
 			this.info = {
-				podIP: data.status.podIPs || ["-"],
+				podIP: data.status.podIPs || data.status.podIP || "-",
 				priorityClass: data.spec.priorityClassName || '-',
 				qosClass: data.status.qosClass || '-',
 				conditions: data.status.conditions || [],
 				secret: data.spec.volumes? data.spec.volumes.filter(el=>{return el.secret}): []
 			};
-			this.initContainers = this.getInitContainers(data);
+			this.initContainers = this.getContainers(data, true);
 
 			// volumns
 			this.volumes = [];
@@ -234,85 +242,36 @@ export default {
 		this.$nuxt.$emit("onCreated","")
 	},
 	methods: {
-		getInitContainers(d) {
-			let statusCons = []
+		getContainers(d, type) {
 			let specCons = []
-			let statusCon = d.status.initContainerStatuses
-			let specCon = d.spec.initContainers
-			if(statusCon) {
-				statusCon.forEach(el => {
-					statusCons.push({
-						name: el.name,
-						status: this.checkStatus(Object.keys(el.state),el),
-						lastState: this.getLast(el.lastState),
-						image: el.image,
-					})
-				})
-			}
-			if(specCon) {
-				specCon.forEach(el => {
-					specCons.push({
-						name: el.name,
-						args: el.args,
-						image: el.image,
-						env: this.getEnv(el.env),
-						ports: this.getPorts(el.ports),
-						mounts: this.getMounts(el.volumeMounts),
-						command: this.getCommand(el.command),
-						status: {value:'',style:''},
-					})
-				})
-			}
+			let statusCon = type ?  d.status.initContainerStatuses : d.status.containerStatuses;
+			let specCon = type ? d.spec.initContainers || d.status.initContainerStatuses || [] : d.spec.containers || d.status.containerStatuses || []
+			
 			if(specCon) {
 				for (let i = 0; i < specCon.length; i++) {
-					Object.assign(specCons[i], statusCons[i])
+					Object.assign(specCon[i], statusCon[i])
 				}
-				return specCons
-			} else if(statusCon) {
-				return statusCon
-			} else return false
-		},
-		getContainers(d) {
-			let statusCons = []
-			let specCons = []
-			let statusCon = d.status.containerStatuses
-			let specCon = d.spec.containers
-			if(statusCon) {
-				statusCon.forEach(el => {
-					statusCons.push({
-						name: el.name,
-						status: this.checkStatus(Object.keys(el.state),el),
-						lastState: this.getLast(el.lastState),
-						image: el.image,
-					})
-				})
-			}
-			if(specCon) {
-				specCon.forEach(el => {
+
+				specCon.forEach((specCon, i) => {
 					specCons.push({
-						name: el.name,
-						args: el.args,
-						image: el.image,
-						env: this.getEnv(el.env),
-						ports: this.getPorts(el.ports),
-						mounts: this.getMounts(el.volumeMounts),
-						command: this.getCommand(el.command),
-						status: {value:'',style:''},
-						liveness: this.getProbe(el.livenessProbe),
-						readiness: this.getProbe(el.readinessProbe),
-						startup: this.getProbe(el.startupProbe),
+						name : specCon.name,
+						args: specCon.args,
+						image: specCon.image,
+						env: this.getEnv(specCon.env),
+						ports: specCon.ports,
+						mounts: specCon.volumeMounts,
+						command: this.getCommand(specCon.command),
+						status: this.checkStatus(Object.keys(specCon.state),specCon) || {value:'',style:''},
+						lastState: this.getLast(specCon.lastState)
 					})
+					if(!type){
+						specCons[i].liveness = this.getProbe(specCon.livenessProbe),
+						specCons[i].readiness = this.getProbe(specCon.readinessProbe),
+						specCons[i].startup = this.getProbe(specCon.startupProbe)
+					}
 				})
 			}
-			if(specCon) {
-				for (let i = 0; i < specCon.length; i++) {
-					Object.assign(specCons[i], statusCons[i])
-				}
-				this.$nuxt.$emit('Containers',specCons)
-				return specCons
-			} else if(statusCon) {
-				return statusCon
-			} else return false
+			return specCons;
 		},
 		copy(type) {
 			let copyText
@@ -345,34 +304,6 @@ export default {
 			}
 			return false
 		},
-		getPorts(ports) {
-			let po = [];
-			if(ports) {
-				ports.forEach(el => {
-					po.push({
-						port: el.containerPort,
-						name: el.name,
-						protocol: el.protocol
-					})
-				})
-				return po
-			}
-			return false
-		},
-		getMounts(m) {
-			let list =[];
-			if(m) {
-				m.forEach(el => {
-					list.push({
-						path: el.mountPath,
-						name: el.name,
-						ro: (el.readOnly ? 'ro' : 'rw')
-					})
-				})
-				return list
-			}
-			return false
-		},
 		getCommand(c) {
 			let list = ""
 			if(c) {
@@ -384,51 +315,13 @@ export default {
 			return false
 		},
 		checkStatus(status,el) {
-			status = status[0]
-			let reason = this.checkReason(el.state)
-			let rd;
-			if(el.ready) {
-				rd = 'ready';
-			} else rd = ''
-			if(status === "failed") {
-				return {
-					"value": status,
-					"style": "text-danger",
-					"ready": rd,
-					"reason": reason,
-					'badge': "danger",
+			return{
+				value : status[0],
+				ready : el.ready ? 'ready' : '',
+				reason : {
+					reason: status[Object.keys(status)].reason,
+					exitCode: status[Object.keys(status)].exitCode,
 				}
-			} else if(status === "pending" || status === 'waiting') {
-				return {
-					"value": status,
-					"style": "text-warning",
-					"ready": rd,
-					"reason": reason,
-					'badge': "warning",
-				}
-			} else if(status === "running" || status === "completed" || status ==="ready") {
-				return {
-					"value": status,
-					"style": "text-success",
-					"ready": rd,
-					"reason": reason,
-					'badge': "success",
-				}
-			}else {
-				return {
-					"value": status,
-					"style": "text-secondary",
-					"ready": rd,
-					"reason": reason,
-					'badge': "secondary",
-				}
-			}
-		},
-		checkReason(state) {
-			let key = Object.keys(state)
-			return {
-				reason: state[key].reason,
-				exitCode: state[key].exitCode,
 			}
 		},
 		getLast(s) {
