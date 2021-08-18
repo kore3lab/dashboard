@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	<c-metadata dtCols="2" ddCols="10">
 	</c-metadata>
 	<!-- 2. rules -->
 	<div class="row">
@@ -24,7 +24,7 @@
 		</div>
 	</div>
 	<!-- 3. events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 
 </div>
 </template>
@@ -39,21 +39,18 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
-			rules: [],
+			rules: []
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.rules = data.rules? data.rules: {};
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

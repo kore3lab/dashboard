@@ -104,7 +104,6 @@ export default {
 				processing : false,
 				timer: null
 			},
-			localUrl: "",
 			localSrc: "",
 			errorcheck: false,
 			errorMessage: "",
@@ -160,20 +159,11 @@ export default {
 		},
 		url(newVal) {
 			if(!newVal) return;
-			if(newVal !== this.localUrl) {
-				this.localUrl =  newVal;
-				this.onSync();
-			} else {
-				this.onSync();
-			}
+			this.onSync();
 		},
 	},
 	mounted() {
-		this.$emit('close');
-		this.$nuxt.$on("onCreated",() => {
-			this.isCreated = true;
-			this.onSync()
-		})
+		this.$emit("close");
 	},
 	beforeUpdate() {
 		let el = document.getElementsByTagName("body")
@@ -192,7 +182,7 @@ export default {
 			this.isYaml = false;
 			if (this.delay === 1) return;
 			this.delay++;
-			this.$axios.get(this.localUrl)
+			this.$axios.get(this.url)
 				.then(resp => {
 					this.errorcheck = false;
 					this.origin = Object.assign({}, resp.data);
@@ -206,14 +196,11 @@ export default {
 					else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
 					else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
 					else this.raw.spec = resp.data.spec || {};
-					if (this.isCreated) {
-						this.$nuxt.$emit("onReadCompleted", this.origin);
-						this.$nuxt.$emit('resetHistory',this.raw);
-					}
 					this.delay = 0;
 					// calcuate selfLink (deprecated metadata.selfLink)
 					let c = this.getResource(this.raw)
 					this.selfLink = this.getApiUrl(c.group, c.resource, this.raw.metadata.namespace, c.name);
+					this.$nuxt.$emit("view-data-read-completed", this.raw);
 				})
 				.catch(e => {
 					this.isError(e);
@@ -297,9 +284,6 @@ export default {
 			this.raw = Object.assign({}, this.origin);
 			this.disabled = false
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("onCreated",'')
 	}
 }
 

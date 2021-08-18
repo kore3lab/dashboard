@@ -29,19 +29,20 @@ export default {
 			events: []
 		}
 	},
-	watch: {
-		value(newVal) {
-
+	mounted() {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
+			if(!data) return
 			this.events = [];
-			this.$axios.get(this.getApiUrl('','events','', '',`fieldSelector=involvedObject.uid=${newVal}`))
+			this.$axios.get(this.getApiUrl('','events','', '',`fieldSelector=involvedObject.uid=${data.metadata.uid}`))
 				.then(resp => {
 					this.events = resp.data.items;
 				}).catch(ex => {
 					console.error(ex.message);
 				});
-
-		}
+		});
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("view-data-read-completed");
 	}
-
 }
 </script>

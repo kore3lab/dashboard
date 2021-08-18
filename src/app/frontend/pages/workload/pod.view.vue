@@ -1,9 +1,9 @@
 <template>
 <div>
 	<!-- 1. chart -->
-	<c-charts class="row" v-model="chartsUrl"></c-charts>
+	<c-charts class="row"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata v-model="metadata" :workload="spec" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Status</dt>
 		<dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
 		<dt class="col-sm-2">Node</dt>
@@ -174,7 +174,7 @@
 	</div>
 
 	<!-- 6. events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 
 </div>
 </template>
@@ -197,7 +197,6 @@ export default {
 			nodeName: "",
 			metadata: {},
 			spec: {},
-			chartsUrl: "",
 			volumes: [],
 			initContainers: [],
 			containers: [],
@@ -207,11 +206,9 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if (!data) return
 			this.metadata = data.metadata;
-			this.spec = data.spec;
-			this.chartsUrl = `namespaces/${data.metadata.namespace}/pods/${data.metadata.name}`;
 			this.nodeName = data.spec.nodeName;
 			this.containers = this.getContainers(data) || {};
 			this.status = this.toPodStatus(data.metadata.deletionTimestamp, data.status);
@@ -239,7 +236,6 @@ export default {
 			}
 
 		});
-		this.$nuxt.$emit("onCreated","")
 	},
 	methods: {
 		getContainers(d, type) {
@@ -372,7 +368,7 @@ export default {
 		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
-	},
+		this.$nuxt.$off("view-data-read-completed");
+	}
 }
 </script>

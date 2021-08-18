@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+	<c-metadata dtCols="3" ddCols="9">
 		<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
 		<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
 		<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
@@ -59,7 +59,6 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			info: [],
 			printerColumns: [],
 			validation: {},
@@ -77,9 +76,8 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.info = {
 				group: data.spec.group,
 				version: data.spec.versions[0]?.name ?? data.spec.version,
@@ -92,7 +90,6 @@ export default {
 			this.printerColumns = this.getPrinterColumns(data.spec)
 			this.validation = data.spec.validation || data.spec.versions?.[0]?.schema || {}
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		getPrinterColumns(spec) {
@@ -103,7 +100,7 @@ export default {
 		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

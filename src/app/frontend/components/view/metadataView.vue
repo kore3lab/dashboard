@@ -5,22 +5,22 @@
 			<div class="card-body p-2">
 				<dl class="row mb-0">
 					<!-- metdata (default) -->
-					<dt v-bind:class="dtClass">Create at</dt><dd v-bind:class="ddClass">{{ this.getTimestampString(value.creationTimestamp)}} ago ({{ value.creationTimestamp }})</dd>
-					<dt v-bind:class="dtClass">Name</dt><dd v-bind:class="ddClass">{{ value.name }}</dd>
-					<dt v-if="value.namespace" v-bind:class="dtClass">Namespace</dt><dd v-if="value.namespace" v-bind:class="ddClass">{{ value.namespace }}</dd>
-					<dt v-if="value.labels && value.labels!={}" v-bind:class="dtClass">Labels</dt>
-					<dd v-if="value.labels && value.labels!={}" v-bind:class="ddClass">
-						<span v-for="(value, name) in value.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
+					<dt v-bind:class="dtClass">Create at</dt><dd v-bind:class="ddClass">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
+					<dt v-bind:class="dtClass">Name</dt><dd v-bind:class="ddClass">{{ metadata.name }}</dd>
+					<dt v-if="metadata.namespace" v-bind:class="dtClass">Namespace</dt><dd v-if="metadata.namespace" v-bind:class="ddClass">{{ metadata.namespace }}</dd>
+					<dt v-if="metadata.labels && metadata.labels!={}" v-bind:class="dtClass">Labels</dt>
+					<dd v-if="metadata.labels && metadata.labels!={}" v-bind:class="ddClass">
+						<span v-for="(value, name) in metadata.labels" v-bind:key="name" class="label">{{ name }}={{ value }}</span>
 					</dd>
-					<dt v-if="value.annotations" v-bind:class="dtClass">Annotations</dt>
-					<dd v-if="value.annotations" v-bind:class="ddClass">
-						<a v-if="value.annotations" href="#"><b-icon :icon="isEllipseAnnotations?'arrows-expand':'arrows-collapse'" class="float-right mt-2" @click="isEllipseAnnotations=!isEllipseAnnotations"></b-icon></a>
+					<dt v-if="metadata.annotations" v-bind:class="dtClass">Annotations</dt>
+					<dd v-if="metadata.annotations" v-bind:class="ddClass">
+						<a v-if="metadata.annotations" href="#"><b-icon :icon="isEllipseAnnotations?'arrows-expand':'arrows-collapse'" class="float-right mt-2" @click="isEllipseAnnotations=!isEllipseAnnotations"></b-icon></a>
 						<ul class="list-unstyled mb-0">
-							<li v-for="(v, k) in value.annotations" v-bind:key="k" v-bind:class="{'text-truncate':isEllipseAnnotations}">{{ k }}=<span class="font-weight-light">{{ v }}</span></li>
+							<li v-for="(v, k) in metadata.annotations" v-bind:key="k" v-bind:class="{'text-truncate':isEllipseAnnotations}">{{ k }}=<span class="font-weight-light">{{ v }}</span></li>
 						</ul>
 					</dd>
-					<dt v-if="value.ownerReferences" v-bind:class="dtClass">Controlled By</dt>
-					<dd v-if="value.ownerReferences" v-bind:class="ddClass">{{ controlledBy.kind }} <a href="#" @click="$emit('navigate', getViewLink(controlledBy.group, controlledBy.resource, value.namespace, controlledBy.name))">{{ controlledBy.name }}</a></dd>
+					<dt v-if="metadata.ownerReferences" v-bind:class="dtClass">Controlled By</dt>
+					<dd v-if="metadata.ownerReferences" v-bind:class="ddClass">{{ controlledBy.kind }} <a href="#" @click="$emit('navigate', getViewLink(controlledBy.group, controlledBy.resource, metadata.namespace, controlledBy.name))">{{ controlledBy.name }}</a></dd>
 					<!-- workload #1/2 (selector, nodeSelector, images) -->
 					<dt v-if="Object.keys(workloadSpec.selector).length>0" v-bind:class="dtClass">Selector</dt>
 					<dd v-if="Object.keys(workloadSpec.selector).length>0" v-bind:class="ddClass">
@@ -55,7 +55,7 @@
 							<c-jsontree v-model="workloadSpec.affinity" class="card-body p-2 border"></c-jsontree>
 						</b-collapse>
 					</dd>
-					<dt v-bind:class="dtClass">UID</dt><dd  v-bind:class="ddClass">{{ value.uid }}</dd>
+					<dt v-bind:class="dtClass">UID</dt><dd  v-bind:class="ddClass">{{ metadata.uid }}</dd>
 				</dl>
 			</div>
 		</div>
@@ -66,12 +66,13 @@
 import VueJsonTree		from "@/components/jsontree";
 
 export default {
-	props:["value","dtCols","ddCols","size","workload","usage"],
+	props:["dtCols","ddCols","size"],
 	components: {
 		"c-jsontree": { extends: VueJsonTree }
 	},
 	data () {
 		return {
+			metadata: {},
 			allClass: `col-${this.size?this.size:'sm'}-12`,
 			dtClass: `col-${this.size?this.size:'sm'}-${this.dtCols?this.dtCols:'2'}`,
 			ddClass: `col-${this.size?this.size:'sm'}-${this.ddCols?this.ddCols:'10'}`,
@@ -91,36 +92,37 @@ export default {
 			}
 		}
 	},
-	watch: {
-		value(newVal) {
-			this.controlledBy = newVal.ownerReferences?this.getResource(newVal.ownerReferences[0]):{};
-		},
-		workload(newVal) {
-			let spec = newVal;
-			if (spec && spec.template && spec.template.spec) {
-				this.workloadSpec = {
-					tolerations : spec.template.spec.tolerations || [],
-					affinity : spec.template.spec.affinity || {},
-					nodeSelector: spec.template.spec.nodeSelector || {},
-					images: spec.template.spec.containers?spec.template.spec.containers.map(d=>d.image):[]
+	mounted() {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
+			if(!data) return
+			this.metadata = data.metadata;
+			this.controlledBy = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
+			this.workloadSpec = { tolerations : [], affinity : {}, nodeSelector: {}, images: [], selector:{} };
+			if (["Deployment","Job","Pod","ReplicaSet","StatefulSet"].includes(data.kind) && data.spec) {
+				let spec = data.spec;
+				if (spec.template && spec.template.spec) {
+					this.workloadSpec = {
+						tolerations : spec.template.spec.tolerations || [],
+						affinity : spec.template.spec.affinity || {},
+						nodeSelector: spec.template.spec.nodeSelector || {},
+						images: spec.template.spec.containers?spec.template.spec.containers.map(d=>d.image):[]
+					}
+				} else if (!spec.template) {
+					this.workloadSpec = {
+						tolerations : spec.tolerations || [],
+						affinity : spec.affinity || {},
+						nodeSelector: spec.nodeSelector || {},
+						images: spec.containers?spec.containers.map(d=>d.image):[]
+					}
 				}
-			} else if (spec && !spec.template) {
-				this.workloadSpec = {
-					tolerations : spec.tolerations || [],
-					affinity : spec.affinity || {},
-					nodeSelector: spec.nodeSelector || {},
-					images: spec.containers?spec.containers.map(d=>d.image):[]
-				}
-			} else {
-				this.workloadSpec = {
-					tolerations : [],
-					affinity : {},
-					nodeSelector: {},
-					images: []
-				}
+				this.workloadSpec.selector =  spec.selector ? spec.selector.matchLabels: {}
 			}
-			this.workloadSpec.selector =  (spec && spec.selector) ? spec.selector.matchLabels: {}
-		},
+
+
+		});
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("view-data-read-completed");
 	}
 }
 </script>

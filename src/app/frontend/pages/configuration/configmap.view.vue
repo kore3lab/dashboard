@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])"></c-metadata>
+	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])"></c-metadata>
 	<!-- 2. data -->
 	<div v-show="configData" class="row">
 		<div class="col-md-12">
@@ -20,7 +20,7 @@
 		</div>
 	</div>
 	<!-- 4. events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 </div>
 </template>
 <script>
@@ -45,13 +45,12 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
 			this.origin = data;
 			this.metadata = data.metadata;
 			this.configData = this.getData(data.data);
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		getData(data) {
@@ -80,7 +79,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

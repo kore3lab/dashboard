@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9"  @navigate="$emit('navigate', arguments[0])">
+	<c-metadata dtCols="3" ddCols="9"  @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="{ 'text-success': status.phase=='Active' }">{{ status.phase }}</dd>
 		<dt class="col-sm-3">Resource Quotas</dt>
 		<dd class="col-sm-9"><span v-if="quotas.length==0">-</span><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
@@ -19,16 +19,14 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			status: {},
 			quotas: [],
 			limits: []
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.status = data.status;
 			this.quotas = [];
 			this.$axios.get(this.getApiUrl("","resourcequotas",data.metadata.name))
@@ -47,11 +45,10 @@ export default {
 			});
 
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

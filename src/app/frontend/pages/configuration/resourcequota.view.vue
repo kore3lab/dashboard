@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10">
+	<c-metadata dtCols="2" ddCols="10">
 		<dt class="col-sm-2">Quotas</dt>
 		<dd class="col-sm-10">
 			<ul v-for="(val, idx) in quotas" v-bind:key="idx" class="list-unstyled mb-0">
@@ -35,7 +35,6 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			quotas: [],
 			scopeSelector: [],
 			fields: [
@@ -46,13 +45,11 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.quotas = this.getQuotas(data.status)
 			this.scopeSelector = this.getScope(data.spec.scopeSelector)
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		getQuotas(status) {
@@ -120,7 +117,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

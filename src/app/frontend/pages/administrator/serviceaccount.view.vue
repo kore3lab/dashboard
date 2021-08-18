@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
 		<dt v-if="imagePullSecrets.length>0" class="col-sm-3">ImagePullSecrets</dt>
 		<dd v-if="imagePullSecrets.length>0" class="col-sm-9"><span v-for="(value, idx) in imagePullSecrets" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('','secrets',metadata.namespace,value.name))">{{ value.name }}</a></span></dd>
 	</c-metadata>
@@ -30,7 +30,7 @@
 		</div>
 	</div>
 	<!--3. events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 
 </div>
 </template>
@@ -52,13 +52,12 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.imagePullSecrets = data.imagePullSecrets? data.imagePullSecrets: [];
 			this.secrets = this.secrets ?this.getSecrets(data.secrets):[];
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		getSecrets(secrets) {
@@ -84,7 +83,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

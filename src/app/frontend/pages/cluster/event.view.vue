@@ -55,7 +55,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.info = {
@@ -70,11 +70,10 @@ export default {
 			this.involvedObject = [this.getResource(data.involvedObject)];
 			this.involvedObject[0]["fieldPath"] = data.involvedObject["fieldPath"]
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1.metdata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Schedule</dt><dd class="col-sm-10">{{ info.schedule }}</dd>
 		<dt class="col-sm-2">Active</dt><dd class="col-sm-10">{{ info.active }}</dd>
 		<dt class="col-sm-2">Suspend</dt><dd class="col-sm-10">{{ info.suspend }}</dd>
@@ -33,7 +33,7 @@
 		</div>
 	</div>
 	<!-- 3.events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 </div>
 </template>
 <script>
@@ -47,15 +47,13 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			info: [],
 			jobs: []
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.info = {
 				schedule: data.spec.schedule,
 				suspend: data.spec.suspend,
@@ -64,7 +62,7 @@ export default {
 			};
 
 			//job-list
-			this.$axios.get(this.getApiUrl("batch","jobs",this.metadata.namespace))
+			this.$axios.get(this.getApiUrl("batch","jobs",data.metadata.namespace))
 				.then(resp => {
 					let list = [];
 					resp.data.items.forEach(el => {
@@ -84,11 +82,10 @@ export default {
 				});
 
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
-	},
+		this.$nuxt.$off("view-data-read-completed");
+	}
 }
 </script>

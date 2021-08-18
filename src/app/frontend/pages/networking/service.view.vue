@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadta -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Selector</dt>
 		<dd class="col-sm-10">
 			<span v-for="(val, idx) in info.selector" v-bind:key="idx" class="border-box background">{{ val }}</span>
@@ -49,7 +49,7 @@
 		</div>
 	</div>
 	<!-- 4. events -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 
 </div>
 </template>
@@ -64,7 +64,6 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			info: [],
 			connection: [],
 			endpoints: [],
@@ -75,9 +74,8 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			this.info = {
 				selector: data.spec.selector? this.stringifyLabels(data.spec.selector):[] ,
 				type: data.spec.type || "",
@@ -89,7 +87,6 @@ export default {
 			};
 			this.endpoints = this.getEndpoints(data);
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
 		getEndpoints(data) {
@@ -116,7 +113,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>
