@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Networking"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -48,12 +48,12 @@
 									</template>
 									<template v-slot:cell(loadBalancers)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }} </li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value.hostname || value.ip }} </li>
 										</ul>
 									</template>
 									<template v-slot:cell(rules)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, idx) in data.item.rules" v-bind:key="idx"><b-link @click="onLink(value.val)">{{ value.val }}</b-link> ⇢ {{ value.target }}</li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx"><b-link @click="onLink(value.fr)">{{ value.fr }}</b-link> ⇢ {{ value.to }}</li>
 										</ul>
 									</template>
 									<template v-slot:cell(endpoints)="data">
@@ -95,7 +95,7 @@ export default {
 				{key: "name", label: "Name", sortable: true},
 				{key: "namespace", label: "Namespace", sortable: true},
 				{key: "loadBalancers", label: "LoadBalancers"},
-				{key: "rules", label: "Rules"},
+				{key: "rules", label: "Rules", formatter: this.formatRules },
 				{key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime},
 			],
 			isBusy: false,
@@ -138,8 +138,9 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								loadBalancers: this.getLoadBalancers(el.status.loadBalancer),
-								rules: this.getRules(el.spec),
+								loadBalancers: el.status.loadBalancer || el.status.loadBalancer.ingress ? el.status.loadBalancer.ingress: [],
+								rules: el.spec.rules,
+								tls: el.spec.tls,
 								creationTimestamp: el.metadata.creationTimestamp,
 							});
 						});
@@ -152,9 +153,9 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getRules(data) {
-			let rules = data.rules
-			let tls = data.tls
+		formatRules(value, key, item) {
+			let rules = item.rules
+			let tls = item.tls
 			if(!rules) return [];
 
 			let protocol = 'http';
@@ -168,34 +169,20 @@ export default {
 
 				if (rule.http && rule.http.paths) {
 					rule.http.paths.forEach(path => {
-						const { serviceName, servicePort } = this.getBackendServiceNamePort(path.backend);
-
+						const serviceName = "service" in path.backend ? path.backend.service.name : path.backend.serviceName;
+						const servicePort = "service" in path.backend ? path.backend.service.port.number ?? path.backend.service.port.name : path.backend.servicePort;
 						routes.push({
-								val: `${protocol}://${host}${path.path || "/"}`,
-								target: `${serviceName}:${servicePort}`
+								fr: `${protocol}://${host}${path.path || "/"}`,
+								to: `${serviceName}:${servicePort}`
 						})
 					});
 				}
 			});
 			return routes;
-		},
-		getBackendServiceNamePort(backend) {
-			const serviceName = "service" in backend ? backend.service.name : backend.serviceName;
-			const servicePort = "service" in backend ? backend.service.port.number ?? backend.service.port.name : backend.servicePort;
-
-			return { serviceName, servicePort };
-		},
-		getLoadBalancers(lb) {
-			if (lb) {
-				return (lb.ingress ?? []).map(address => (
-						address.hostname || address.ip
-				));
-			}
-		},
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

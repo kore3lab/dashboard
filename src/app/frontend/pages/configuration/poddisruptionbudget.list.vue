@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -79,10 +79,10 @@ export default {
 			fieldsAll: [
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
-				{ key: "minAvailable", label: "Min Available", sortable: true  },
-				{ key: "maxUnavailable", label: "Max Unavailable", sortable: true  },
-				{ key: "currentHealthy", label: "Current Healthy", sortable: true  },
-				{ key: "desiredHealthy", label: "Desired Healthy", sortable: true  },
+				{ key: "minAvailable", label: "Min Available", sortable: true },
+				{ key: "maxUnavailable", label: "Max Unavailable", sortable: true },
+				{ key: "currentHealthy", label: "Current Healthy", sortable: true },
+				{ key: "desiredHealthy", label: "Desired Healthy", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			isBusy: false,
@@ -144,4 +144,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

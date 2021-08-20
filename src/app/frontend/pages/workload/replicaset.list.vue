@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -92,9 +92,9 @@ export default {
 				{ key: "desired", label: "Desired", sortable: true },
 				{ key: "current", label: "Current", sortable: true },
 				{ key: "ready", label: "Ready", sortable: true },
-				{ key: "creationTimestamp", label: "Age" , sortable: true, formatter: this.getElapsedTime },
+				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
-			isBusy: false,
+			isBusy: true,
 			items: [],
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
@@ -152,4 +152,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

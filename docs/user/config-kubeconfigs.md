@@ -24,7 +24,7 @@ kubeconfig=strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,fil
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --kubeconfig=/app/.kube/config
       volumeMounts:
@@ -49,7 +49,7 @@ $ kubectl create configmap kore-board-kubeconfig  -n kore --from-file=config=${H
 spec:
   containers:
     - name: backend
-      image: ghcr.io/acornsoftlab/kore-board.backend:latest
+      image: ghcr.io/kore3lab/kore-board.backend:latest
       args:
         - --kubeconfig=strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config
 ```

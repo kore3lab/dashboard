@@ -1,605 +1,273 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row mb-0">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<b-tabs content-class="mt-3" >
-							<b-tab title="CPU" active title-link-class="border-top-0 border-right-0  border-left-0">
-								<div v-if="isCpu" class="chart">
-									<c-linechart id="cpu" :chart-data="chart.data.cpu" :options="chart.options.cpu" class="mw-100 h-chart"></c-linechart>
-								</div>
-								<div v-if="!isCpu" class="text-center"><p> Metrics not available at the moment</p></div>
-							</b-tab>
-							<b-tab title="Memory"  title-link-class="border-top-0 border-right-0  border-left-0">
-								<div v-if="isMemory" class="chart">
-									<c-linechart id="memory" :chart-data="chart.data.memory" :options="chart.options.memory" class="mw-100 h-chart"></c-linechart>
-								</div>
-								<div v-if="!isMemory" class="text-center"><p> Metrics not available at the moment</p></div>
-							</b-tab>
-						</b-tabs>
-					</div>
-				</div>
-			</div>
-		</div>
+<div>
+	<!-- 1. chart -->
+	<c-charts class="row"></c-charts>
+	<!-- 2. metadata -->
+	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+		<dt class="col-sm-2">Status</dt>
+		<dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
+		<dt class="col-sm-2">Node</dt>
+		<dd class="col-sm-10">
+			<a v-if="nodeName" href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', nodeName))">{{ nodeName }}</a>
+			<span v-if="!nodeName">-</span>
+		</dd>
+		<dt class="col-sm-2">Pod IP</dt>
+		<dd class="col-sm-10">
+			<ul class="list-unstyled mb-0">
+				<li v-if="typeof info.podIP == 'string'" class="mb-1">{{ info.podIP }}</li>
+				<li else v-for="(v, k) in info.podIP" v-bind:key="k" class="mb-1">{{ v.ip }}</li>
+			</ul>
+		</dd>
+		<dt class="col-sm-2">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
+		<dt class="col-sm-2">QoS Class</dt><dd class="col-sm-10">{{ info.qosClass }}</dd>
+		<dt v-if="info.conditions" class="col-sm-2">Conditions</dt>
+		<dd v-if="info.conditions" class="col-sm-10">
+			<span v-for="(v, k) in info.conditions" v-bind:key="k" class="border-box">{{ v.type }}</span>
+		</dd>
+		<dt v-if="info.secret" class="col-sm-2">Secrets</dt>
+		<dd v-if="info.secret" class="col-sm-10" >
+			<ul class="list-unstyled mb-0">
+				<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
+					<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d.secret.secretName))">{{ d.secret.secretName }}</a>
+				</li>
+			</ul>
+		</dd>
+	</c-metadata>
 
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-							<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-2 text-truncate">Annotations</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Labels</dt>
-							<dd class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">UID</dt><dd class="col-sm-10">{{ metadata.uid }}</dd>
-							<dt v-if="metadata.ownerReferences" class="col-sm-2 text-truncate">Controlled By</dt>
-							<dd v-if="metadata.ownerReferences" class="col-sm-10">{{ metadata.ownerReferences[0].kind }} <a href="#" @click="$emit('navigate', getViewLink(controller.g, controller.k, metadata.namespace, metadata.ownerReferences[0].name))">{{ metadata.ownerReferences[0].name }}</a></dd>
-							<dt class="col-sm-2 text-truncate">Status</dt><dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
-							<dt class="col-sm-2">Node</dt>
-							<dd v-if="raw.spec.nodeName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', 'nodes', '', raw.spec.nodeName? raw.spec.nodeName : '' ))">{{ raw.spec.nodeName}}</a></dd>
-							<dd v-if="!raw.spec.nodeName" class="col-sm-10">-</dd>
-							<dt class="col-sm-2 text-truncate">Pod IP</dt>
-							<dd class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(d, idx) in info.podIP" v-bind:key="idx" class="mb-1">{{ d }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Priority Class</dt><dd class="col-sm-10">{{ info.priorityClass}}</dd>
-							<dt class="col-sm-2 text-truncate">QoS Class</dt><dd class="col-sm-10">{{ info.qosClass }}</dd>
-							<dt v-if="info.conditions" class="col-sm-2 text-truncate">Conditions</dt><dd v-if="info.conditions" class="col-sm-10"><span v-for="(d, idx) in info.conditions" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d }}</span></dd>
-							<dt v-if="info.isNodeSelector" class="col-sm-2 text-truncate">Node Selector</dt><dd v-if="info.isNodeSelector" class="col-sm-10"><span v-for="(d, idx) in info.nodeSelector" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mr-1">{{ d.name }}: {{ d.value }}</span></dd>
-							<dt class="col-sm-2 text-truncate">Tolerations</dt>
-							<dd class="col-sm-10">{{ info.tolerations? info.tolerations.length: "-" }}<a class="float-right" v-b-toggle.tol href="#tol-table" @click.prevent @click="onTol">{{onTols ? 'Hide' : 'Show'}}</a></dd>
-							<b-collapse class="col-sm-12" id="tol-table"><b-table striped hover small :items="info.tolerations"></b-table></b-collapse>
-
-							<dt v-show="info.isAffinity" class="col-sm-2 text-truncate">Affinities</dt>
-							<dd v-show="info.isAffinity" class="col-sm-10">{{ info.affinities? Object.keys(info.affinities).length: "-" }}<a class="float-right" v-b-toggle.affi href="#affi-json" @click.prevent @click="onAffi">{{onAffis ? 'Hide' : 'Show'}}</a>
-								<b-collapse id="affi-json"><c-jsontree id="txtSpec" v-model="info.affinities" class="card-body p-2 border"></c-jsontree></b-collapse>
-							</dd>
-							<dt v-if="info.secret" class="col-sm-2 text-truncate">Secrets</dt>
-							<dd v-if="info.secret" class="col-sm-10" >
-								<ul class="list-unstyled">
-									<li v-for="(d, idx) in info.secret" v-bind:key="idx" >
-										<a href="#" @click="$emit('navigate', getViewLink('', 'secrets', metadata.namespace, d))">{{ d }}</a>
-									</li>
-								</ul>
-							</dd>
-							<dt v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-2">CPU</dt><dd v-show="cpuLimits !==0 || cpuRequests !==0" class="col-sm-10"><span v-show="cpuRequests !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ cpuRequests }}</span><span v-show="cpuLimits !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ cpuLimits }}</span></dd>
-							<dt v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-2">Memory</dt><dd v-show="memoryLimits !== 0 || memoryRequests !==0" class="col-sm-10"><span v-show="memoryRequests !==0" class="badge badge-secondary font-weight-light text-sm mr-1">Requests : {{ memoryRequests | comma }}Mi</span><span v-show="memoryLimits !== 0" class="badge badge-secondary font-weight-light text-sm mr-1">Limits : {{ memoryLimits | comma }}Mi</span></dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div v-show="isInit" class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Init Containers</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in initContainers" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
-							<dt v-if="val.status.value" class="col-sm-2 text-truncate">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
-							<dt v-if="val.lastState" class="col-sm-2 text-truncate">Last Status</dt>
-							<dd v-if="val.lastState" class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10"><span class="badge badge-secondary font-weight-light text-sm" id="copyTextInit">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('init')"><i class="fas fa-copy"></i></button></dd>
-							<dt v-if="val.ports" class="col-sm-2 text-truncate">Ports</dt>
-							<dd v-if="val.ports" class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.port }}/{{ p.protocol }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Environment</dt>
-							<dd class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(e, idx) in val.env" v-bind:key="idx"><span class="font-weight-bold">{{ e.name }}</span>: {{ e.value }} {{ e.v }}</li>
-									<li v-if="!val.env">-</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Mounts</dt>
-							<dd class="col-sm-10">
-								<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
-									<li><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ m.path }}</span></li>
-									<li>from {{ m.name }}({{m.ro}})</li>
-								</ul>
-							</dd>
-							<dt v-if="val.command" class="col-sm-2 text-truncate">Command</dt><dd v-if="val.command" class="col-sm-10 text-sm">{{ val.command }}</dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Containers</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in containers" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><span class="card-title mb-2"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</span></dt>
-							<dt v-if="val.status.value" class="col-sm-2 text-truncate">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="val.status.style">{{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
-							<dt v-if="val.lastState" class="col-sm-2 text-truncate">Last Status</dt>
-							<dd v-if="val.lastState" class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Image</dt><dd class="col-sm-10"><span class="badge badge-secondary font-weight-light text-sm" id="copyTextCon">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('con')"><i class="fas fa-copy"></i></button></dd>
-							<dt v-if="val.ports" class="col-sm-2 text-truncate">Ports</dt>
-							<dd v-if="val.ports" class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.port }}/{{ p.protocol }}</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Environment</dt>
-							<dd class="col-sm-10">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(e, idx) in val.env" v-bind:key="idx"><span class="font-weight-bold">{{ e.name }}</span>: {{ e.value }} {{ e.v }}</li>
-									<li v-if="!val.env">-</li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2 text-truncate">Mounts</dt>
-							<dd class="col-sm-10">
-								<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
-									<li><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ m.path }}</span></li>
-									<li>from {{ m.name }}({{m.ro}})</li>
-								</ul>
-							</dd>
-							<dt v-if="val.command" class="col-sm-2 text-truncate">Command</dt><dd v-if="val.command" class="col-sm-10 text-sm">{{ val.command }}</dd>
-							<dt v-if="val.liveness" class="col-sm-2 text-truncate">Liveness</dt><dd v-if="val.liveness" class="col-sm-10"><span v-for="(d, idx) in val.liveness" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ d }}</span></dd>
-							<dt v-if="val.readiness" class="col-sm-2 text-truncate">Readiness</dt><dd v-if="val.readiness" class="col-sm-10"><span v-for="(d, idx) in val.readiness" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ d }}</span></dd>
-							<dt v-if="val.startup" class="col-sm-2 text-truncate">Startup</dt><dd v-if="val.startup" class="col-sm-10"><span v-for="(d, idx) in val.startup" v-bind:key="idx" class="badge badge-secondary font-weight-light text-sm mb-1 mr-1">{{ d }}</span></dd>
-							<dt v-if="val.args" class="col-sm-2 text-truncate">Arguments</dt><dd v-if="val.args" class="col-sm-10 text-sm"><span v-for="(d, idx) in val.args" v-bind:key="idx">{{ d }} </span></dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">volumes</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in volumes" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p class="mb-1"><i class="fas fa-hdd mr-1 "></i> {{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Type</dt><dd class="col-sm-10">{{ val.type }}</dd>
-							<dt v-if="val.subName !== ''" class="col-sm-2 text-truncate">{{ val.subName }}</dt><dd v-if="val.subName !== ''" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', val.type.toLowerCase()+'s', metadata.namespace, val.subValue))">{{ val.subValue }}</a></dd>
-						</dl>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Events</h3></div>
-					<div class="card-body p-2">
-						<dl v-for="(val, idx) in event" v-bind:key="idx" class="row mb-0 card-body p-2 border-bottom">
-							<dt class="col-sm-12"><p v-bind:class="val.type" class="mb-1">{{ val.name }}</p></dt>
-							<dt class="col-sm-2 text-truncate">Source</dt><dd class="col-sm-10">{{ val.source }}</dd>
-							<dt class="col-sm-2 text-truncate">Count</dt><dd class="col-sm-10">{{ val.count }}</dd>
-							<dt class="col-sm-2 text-truncate">Sub-object</dt><dd class="col-sm-10">{{ val.subObject }}</dd>
-							<dt class="col-sm-2 text-truncate">Last seen</dt><dd class="col-sm-10">{{ val.lastSeen }}</dd>
-						</dl>
-					</div>
+	<!-- 3. init container -->
+	<div class="row" v-show="initContainers.length > 0">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Init Containers</h3></div>
+				<div class="card-body group">
+					<ul>
+						<li v-for="(val, idx) in initContainers" v-bind:key="idx">
+							<div class="title"><span v-bind:class=" {'badge-success': (val.status.value=='running' || val.status.value=='complete' || val.status.value=='ready'), 'badge-danger':val.status.value=='failed', 'badge-secondary':(val.status.value=='unknown' || val.status.value=='terminated'),'badge-warning':(val.status.value=='pending' || val.status.value=='waiting')}" class="badge mr-1">&nbsp;</span>{{ val.name }}</div>
+							<dl class="row">
+								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="{'text-success': (val.status.value =='running' || val.status.value=='complete' || val.status.value=='ready'), 'text-danger':val.status.value=='failed', 'text-warning': (val.status.value=='pending' || val.status.value=='waiting'),'text-secondary' :(val.status.value=='unknown' || val.status.value=='terminated')}" > {{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
+								<dt v-if="val.lastState" class="col-sm-2">Last Status</dt>
+								<dd v-if="val.lastState" class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Image</dt>
+								<dd class="col-sm-10"><span class="border border-secondary rounded pl-2 pr-2" id="copyTextInit">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('init')"><i class="fas fa-copy"></i></button></dd>
+								<dt v-if="val.ports" class="col-sm-2">Ports</dt>
+								<dd v-if="val.ports" class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.port }}/{{ p.protocol }}</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Environment</dt>
+								<dd class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(e, idx) in val.env" v-bind:key="idx"><span class="font-weight-bold">{{ e.name }}</span>: {{ e.value }} {{ e.v }}</li>
+										<li v-if="!val.env">-</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Mounts</dt>
+								<dd class="col-sm-10">
+									<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
+										<li style="font-weight-bold">{{ m.mountPath }}</li>
+										<li>from {{ m.name }}({{m.readOnly ? "ro" : "rw"}})</li>
+									</ul>
+								</dd>
+								<dt v-if="val.command" class="col-sm-2">Command</dt><dd v-if="val.command" class="col-sm-10">{{ val.command }}</dd>
+							</dl>
+						</li>
+					</ul>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<!-- 4. containers -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Containers</h3></div>
+				<div class="card-body group">
+					<ul>
+						<li v-for="(val, idx) in containers" v-bind:key="idx">
+							<div class="title">
+								<span v-bind:class=" {'badge-success': (val.status.value=='running' || val.status.value=='complete' || val.status.value=='ready'), 'badge-danger':val.status.value=='failed', 'badge-secondary':(val.status.value=='unknown' || val.status.value=='terminated'),'badge-warning':(val.status.value=='pending' || val.status.value=='waiting')}" class="badge mr-1">&nbsp;</span>{{ val.name }}
+								<span v-if="val.status.value === 'running'">
+									<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: metadata.name, namespace: metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
+										<button id="terminal" class="btn btn-tool" ><i class="fas fa-terminal" style="color:black"></i></button>
+									</nuxt-link>
+								</span>
+							</div>
+							<dl class="row">
+								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="{'text-success': (val.status.value =='running' || val.status.value=='complete' || val.status.value=='ready'), 'text-danger':val.status.value=='failed', 'text-warning': (val.status.value=='pending' || val.status.value=='waiting'),'text-secondary' :(val.status.value=='unknown' || val.status.value=='terminated')}" > {{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
+								<dt v-if="val.lastState" class="col-sm-2">Last Status</dt>
+								<dd v-if="val.lastState" class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(ls, idx) in val.lastState" v-bind:key="idx">{{ idx }} : {{ ls }}</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Image</dt><dd class="col-sm-10"><span id="copyTextCon">{{ val.image }}</span><button type="button" class="btn p-0 pl-2" @click="copy('con')"><i class="fas fa-copy"></i></button></dd>
+								<dt v-if="val.ports" class="col-sm-2">Ports</dt>
+								<dd v-if="val.ports" class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(p, idx) in val.ports" v-bind:key="idx">{{p.name? p.name+':' : ""}}{{ p.containerPort }}/{{ p.protocol }}</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Environment</dt>
+								<dd class="col-sm-10">
+									<ul class="list-unstyled mb-0">
+										<li v-for="(e, idx) in val.env" v-bind:key="idx"><span class="font-weight-bold">{{ e.name }}</span>: {{ e.value }} {{ e.v }}</li>
+										<li v-if="!val.env">-</li>
+									</ul>
+								</dd>
+								<dt class="col-sm-2">Mounts</dt>
+								<dd class="col-sm-10">
+									<ul v-for="(m, idx) in val.mounts" v-bind:key="idx" class="list-unstyled mb-0">
+										<li class="font-weight-bold">{{ m.mountPath }}</li>
+										<li>from {{ m.name }}({{m.readOnly ? "ro" : "rw"}})</li>
+									</ul>
+								</dd>
+								<dt v-if="val.command" class="col-sm-2">Command</dt><dd v-if="val.command" class="col-sm-10">{{ val.command }}</dd>
+								<dt v-if="val.liveness" class="col-sm-2">Liveness</dt><dd v-if="val.liveness" class="col-sm-10">
+									<span v-for="(d, idx) in val.liveness" v-bind:key="idx" class="border-box">{{ d }}</span>
+								</dd>
+								<dt v-if="val.readiness" class="col-sm-2">Readiness</dt>
+								<dd v-if="val.readiness" class="col-sm-10">
+									<span v-for="(d, idx) in val.readiness" v-bind:key="idx" class="border-box">{{ d }}</span>
+								</dd>
+								<dt v-if="val.startup" class="col-sm-2">Startup</dt>
+								<dd v-if="val.startup" class="col-sm-10">
+									<span v-for="(d, idx) in val.startup" v-bind:key="idx" class="border-box">{{ d }}</span>
+								</dd>
+								<dt v-if="val.args" class="col-sm-2">Arguments</dt>
+								<dd v-if="val.args" class="col-sm-10">
+									<span v-for="(d, idx) in val.args" v-bind:key="idx">{{ d }} </span>
+								</dd>
+							</dl>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 5. volumnes -->
+	<div class="row" v-show="volumes.length > 0">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">volumes</h3></div>
+				<div class="card-body group">
+					<ul>
+						<li v-for="(val, idx) in volumes" v-bind:key="idx">
+							<div class="title"><i class="fas fa-hdd mr-1 "></i> {{ val.name }}</div>
+							<dl class="row">
+								<dt class="col-sm-2">Type</dt>
+								<dd class="col-sm-10">{{ val.type }}</dd>
+								<dt v-if="val.subName" class="col-sm-2">{{ val.subName }}</dt>
+								<dd v-if="val.subName" class="col-sm-10"><a href="#" @click="$emit('navigate', getViewLink('', val.type.toLowerCase()+'s', metadata.namespace, val.subValue))">{{ val.subValue }}</a></dd>
+							</dl>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 6. events -->
+	<c-events class="row"></c-events>
+
+</div>
 </template>
 <script>
-import VueChartJs from "vue-chartjs"
-import VueJsonTree from "@/components/jsontree";
-import {CHART_BG_COLOR} from "static/constrants";
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueJsonTree		from "@/components/jsontree";
+import VueEventsView	from "@/components/view/eventsView.vue";
+import VueChartsView	from "@/components/view/metricsChartsView.vue";
+
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": { extends: VueJsonTree },
-		"c-linechart": {
-			extends: VueChartJs.Line,
-			props: ["options"],
-			mixins: [VueChartJs.mixins.reactiveProp],
-			mounted () {
-				if(this.chartData) {
-					this.renderChart(this.chartData, this.options)
-					this.update()
-				}
-			},
-			watch: {
-				chartData: function () {
-					this.update();
-				},
-				options: function() {
-					this.update();
-				},
-			},
-			methods: {
-				update: function() {
-					this.renderChart(this.chartData, this.options);
-				},
-			},
-		}
+		"c-events": { extends: VueEventsView },
+		"c-charts": { extends: VueChartsView }
 	},
 	data() {
 		return {
-			raw: { metadata: {}, spec: {} },
-			event: [],
+			nodeName: "",
 			metadata: {},
+			spec: {},
 			volumes: [],
 			initContainers: [],
 			containers: [],
 			status: [],
 			metrics: [],
-			controller: [],
-			info: [],
-			isCpu: false,
-			isMemory: false,
-			isInit: false,
-			onTols: false,
-			onAffis: false,
-			cpuRequests: 0,
-			cpuLimits: 0,
-			memoryRequests: 0,
-			memoryLimits: 0,
-			chart: {
-				options: {
-					cpu: {
-						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {return value.toFixed(3)}} }]
-						}
-					},
-					memory: {
-						tooltips: {
-							callbacks: {
-								label: function(data) {
-									return (data.yLabel).toFixed(2) + "Mi"
-								}
-							}
-						},
-						maintainAspectRatio : false, responsive : true, legend: { display: true, position: 'bottom' },
-						scales: {
-							xAxes: [{ gridLines : {display : false}}],
-							yAxes: [{ gridLines : {display : false},  ticks: { beginAtZero: true, suggestedMax: 0, callback: function(value) {
-										if(value === 0) return value
-										let regexp = /\B(?=(\d{3})+(?!\d))/g;
-										return value.toString().replace(regexp, ',')+'Mi';}
-								}}]
-						}
-					}
-				},
-				data: { cpu: {}, memory: {}}
-			},
+			info: {}
 		}
 	},
-	filters: {
-		comma(value) {
-			if(value === 0) return value
-			let regexp = /\B(?=(\d{3})+(?!\d))/g;
-			return value.toString().replace(regexp, ',');
-		},
-	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if (!data) return
 			this.metadata = data.metadata;
-			this.onCpu(data.spec)
-			this.onMemory(data.spec)
-			this.onSync(data)
+			this.nodeName = data.spec.nodeName;
+			this.containers = this.getContainers(data) || {};
+			this.status = this.toPodStatus(data.metadata.deletionTimestamp, data.status);
+			this.info = {
+				podIP: data.status.podIPs || data.status.podIP || "-",
+				priorityClass: data.spec.priorityClassName || '-',
+				qosClass: data.status.qosClass || '-',
+				conditions: data.status.conditions || [],
+				secret: data.spec.volumes? data.spec.volumes.filter(el=>{return el.secret}): []
+			};
+			this.initContainers = this.getContainers(data, true);
+
+			// volumns
+			this.volumes = [];
+			if(data.spec.volumes) {
+				data.spec.volumes.forEach(d => {
+					if (d.persistentVolumeClaim) {
+						this.volumes.push({name: d.name, type: "persistentVolumeClaim", subName: "claimName", subValue: d.persistentVolumeClaim.claimName});
+					} else if (d.configMap) {
+						this.volumes.push({name: d.name, type: "configMap", subName: "name", subValue: d.configMap.name});
+					} else {
+						this.volumes.push({name: d.name, type: (Object.keys(d)[1] === "name"? Object.keys(d)[0] : Object.keys(d)[1]), subName: "",subValue: ""});
+					}
+				})
+			}
+
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	methods: {
-		onSync(data) {
-			this.raw = data;
-			this.event = this.getEvents(data.metadata.uid,'fieldSelector=involvedObject.name='+data.metadata.name);
-			this.volumes = this.getVolumes(data.spec.volumes) || {};
-			this.containers = this.getContainers(data) || {};
-			this.status = this.toStatus(data.metadata.deletionTimestamp, data.status);
-			this.controller = this.getController(data.metadata.ownerReferences);
-			this.info = this.getInfo(data);
-			this.initContainers = this.getInitContainers(data);
-		},
-		onCpu(spec) {
-			this.cpuLimits = 0
-			this.cpuRequests = 0
-			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/cpu`)
-					.then(resp => {
-						if (resp.data.items) {
-							let topData = [];
-							if (spec.containers) {
-								spec.containers.forEach(el => {
-									if(el.resources) {
-										if(el.resources.requests && el.resources.requests.cpu) {
-											topData.push(el.resources.requests.cpu)
-											this.cpuRequests += this.cpuRL(el.resources.requests.cpu)
-										}
-										if(el.resources.limits && el.resources.limits.cpu) this.cpuLimits += this.cpuRL(el.resources.limits.cpu)
-									}
-								})
-							}
-							let data = resp.data.items[0]
-							let labels =[], da= []; let top = 0;
-							let re=[], li=[];
-							data.metricPoints.forEach(d => {
-								if (d.value>top) top = d.value / 1000;
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(d.value/1000);
-								if(this.cpuRequests) re.push(this.cpuRequests)
-								if(this.cpuLimits) li.push(this.cpuLimits)
-							});
-							if(this.cpuLimits > 0) {
-								top = this.cpuLimits
-							} else if (this.cpuRequests > 0) {
-								top = this.cpuRequests
-							} else {
-								top = top*1.2 / 1000
-							}
-							this.isCpu = !!data;
-							if (top === 0) top = 1;
-							this.$data.chart.options.cpu.scales.yAxes[0].ticks.suggestedMax = top;
-							this.$data.chart.data.cpu = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.cpu,data: da,label:'Usage'},
-								]
-							};
-							if(this.cpuRequests) this.$data.chart.data.cpu.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
-							if(this.cpuLimits) this.$data.chart.data.cpu.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
-						} else {
-							this.isCpu = false;
-						}
-					})
-		},
-		onMemory(spec) {
-			this.memoryLimits = 0
-			this.memoryRequests = 0
-			this.$axios.get(`/api/clusters/${this.currentContext()}/namespaces/${this.metadata.namespace}/pods/${this.metadata.name}/metrics/memory`)
-					.then(resp => {
-						if (resp.data.items){
-							let topData = [];
-							if (spec.containers) {
-								spec.containers.forEach(el => {
-									if(el.resources) {
-										if(el.resources.requests && el.resources.requests.memory) {
-											topData.push(el.resources.requests.memory)
-											this.memoryRequests += this.memoryRL(el.resources.requests.memory)
-										}
-										if(el.resources.limits && el.resources.limits.cpu) this.memoryLimits += this.memoryRL(el.resources.limits.memory)
-									}
-								})
-							}
-							let data = resp.data.items[0]
-							let labels =[], da= []; let top = 0;
-							let re=[], li=[];
-							data.metricPoints.forEach(d => {
-								if (d.value>top) top = d.value / 1024 / 1024;
-								let dt = new Date(d.timestamp);
-								labels.push(`${dt.getHours()}:${dt.getMinutes()}`);
-								da.push(Math.round(d.value/1024/1024));
-								if(this.memoryRequests) re.push(this.memoryRequests)
-								if(this.memoryLimits) li.push(this.memoryLimits)
-							});
-							if(this.memoryLimits > 0) {
-								top = this.memoryLimits
-							} else if ( this.memoryRequests > 0) {
-								top = this.memoryRequests
-							} else {
-								top = top*1.2
-							}
-							this.isMemory = !!data;
-							if (top === 0) top = 1024
-							this.$data.chart.options.memory.scales.yAxes[0].ticks.suggestedMax = top;
-							this.$data.chart.data.memory = {
-								labels: labels,
-								datasets: [
-									{ backgroundColor : CHART_BG_COLOR.memory,data: da,label:'Usage'},
-								]
-							};
-							if(this.memoryRequests) this.$data.chart.data.memory.datasets.push({ backgroundColor: CHART_BG_COLOR.white,data: re, borderColor: CHART_BG_COLOR.requests,label:'Requests',pointRadius:0,borderWidth:1})
-							if(this.memoryLimits) this.$data.chart.data.memory.datasets.push({ backgroundColor : CHART_BG_COLOR.white,data: li, borderColor: CHART_BG_COLOR.limits,label:"Limits",pointRadius:0,borderWidth:1})
-						} else {
-							this.isMemory = false;
-						}
-					})
-		},
-		getInfo(d) {
-			let podIP = [];
-			let conditions = [];
-			let tolerations = [];
-			let affinity = [];
-			let secret = [];
-			let nodeSelector = [];
-			let isAffinity = false;
-			let isNodeSelector = false;
-			if(d.status.podIPs) {
-				d.status.podIPs.forEach(el => {
-					podIP.push(el.ip)
-				})
-			} else podIP =['-']
-			if(d.status.conditions) {
-				d.status.conditions.forEach(el =>{
-					conditions.push(el.type)
-				})
-			}
-			if(d.spec.tolerations) {
-				d.spec.tolerations.forEach(el => {
-					tolerations.push({
-						key: el.key || '',
-						operator: el.operator || '',
-						effect: el.effect || '',
-						seconds: el.tolerationSeconds || '',
-					})
-				})
-			}
-			if(d.spec.affinity && Object.keys(d.spec.affinity).length !== 0) {
-				affinity = d.spec.affinity;
-				isAffinity = true;
-			}
-			if(d.spec.volumes) {
-				d.spec.volumes.forEach(el => {
-					if(el.secret) {
-						secret.push(el.secret.secretName)
-					}
-				})
-				if(secret.length === 0) secret = false
-			}
-			if(d.spec.nodeSelector) {
-				let key = Object.keys(d.spec.nodeSelector)
-				for(let i=0;i<key.length;i++) {
-					nodeSelector.push({
-						name: key[i],
-						value: d.spec.nodeSelector[key[i]]
-					})
-				}
-				isNodeSelector = true
-			}
-			return {
-				podIP: podIP,
-				priorityClass: d.spec.priorityClassName? d.spec.priorityClassName: '-',
-				qosClass: d.status.qosClass? d.status.qosClass: '-',
-				conditions: conditions,
-				nodeSelector: nodeSelector,
-				tolerations: tolerations,
-				affinities: affinity,
-				secret: secret,
-				isAffinity: isAffinity,
-				isNodeSelector: isNodeSelector,
-			}
-		},
-		getInitContainers(d) {
-			let statusCons = []
+		getContainers(d, type) {
 			let specCons = []
-			let statusCon = d.status.initContainerStatuses
-			let specCon = d.spec.initContainers
-			this.isInit = !!d.spec.initContainers;
-			if(statusCon) {
-				statusCon.forEach(el => {
-					statusCons.push({
-						name: el.name,
-						status: this.checkStatus(Object.keys(el.state),el),
-						lastState: this.getLast(el.lastState),
-						image: el.image,
-					})
-				})
-			}
-			if(specCon) {
-				specCon.forEach(el => {
-					specCons.push({
-						name: el.name,
-						args: el.args,
-						image: el.image,
-						env: this.getEnv(el.env),
-						ports: this.getPorts(el.ports),
-						mounts: this.getMounts(el.volumeMounts),
-						command: this.getCommand(el.command),
-						status: {value:'',style:''},
-					})
-				})
-			}
+			let statusCon = type ?  d.status.initContainerStatuses : d.status.containerStatuses;
+			let specCon = type ? d.spec.initContainers || d.status.initContainerStatuses || [] : d.spec.containers || d.status.containerStatuses || []
+			
 			if(specCon) {
 				for (let i = 0; i < specCon.length; i++) {
-					Object.assign(specCons[i], statusCons[i])
+					Object.assign(specCon[i], statusCon[i])
 				}
-				return specCons
-			} else if(statusCon) {
-				return statusCon
-			} else return false
-		},
-		getVolumes(vol) {
-			let vols = []
-			if(vol) {
-				vol.forEach(d => {
-					if (d.persistentVolumeClaim) {
-						vols.push({
-							name: d.name,
-							type: 'persistentVolumeClaim',
-							subName: 'claimName',
-							subValue: d.persistentVolumeClaim.claimName
-						})
-					} else if (d.configMap) {
-						vols.push({
-							name: d.name,
-							type: 'configMap',
-							subName: 'name',
-							subValue: d.configMap.name
-						})
-					} else {
-						vols.push({
-							name: d.name,
-							type: (Object.keys(d)[1] === 'name'? Object.keys(d)[0] : Object.keys(d)[1]),
-							subName: '',
-							subValue: '',
-						})
-					}
-				})
-				return vols
-			}
-			return false
 
-		},
-		getContainers(d) {
-			let statusCons = []
-			let specCons = []
-			let statusCon = d.status.containerStatuses
-			let specCon = d.spec.containers
-			if(statusCon) {
-				statusCon.forEach(el => {
-					statusCons.push({
-						name: el.name,
-						status: this.checkStatus(Object.keys(el.state),el),
-						lastState: this.getLast(el.lastState),
-						image: el.image,
-					})
-				})
-			}
-			if(specCon) {
-				specCon.forEach(el => {
+				specCon.forEach((specCon, i) => {
 					specCons.push({
-						name: el.name,
-						args: el.args,
-						image: el.image,
-						env: this.getEnv(el.env),
-						ports: this.getPorts(el.ports),
-						mounts: this.getMounts(el.volumeMounts),
-						command: this.getCommand(el.command),
-						status: {value:'',style:''},
-						liveness: this.getProbe(el.livenessProbe),
-						readiness: this.getProbe(el.readinessProbe),
-						startup: this.getProbe(el.startupProbe),
+						name : specCon.name,
+						args: specCon.args,
+						image: specCon.image,
+						env: this.getEnv(specCon.env),
+						ports: specCon.ports,
+						mounts: specCon.volumeMounts,
+						command: this.getCommand(specCon.command),
+						status: this.checkStatus(Object.keys(specCon.state),specCon) || {value:'',style:''},
+						lastState: this.getLast(specCon.lastState)
 					})
+					if(!type){
+						specCons[i].liveness = this.getProbe(specCon.livenessProbe),
+						specCons[i].readiness = this.getProbe(specCon.readinessProbe),
+						specCons[i].startup = this.getProbe(specCon.startupProbe)
+					}
 				})
 			}
-			if(specCon) {
-				for (let i = 0; i < specCon.length; i++) {
-					Object.assign(specCons[i], statusCons[i])
-				}
-				this.$nuxt.$emit('Containers',specCons)
-				return specCons
-			} else if(statusCon) {
-				return statusCon
-			} else return false
+			return specCons;
 		},
 		copy(type) {
 			let copyText
@@ -632,34 +300,6 @@ export default {
 			}
 			return false
 		},
-		getPorts(ports) {
-			let po = [];
-			if(ports) {
-				ports.forEach(el => {
-					po.push({
-						port: el.containerPort,
-						name: el.name,
-						protocol: el.protocol
-					})
-				})
-				return po
-			}
-			return false
-		},
-		getMounts(m) {
-			let list =[];
-			if(m) {
-				m.forEach(el => {
-					list.push({
-						path: el.mountPath,
-						name: el.name,
-						ro: (el.readOnly ? 'ro' : 'rw')
-					})
-				})
-				return list
-			}
-			return false
-		},
 		getCommand(c) {
 			let list = ""
 			if(c) {
@@ -671,51 +311,13 @@ export default {
 			return false
 		},
 		checkStatus(status,el) {
-			status = status[0]
-			let reason = this.checkReason(el.state)
-			let rd;
-			if(el.ready) {
-				rd = 'ready';
-			} else rd = ''
-			if(status === "failed") {
-				return {
-					"value": status,
-					"style": "text-danger",
-					"ready": rd,
-					"reason": reason,
-					'badge': "danger",
+			return{
+				value : status[0],
+				ready : el.ready ? 'ready' : '',
+				reason : {
+					reason: status[Object.keys(status)].reason,
+					exitCode: status[Object.keys(status)].exitCode,
 				}
-			} else if(status === "pending" || status === 'waiting') {
-				return {
-					"value": status,
-					"style": "text-warning",
-					"ready": rd,
-					"reason": reason,
-					'badge': "warning",
-				}
-			} else if(status === "running" || status === "completed" || status ==="ready") {
-				return {
-					"value": status,
-					"style": "text-success",
-					"ready": rd,
-					"reason": reason,
-					'badge': "success",
-				}
-			}else {
-				return {
-					"value": status,
-					"style": "text-secondary",
-					"ready": rd,
-					"reason": reason,
-					'badge': "secondary",
-				}
-			}
-		},
-		checkReason(state) {
-			let key = Object.keys(state)
-			return {
-				reason: state[key].reason,
-				exitCode: state[key].exitCode,
 			}
 		},
 		getLast(s) {
@@ -763,17 +365,10 @@ export default {
 					`#failure=${failureThreshold || "0"}`,
 			);
 			return probe;
-		},
-		onTol() {
-			this.onTols = !this.onTols
-		},
-		onAffi() {
-			this.info.affinities = Object.assign({},this.info.affinities)
-			this.onAffis = !this.onAffis
-		},
+		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
-	},
+		this.$nuxt.$off("view-data-read-completed");
+	}
 }
 </script>

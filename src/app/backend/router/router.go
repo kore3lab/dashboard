@@ -3,13 +3,12 @@ package router
 import (
 	"net/http"
 
-	"github.com/acornsoftlab/dashboard/docs"
-	"github.com/acornsoftlab/dashboard/pkg/app"
-	"github.com/acornsoftlab/dashboard/pkg/config"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
-	"github.com/acornsoftlab/dashboard/router/apis/_raw"
-	api "github.com/acornsoftlab/dashboard/router/apis/clusters"
 	"github.com/gin-gonic/gin"
+	"github.com/kore3lab/dashboard/docs"
+	"github.com/kore3lab/dashboard/pkg/app"
+	"github.com/kore3lab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/pkg/lang"
+	"github.com/kore3lab/dashboard/router/apis"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
@@ -22,7 +21,7 @@ func CreateUrlMappings() {
 	docs.SwaggerInfo.Title = "kore-board API"
 	docs.SwaggerInfo.Description = "mulit-cluster kubernetes dashboard api"
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "github.com/acornsoftlab"
+	docs.SwaggerInfo.Host = "github.com/kore3lab"
 	docs.SwaggerInfo.BasePath = "/swegger"
 
 	// gin
@@ -38,57 +37,47 @@ func CreateUrlMappings() {
 	// Authentication API
 	authAPI := Router.Group("/api/auth")
 	{
-		authAPI.POST("/login", api.Login)                                // authentication & issuance  access/refresh token
-		authAPI.GET("/login", api.GetAuth)                               // get auth-config
-		authAPI.GET("/logout", api.Logout)                               // logout
-		authAPI.GET("/user", authenticate(), api.GetUser)                // user info
-		authAPI.POST("/token/refresh", authenticate(), api.RefreshToken) // authentication & get access token
+		authAPI.POST("/login", apis.Login)                                // authentication & issuance  access/refresh token
+		authAPI.GET("/login", apis.GetAuth)                               // get auth-config
+		authAPI.GET("/logout", apis.Logout)                               // logout
+		authAPI.GET("/user", authenticate(), apis.GetUser)                // user info
+		authAPI.POST("/token/refresh", authenticate(), apis.RefreshToken) // authentication & get access token
 	}
 
 	// contexts API
 	contextsAPI := Router.Group("/api/contexts", authenticate())
 	{
-		contextsAPI.GET("", api.ListContexts)                     // list contexts
-		contextsAPI.POST("", api.CreateContexts)                  // create contexts (kubeconfig yaml)
-		contextsAPI.GET("/:CLUSTER", api.GetContext)              // get a context (context meta-data : resources & namespaces)
-		contextsAPI.GET("/:CLUSTER/config", api.GetContextConfig) // get a context (server, user, context)
-		contextsAPI.POST("/:CLUSTER", api.AddContext)             // add a context (server, user, context)
-		contextsAPI.DELETE("/:CLUSTER", api.DeleteContext)        // delete a context
+		contextsAPI.GET("", apis.ListContexts)                     // list contexts
+		contextsAPI.POST("", apis.CreateContexts)                  // create contexts (kubeconfig yaml)
+		contextsAPI.GET("/:CLUSTER", apis.GetContext)              // get a context (context meta-data : resources & namespaces)
+		contextsAPI.GET("/:CLUSTER/config", apis.GetContextConfig) // get a context (server, user, context)
+		contextsAPI.POST("/:CLUSTER", apis.AddContext)             // add a context (server, user, context)
+		contextsAPI.DELETE("/:CLUSTER", apis.DeleteContext)        // delete a context
 	}
 
-	// clusters API
+	// custom API
 	clustersAPI := Router.Group("/api/clusters/:CLUSTER", authenticate())
 	{
-		clustersAPI.GET("/nodes/:NODE/metrics/:METRICS", api.GetNodeMetrics)                    // get node metrics
-		clustersAPI.GET("/namespaces/:NAMESPACE/pods/:POD/metrics/:METRICS", api.GetPodMetrics) // get pod metrics
-		clustersAPI.GET("/topology", api.Topology)                                              // get cluster topology graph
-		clustersAPI.GET("/topology/namespaces/:NAMESPACE", api.Topology)                        // get namespace topology graph
-		clustersAPI.GET("/dashboard", api.Dashboard)                                            // get dashboard
+		clustersAPI.GET("/metrics", apis.GetClusterMetrics)                                                // get metrics (cluster)
+		clustersAPI.GET("/nodes/:NAME/metrics", apis.GetNodeMetrics)                                       // get metrics (node)
+		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/metrics", apis.GetWorkloadMetrics)         // get metrics (workload - pod, deployment, statefulset, daemonset, replicaset)
+		clustersAPI.GET("/nodes/:NAME/pods", apis.GetNodePodListWithMetrics)                               // get pod list in (node)
+		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/pods", apis.GetWorkloadPodListWithMetrics) // get pod list in (workload - deployment, statefulset, daemonset, replicaset)
+		clustersAPI.GET("/topology", apis.Topology)                                                        // get topology graph (cluster)
+		clustersAPI.GET("/topology/namespaces/:NAMESPACE", apis.Topology)                                  // get topology graph (namespace)
+		clustersAPI.GET("/dashboard", apis.Dashboard)                                                      // get dashboard
+		clustersAPI.GET("/nodes", apis.GetNodeListWithUsage)                                               // get node-list
 	}
-	clustersAPI_ := Router.Group("/api", authenticate())
-	{
-		clustersAPI_.GET("/topology", api.Topology)
-		clustersAPI_.GET("/topology/namespaces/:NAMESPACE", api.Topology)
-		clustersAPI_.GET("/dashboard", api.Dashboard)
-	}
-
-	//// ROOT API
-	//API := Router.Group("/api", authenticate())
-	//{
-	//	API.GET("/topology", api.Topology)
-	//	API.GET("/topology/namespaces/:NAMESPACE", api.Topology)
-	//	API.GET("/dashboard", api.Dashboard)
-	//}
 
 	// RAW-API > POST/PUT (apply, patch)
-	Router.POST("/raw/clusters/:CLUSTER", authenticate(), _raw.ApplyRaw)
-	Router.PUT("/raw/clusters/:CLUSTER", authenticate(), _raw.ApplyRaw)
-	Router.POST("/raw", authenticate(), _raw.ApplyRaw)
-	Router.PUT("/raw", authenticate(), _raw.ApplyRaw)
+	Router.POST("/raw/clusters/:CLUSTER", authenticate(), apis.ApplyRaw)
+	Router.PUT("/raw/clusters/:CLUSTER", authenticate(), apis.ApplyRaw)
+	Router.POST("/raw", authenticate(), apis.ApplyRaw)
+	Router.PUT("/raw", authenticate(), apis.ApplyRaw)
 
 	// RAW-API > API-Group List
-	Router.GET("/raw/clusters/:CLUSTER/apis/", authenticate(), _raw.GetAPIGroupList)
-	Router.GET("/raw/apis/", authenticate(), _raw.GetAPIGroupList)
+	Router.GET("/raw/clusters/:CLUSTER/apis/", authenticate(), apis.GetAPIGroupList)
+	Router.GET("/raw/apis/", authenticate(), apis.GetAPIGroupList)
 
 	// RAW-API Core
 	//      non-Namespaced
@@ -97,32 +86,19 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /api/v1/namespaces/default/services/kubernetes
 	//          /api/v1/namespaces/default/serviceaccounts/default
-	Router.GET("/raw/clusters/:CLUSTER/api/", authenticate(), _raw.GetRaw) // Core APIVersions
+	Router.GET("/raw/clusters/:CLUSTER/api/", authenticate(), apis.GetRaw) // Core APIVersions
 	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION", authenticate(), route())
 	{
-		rawAPI.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceLis
-		rawAPI.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
-		rawAPI.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
-		rawAPI.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
-		rawAPI.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - patch
-		rawAPI.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
-		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
-		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
-		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
+		rawAPI.GET("", apis.GetRaw)                             // ""                                       > core apiGroup - APIResourceLis
+		rawAPI.GET("/:A", apis.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
+		rawAPI.GET("/:A/:B", apis.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
+		rawAPI.DELETE("/:A/:B", apis.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
+		rawAPI.PATCH("/:A/:B", apis.PatchRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - patch
+		rawAPI.GET("/:A/:B/:RESOURCE", apis.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
+		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", apis.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
+		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
+		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 	}
-	//Router.GET("/raw/api/", authenticate(), _raw.GetRaw) // Core APIVersions
-	//rawAPI_d := Router.Group("/raw/api/:VERSION", authenticate(), route())
-	//{
-	//	rawAPI_d.GET("", _raw.GetRaw)                             // ""                                       > core apiGroup - APIResourceList
-	//	rawAPI_d.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
-	//	rawAPI_d.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
-	//	rawAPI_d.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
-	//	rawAPI_d.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - patch
-	//	rawAPI_d.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
-	//	rawAPI_d.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
-	//	rawAPI_d.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
-	//	rawAPI_d.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
-	//}
 
 	// RAW-API Grouped
 	//      non-Namespaced
@@ -130,32 +106,19 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /apis/apps/v1/namespaces/kube-system/deployments/nginx
 	//          /apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings/clusterrolebinding-2g782
-	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", authenticate(), _raw.GetRaw) // APIGroup
+	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", authenticate(), apis.GetRaw) // APIGroup
 	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION", authenticate(), route())
 	{
-		rawAPIs.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
-		rawAPIs.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
-		rawAPIs.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
-		rawAPIs.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete
-		rawAPIs.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                          > apiGroup - patch
-		rawAPIs.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"          > namespaced apiGroup - list
-		rawAPIs.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - get
-		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
-		rawAPIs.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
+		rawAPIs.GET("", apis.GetRaw)                             // ""                                          > apiGroup - APIResourceList
+		rawAPIs.GET("/:A", apis.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
+		rawAPIs.GET("/:A/:B", apis.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
+		rawAPIs.DELETE("/:A/:B", apis.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete
+		rawAPIs.PATCH("/:A/:B", apis.PatchRaw)                   // "/:RESOURCE/:NAME"                          > apiGroup - patch
+		rawAPIs.GET("/:A/:B/:RESOURCE", apis.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"          > namespaced apiGroup - list
+		rawAPIs.GET("/:A/:B/:RESOURCE/:NAME", apis.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - get
+		rawAPIs.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
+		rawAPIs.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
 	}
-	//Router.GET("/raw/apis/:GROUP", authenticate(), _raw.GetRaw) // APIGroup
-	//rawAPIs_d := Router.Group("/raw/apis/:GROUP/:VERSION", authenticate(), route())
-	//{
-	//	rawAPIs_d.GET("", _raw.GetRaw)                             // ""                                          > apiGroup - APIResourceList
-	//	rawAPIs_d.GET("/:A", _raw.GetRaw)                          // "/:RESOURCE"                                > apiGroup - list
-	//	rawAPIs_d.GET("/:A/:B", _raw.GetRaw)                       // "/:RESOURCE/:NAME"                          > apiGroup - get
-	//	rawAPIs_d.DELETE("/:A/:B", _raw.DeleteRaw)                 // "/:RESOURCE/:NAME"                          > apiGroup - delete
-	//	rawAPIs_d.PATCH("/:A/:B", _raw.PatchRaw)                   // "/:RESOURCE/:NAME"                          > apiGroup - patch
-	//	rawAPIs_d.GET("/:A/:B/:RESOURCE", _raw.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"          > namespaced apiGroup - list
-	//	rawAPIs_d.GET("/:A/:B/:RESOURCE/:NAME", _raw.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - get
-	//	rawAPIs_d.DELETE("/:A/:B/:RESOURCE/:NAME", _raw.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - delete
-	//	rawAPIs_d.PATCH("/:A/:B/:RESOURCE/:NAME", _raw.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME"    > namespaced apiGroup - patch
-	//}
 
 }
 

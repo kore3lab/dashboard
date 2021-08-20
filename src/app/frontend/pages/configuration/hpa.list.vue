@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -46,16 +46,8 @@
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
-									<template v-slot:cell(labels)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-										</ul>
-									</template>
 									<template v-slot:cell(target)="data">
-										<a href="#" @click="viewModel=getViewLink(data.value.group,data.value.rs,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}/{{ data.value.name }}</a>
-									</template>
-									<template v-slot:cell(status)="data">
-										<span v-for="(status, idx) in data.item.status" v-bind:key="idx" v-bind:class="status.style" class=" text-sm ml-1">{{ status.type }}</span>
+										<span>{{ data.value.kind }} / <a href="#" @click="viewModel=getViewLink(data.value.group,data.value.resource,data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a></span>
 									</template>
 								</b-table>
 							</div>
@@ -91,10 +83,10 @@ export default {
 				{ key: "name", label: "Name", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true  },
 				{ key: "metrics", label: "Metrics", sortable: true  },
-				{ key: "minpods", label: "Min Pods", sortable: true  },
-				{ key: "maxpods", label: "Max Pods", sortable: true  },
-				{ key: "replicas", label: "Replicas", sortable: true  },
-				{ key: "target", label: "Target", sortable: true },
+				{ key: "minpods", label: "Min Pods", sortable: true },
+				{ key: "maxpods", label: "Max Pods", sortable: true },
+				{ key: "replicas", label: "Replicas", sortable: true },
+				{ key: "target", label: "Target", sortable: true, formatter: this.formatTarget },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			isBusy: false,
@@ -134,11 +126,11 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								metrics: this.getMetrics(el),
+								metrics: `${el.status.currentCPUUtilizationPercentage ? el.status.currentCPUUtilizationPercentage +'%': "<unknown>"} / ${el.spec.targetCPUUtilizationPercentage?el.spec.targetCPUUtilizationPercentage:"0"}%`,
 								minpods: el.spec.minReplicas,
 								maxpods: el.spec.maxReplicas,
 								replicas: el.status.currentReplicas,
-								target: this.getTarget(el.spec.scaleTargetRef),
+								target: el.spec.scaleTargetRef,
 								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
@@ -151,95 +143,17 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		getStatus(conditions) {
-			let list = [];
-			if(conditions) {
-				for (let i = 0; i < conditions.length; i++) {
-					if (conditions[i].status === "True") {
-						if (conditions[i].type === "AbleToScale") {
-							list.push({
-								type: conditions[i].type,
-								style: "text-success"
-							})
-						} else if (conditions[i].type === "ScalingActive") {
-							list.push({
-								type: conditions[i].type,
-								style: "text-primary"
-							})
-						} else {
-							list.push({
-								type: conditions[i].type,
-								style: "text-danger"
-							})
-						}
-					}
-				}
-			}
-			return list
-		},
-
-
-		getMetrics(el) {
-			let current = ""
-			let target = ""
-			if (el.status.currentCPUUtilizationPercentage) {
-				current = el.status.currentCPUUtilizationPercentage + "%"
-			} else {
-				current = "0"
-			}
-			if (el.spec.targetCPUUtilizationPercentage) {
-				target = el.spec.targetCPUUtilizationPercentage + "%"
-			} else {
-				target = "0"
-			}
-			return current+' / '+target
-			// v2beta2 에서 사용 가능.
-			//   let specType,statusType,lowerType;
-			//   let targetVal,currentVal;
-			//   let currentValue = "unknown";
-			//   let targetValue = "unknown";
-			//   if (el.spec.metrics) {
-			//     specType = el.spec.metrics[0].type
-			//   }
-			//   if (el.status.currentMetrics) {
-			//     statusType = el.status.currentMetrics[0].type
-			//   }
-			//   if (specType) {
-			//     lowerType = specType.toLowerCase()
-			//     targetVal = el.spec.metrics[0][lowerType]
-			//   }
-			//   if (statusType) {
-			//     lowerType = statusType.toLowerCase()
-			//     currentVal = el.status.currentMetrics[0][lowerType]
-			//   }
-			//   if (targetVal) {
-			//     targetValue = targetVal.target.averageUtilization || targetVal.target.averageValue || targetVal.target.value;
-			//     if (targetVal.target.averageUtilization) {
-			//       targetValue += "%";
-			//     }
-			//   }
-			//   if (currentVal) {
-			//     currentValue = currentVal.current.averageUtilization || currentVal.current.averageValue || currentVal.current.value;
-			//     if (currentVal.current.averageUtilization) {
-			//       currentValue += "%";
-			//     }
-			//   }
-			//   if (el.spec.metrics && el.spec.metrics.length > 1) {
-			//     targetValue += ` + ${el.spec.metrics.length-1} more...`
-			//   }
-			//   return `${currentValue} / ${targetValue}`
-		},
-		getTarget(ref) {
+		formatTarget(ref) {
 			let group = ""
 			let version = ref.apiVersion.split('/')
 			if (version.length>1) {
 				group = version[0]
 			}
 			return {
-				"name": ref.name,
 				"group": group,
 				"kind": ref.kind,
-				"rs": ref.kind.toLowerCase()+'s'
+				"name": ref.name,
+				"resource": ref.kind.toLowerCase()+'s'
 			}
 		},
 	},
@@ -248,4 +162,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

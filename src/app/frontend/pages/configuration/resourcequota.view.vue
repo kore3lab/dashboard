@@ -1,60 +1,40 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ metadata.name }}</dd>
-							<dt class="col-sm-2">Namespace</dt><dd class="col-sm-10">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-2">Annotations</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">Labels</dt>
-							<dd class="col-sm-10 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-2">Quotas</dt><dd class="col-sm-10">
-							<ul v-for="(val, idx) in quotas" v-bind:key="idx" class="list-unstyled mb-0">
-								<li><span>{{ val.name }}</span> <span class="float-right">{{ val.current }} / {{ val.temp }}</span></li>
-								<b-progress :value="val.current" :max="val.max" show-value class="mb-3"></b-progress>
-							</ul>
-						</dd>
-						</dl>
-					</div>
+<div>
+	<!-- 1. metadata -->
+	<c-metadata dtCols="2" ddCols="10">
+		<dt class="col-sm-2">Quotas</dt>
+		<dd class="col-sm-10">
+			<ul v-for="(val, idx) in quotas" v-bind:key="idx" class="list-unstyled mb-0">
+				<li><span>{{ val.name }}</span> <span class="float-right">{{ val.current }} / {{ val.max }} </span></li>
+				<b-progress :max="val.max">
+					<b-progress-bar :value="val.current" :label="`${((parseInt(val.current) / parseInt(val.max)) * 100).toFixed(0)}%`"></b-progress-bar>
+				</b-progress>
+			</ul>
+		</dd>
+	</c-metadata>
+	<!-- 2. scope selector -->
+	<div v-if="scopeSelector" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline m-0">
+				<div class="card-header p-2"><h3 class="card-title">Scope Selector</h3></div>
+				<div class="card-body p-2">
+					<b-table-lite striped hover small :items="scopeSelector" :fields="fields"></b-table-lite>
 				</div>
 			</div>
 		</div>
-
-		<div v-if="scopeSelector" class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline m-0">
-					<div class="card-header p-2"><h3 class="card-title text-md">Scope Selector</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="scopeSelector" :fields="fields"></b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
 	</div>
+
+</div>
 </template>
 <script>
-import VueAceEditor from "@/components/aceeditor";
+import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
 	components: {
-		"c-aceeditor": { extends: VueAceEditor },
+		"c-metadata": { extends: VueMetadataView }
 	},
 	data() {
 		return {
-			metadata: {},
 			quotas: [],
 			scopeSelector: [],
 			fields: [
@@ -65,18 +45,13 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
-			this.onSync(data)
-		});
-		this.$nuxt.$emit("onCreated",'')
-	},
-	methods: {
-		onSync(data) {
 			this.quotas = this.getQuotas(data.status)
 			this.scopeSelector = this.getScope(data.spec.scopeSelector)
-		},
+		});
+	},
+	methods: {
 		getQuotas(status) {
 			let list = [];
 			let temp;
@@ -86,39 +61,10 @@ export default {
 					.map(([name, value]) => {
 						let current = this.transformUnit(name, used[name]);
 						let max = this.transformUnit(name, value);
-						temp = max
-						let usage = max === 0 ? 100 : Math.ceil(current / max * 100);
-						if(name === 'cpu') {
-							temp = Number(max)
-							if(temp >= 1000) {
-								temp = max / 1000
-								temp+='k'
-							}
-						}
-						if(name === 'memory' || name ==='storage') {
-							temp = Number(max)
-							if(temp >= 1024) {
-								temp = temp / 1024
-								if( temp >= 1024) {
-									temp = temp / 1024
-									if( temp >= 1024) {
-										temp = temp / 1024
-										if ( temp >= 1024) {
-											max = temp / 1024
-											if (temp >= 1024) {
-												temp = temp / 1024
-											} else temp += 'Ti'
-										} else temp += 'Gi'
-									} else temp += 'Mi'
-								} else temp += 'Ki'
-							}
-						}
 						list.push({
 							name: name,
 							current: current,
-							max: max,
-							usage: usage,
-							temp: temp,
+							max: max
 						})
 					})
 			return list
@@ -140,16 +86,38 @@ export default {
 		},
 		transformUnit(name, value) {
 			if(name.includes('memory') || name.includes('storage')) {
-				return this.unitsToBytes(value);
+				return this.unitsToBytes(name, value);
 			}
 			if(name.includes('cpu')) {
-				return this.cpuUnitsToNumber(value);
+				return this.cpuUnitsToNumber(value) + "m";
 			}
-			return this.metricUnitsToNumber(value);
+			return value;
+		},
+		
+		cpuUnitsToNumber(value) {
+			const thousand = 1000;
+			const million = thousand * thousand;
+			const cpuNum = parseInt(value);
+			
+			if (value.includes("k")) return cpuNum * million;
+			if (value.includes("m")) return cpuNum;
+			if (value.includes("u")) return cpuNum / thousand;
+			if (value.includes("n")) return cpuNum / million;
+
+			return cpuNum * thousand;
+		},
+		unitsToBytes(name, value) {
+			const base = 1024;
+			const suffixes = ["K", "M", "G", "T", "P", "E"];
+			const suffix = value.replace(/[0-9]|i|\./g, "");
+			const index = suffixes.indexOf(suffix);
+			const val = name.includes('memory') ? parseFloat(value) * Math.pow(base, index-1) + "Mi" : parseFloat(value) * Math.pow(base, index-2) + "Gi";
+			
+			return val;
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

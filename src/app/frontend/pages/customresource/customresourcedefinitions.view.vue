@@ -1,91 +1,67 @@
 <template>
-	<div class="card-body p-2">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-body p-2">
-						<dl class="row mb-0">
-							<dt class="col-sm-3 text-truncate">Create at</dt><dd class="col-sm-9">{{ this.getTimestampString(metadata.creationTimestamp)}} ago ({{ metadata.creationTimestamp }})</dd>
-							<dt class="col-sm-3">Name</dt><dd class="col-sm-9">{{ metadata.name }}</dd>
-							<dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ metadata.namespace }}</dd>
-							<dt class="col-sm-3">Annotations</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3">Labels</dt>
-							<dd class="col-sm-9 text-truncate">
-								<ul class="list-unstyled mb-0">
-									<li v-for="(value, name) in metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-								</ul>
-							</dd>
-							<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
-							<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
-							<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
-							<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
-							<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {group: info.group, plural:info.resource[0].plural, kind: info.resource[0].kind, columnsName: info.printerColumns? info.printerColumns.name : '', columnsPath: info.printerColumns? info.printerColumns.path : '', scope: info.scope }}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
-							<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
-							<dt class="col-sm-3">Conditions</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="val.style" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span></dd>
-						</dl>
-					</div>
+<div>
+	<!-- 1. metadata -->
+	<c-metadata dtCols="3" ddCols="9">
+		<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
+		<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
+		<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
+		<dt class="col-sm-3">Scope</dt><dd class="col-sm-9">{{ info.scope }}</dd>
+		<dt class="col-sm-3">Resource</dt><dd class="col-sm-9"><span v-for="(val, idx) in info.resource" v-bind:key="idx"><nuxt-link :to="{path: '/customresource/customresource.list', query: {crd: `${val.plural}.${info.group}`, version: info.version}}" class="mr-2">{{ val.plural }}</nuxt-link></span></dd>
+		<dt class="col-sm-3">Conversion</dt><dd class="col-sm-9"><c-jsontree id="txtConversion" v-model="info.conversion" class="card-body p-2 border"></c-jsontree></dd>
+		<dt class="col-sm-3">Conditions</dt>
+		<dd class="col-sm-9">
+			<span v-for="(val, idx) in info.conditions" v-bind:key="idx" v-bind:class="{'badge-success': (val.type=='Established' || val.type=='NamesAccepted'), 'badge-danger':val.type=='NonStructuralSchema', 'badge-secondary':val.type=='Terminating','badge-warning':val.type=='KubernetesAPIApprovalPolicyConformant'}" class="badge font-weight-light text-sm mr-1">{{ val.type }}</span>
+		</dd>
+	</c-metadata>
+	<!-- 2. names -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Names</h3></div>
+				<div class="card-body p-2">
+					<b-table-lite small :items="info.resource" :fields="fields" class="subset"></b-table-lite>
 				</div>
 			</div>
 		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Names</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small fixed :items="info.resource" :fields="fields"></b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div v-if="printerColumns.length !== 0" class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Additional Printer Columns</h3></div>
-					<div class="card-body p-2">
-						<b-table striped hover small :items="printerColumns" :fields="columnsFields">
-							<template v-slot:cell(jsonPath)="data">
-								<span class="badge badge-secondary font-weight-light text-sm mb-1">{{ data.value }}</span>
-							</template>
-						</b-table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-12">
-				<div class="card card-secondary card-outline">
-					<div class="card-header p-2"><h3 class="card-title text-md">Validation</h3></div>
-					<div class="card-body p-2">
-						<c-jsontree id="txtValidation" v-model="validation" class="card-body p-2 border"></c-jsontree>
-					</div>
-				</div>
-			</div>
-		</div>
-
 	</div>
+	<!-- 3. additional printer columns -->
+	<div v-if="printerColumns.length !== 0" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Additional Printer Columns</h3></div>
+				<div class="card-body p-2">
+					<b-table-lite small :items="printerColumns" :fields="columnsFields" class="subset"></b-table-lite>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 4. validation -->
+	<div v-show="Object.keys(validation).length > 0" class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Validation</h3></div>
+				<div class="card-body p-2">
+					<c-jsontree id="txtValidation" v-model="validation" class="card-body p-2 border"></c-jsontree>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 </template>
 <script>
-
-import VueJsonTree from "@/components/jsontree";
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueJsonTree 		from "@/components/jsontree";
 
 export default {
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": {extends: VueJsonTree},
 	},
 	data() {
 		return {
-			metadata: {},
 			info: [],
 			printerColumns: [],
-			validation: [],
+			validation: {},
 			fields: [
 				{ key: "plural", label: "plural" },
 				{ key: "singular", label: "singular" },
@@ -100,94 +76,31 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
-			this.onSync(data)
-		});
-		this.$nuxt.$emit("onCreated",'')
-	},
-	methods: {
-		onSync(data) {
-			this.info = this.getInfo(data)
-			this.printerColumns = this.getPrinterColumns(data.spec)
-			this.validation = this.getValidation(data.spec)
-		},
-		getInfo(data) {
-			let resource = [];
-			resource.push({
-				group: data.spec.group,
-				plural: data.spec.names.plural,
-				kind: data.spec.names.kind,
-				singular: data.spec.names.singular,
-				listKind: data.spec.names.listKind,
-			})
-			let conditions = [];
-			if(data.status?.conditions) {
-				data.status.conditions.map(condition => {
-					conditions.push({
-						type: condition.type,
-						status: condition.status,
-						style: this.styleCheck(condition.type)
-					})
-				})
-			}
-
-			return {
+			this.info = {
 				group: data.spec.group,
 				version: data.spec.versions[0]?.name ?? data.spec.version,
-				storedVersions: data.status.storedVersions.join(","),
+				storedVersions: data.status.storedVersions.join(),
 				scope: data.spec.scope,
-				resource: resource,
+				resource: [data.spec.names],
 				conversion: data.spec.conversion,
-				conditions: conditions,
-				printerColumns: this.conv(this.getPrinterColumns(data.spec))
+				conditions: data.status?.conditions ?? []
 			}
-		},
+			this.printerColumns = this.getPrinterColumns(data.spec)
+			this.validation = data.spec.validation || data.spec.versions?.[0]?.schema || {}
+		});
+	},
+	methods: {
 		getPrinterColumns(spec) {
-			const columns = spec.versions.find(a => this.getVersion(spec) === a.name)?.additionalPrinterColumns ??
-					spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath})) ?? [];
-			return columns
-					.filter(column => column.name !== 'Age')
-					.filter(column => column.jsonPath ? true : !column.priority );
-		},
-		getValidation(spec) {
-			return spec.validation?? spec.versions?.[0]?.schema
-		},
-		getVersion(spec) {
-			return spec.versions[0]?.name ?? spec.version
-		},
-		conv(col) {
-			if(col.length === 0) return
-
-			let name = []
-			let path = []
-			col.forEach(el => {
-				name.push(el.name)
-				path.push(el.jsonPath)
-			})
-			return {
-				name: name.join(','),
-				path: path.join(','),
-			}
-		},
-		styleCheck(type) {
-			if(type === 'Established') {
-				return 'badge-success'
-			}else if(type === 'NamesAccepted') {
-				return 'badge-success'
-			}else if(type === 'NonStructuralSchema') {
-				return 'badge-danger'
-			}else if(type === 'Terminating') {
-				return 'badge-secondary'
-			}else if(type === 'KubernetesAPIApprovalPolicyConformant') {
-				return 'badge-warning'
-			}
-		},
-
+			const columns = spec.versions.find(a => spec.versions[0]?.name ?? spec.version === a.name)?.additionalPrinterColumns ??
+					spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath}))
+					.filter(column => column.name !== 'Age') ?? [];
+			return columns;
+		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

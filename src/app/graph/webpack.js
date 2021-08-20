@@ -17,12 +17,10 @@ module.exports = [
       extensions: [".ts", ".js", ".scss"],
     },
     output: {
-      // path: path.resolve(__dirname, "../frontend/static/acorn-graph"),
-      // publicPath: "/graph",
       path: path.resolve(__dirname, "dist"),
-      library: ["acorn", "graph"],
+      library: ["kore3lab", "graph"],
       libraryTarget: "umd",
-      filename: "acorn.graph.[name].js",
+      filename: "kore3lab.graph.[name].js",
       globalObject: "this",
     },
     module: {

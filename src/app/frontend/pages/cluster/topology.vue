@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Cluster"></c-navigator>
 				<div class="row mb-2">
@@ -10,7 +10,7 @@
 					<div class="col-sm-1 text-right"><b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button></div>
 				</div>
 			</div>
-		</div>
+		</section>
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
@@ -29,7 +29,7 @@
 	</div>
 </template>
 <script>
-import * as graph	from "../../static/acorn-graph/acorn.graph.topology"
+import * as graph	from "../../static/kore3lab.graph/kore3lab.graph.topology"
 import VueNavigator from "@/components/navigator"
 
 export default {

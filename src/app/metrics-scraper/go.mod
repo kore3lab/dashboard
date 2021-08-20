@@ -1,6 +1,6 @@
-module github.com/kubernetes-sigs/dashboard-metrics-scraper
+module github.com/kore3lab/dashboard-metrics-scraper
 
-go 1.13
+go 1.15
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
@@ -10,11 +10,13 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/gomega v1.13.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
 	gopkg.in/inf.v0 v0.9.0 // indirect
-	k8s.io/api v0.0.0-20190222053316-a4bb047fdb92 // indirect
+	k8s.io/api v0.0.0-20190222053316-a4bb047fdb92
 	k8s.io/apimachinery v0.0.0-20190221093215-450d01ad5771
 	k8s.io/client-go v0.0.0-20190222093734-6e378217e628
 	k8s.io/klog v0.0.0-20181108234604-8139d8cb77af // indirect

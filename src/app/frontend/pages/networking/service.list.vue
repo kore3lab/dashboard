@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Networking"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -46,25 +46,21 @@
 											<span class="text-lg align-middle">Loading...</span>
 										</div>
 									</template>
-									<template v-slot:cell(internalEndpoints)="data">
+									<template v-slot:cell(ports)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.internalEndpoints" v-bind:key="value">{{ value }}</li>
+											<li v-for="value in data.value" v-bind:key="value">{{ value }}</li>
 										</ul>
 									</template>
-									<template v-slot:cell(externalEndpoints)="data">
+									<template v-slot:cell(externalIPs)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(val, idx) in data.value" v-bind:key="idx">{{ val }}</li>
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }}</li>
 										</ul>
 									</template>
 									<template v-slot:cell(selector)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.selector" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-										</ul>
+										<span v-for="(value, name) in data.item.selector" v-bind:key="name" class="border-box background">{{ name }}={{ value }}</span>
 									</template>
 									<template v-slot:cell(status)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-bind:key="data.value" v-bind:class="[ data.value === 'Active'? 'text-success' : 'text-warning' ]">{{ data.value }}</li>
-										</ul>
+										<span v-bind:key="data.value" v-bind:class="{'text-success': data.value=='Active', 'text-warning': data.value=='Pending'}">{{ data.value }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -101,11 +97,11 @@ export default {
 				{ key: "namespace", label: "Namespace", sortable: true },
 				{ key: "type", label: "Type", sortable: true },
 				{ key: "clusterIP", label: "Cluster IP", sortable: true },
-				{ key: "internalEndpoints", label: "Ports", sortable: true },
-				{ key: "externalEndpoints", label: "External IP", sortable: true },
+				{ key: "ports", label: "Ports", sortable: true, formatter: this.formatPorts },
+				{ key: "externalIPs", label: "External IP", sortable: true, formatter: this.formatExternalIPs },
 				{ key: "selector", label: "Selector", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "status", label: "Status", sortable: true }
+				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
 			],
 			isBusy: false,
 			items: [],
@@ -151,11 +147,11 @@ export default {
 								namespace: el.metadata.namespace,
 								type: el.spec.type,
 								clusterIP: el.spec.clusterIP,
-								internalEndpoints: this.toEndpointList(el.spec.ports,el.spec.type),
-								externalEndpoints: this.externalEndpoint(el),
+								ports: el.spec.ports,
+								externalIPs: el.spec.externalIPs,
 								selector: el.spec.selector,
 								creationTimestamp: el.metadata.creationTimestamp,
-								status: this.checkStatus(el.spec.type,el.status)
+								status: el.status
 							});
 						});
 						this.onFiltered(this.items);
@@ -167,50 +163,40 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
-		toEndpointList(p,type) {
-			let list = [];
-			if (p === undefined) return;
-			for(let i =0; i < p.length; i++) {
-				if (type === 'NodePort' || type === 'LoadBalancer') {
-					list.push(`${p[i].port}:${p[i].nodePort}/${p[i].protocol}`)
-				}else if(p[i].targetPort === p[i].port){
-					list.push(`${p[i].port}/${p[i].protocol}`)
+		formatStatus(status, key, item) {
+			if (item.type == "LoadBalancer") {
+				if(status.loadBalancer && status.loadBalancer.ingress) {
+					return "Active";
+				} else {
+					return "Pending";
 				}
-				else{
-					list.push(`${p[i].port}:${p[i].targetPort}/${p[i].protocol}`)
+			} else {
+				return "Active";
+			}
+		},
+		formatExternalIPs(externalIPs, key, item) {
+			if (item.type == "LoadBalancer") {
+				return item.status.loadBalancer.ingress? [item.status.loadBalancer] : ["-"];
+			} else if(item.type == "ExternalName") {
+				return [el.spec.externalName];
+			} else {
+				return (externalIPs? externalIPs : ["-"])
+			}
+		},
+		formatPorts(ports, key, item) {
+			let list = [];
+			if (ports) {
+				for(let i =0; i < ports.length; i++) {
+					if (item.type == "NodePort" || item.type == "LoadBalancer") {
+						list.push(`${ports[i].port}:${ports[i].nodePort}/${ports[i].protocol}`)
+					} else if(ports[i].targetPort === ports[i].port) {
+						list.push(`${ports[i].port}/${ports[i].protocol}`)
+					} else {
+						list.push(`${ports[i].port}:${ports[i].targetPort}/${ports[i].protocol}`)
+					}
 				}
 			}
 			return list;
-		},
-		externalEndpoint(el) {
-			let list = []
-			if (el.spec.type === 'LoadBalancer') {
-				return (el.status.loadBalancer.ingress !== undefined? el.status.loadBalancer : "-")
-			} else if(el.spec.type === 'ExternalName') {
-				list.push(el.spec.externalName)
-				return list
-			} else {
-				return (el.spec.externalIPs? el.spec.externalIPs : "-")
-			}
-		},
-		checkStatus(type,status) {
-			if (type !== 'LoadBalancer') {
-				this.status = true
-				return 'Active'
-			} else if (this.getExternalIps(status) === true) {
-				this.status = true
-				return 'Active'
-			} else {
-				this.status = false
-				return 'Pending'
-			}
-		},
-		getExternalIps(status) {
-			const lb = this.getLoadBalancer(status);
-			return (lb.ingress !== undefined)
-		},
-		getLoadBalancer(status) {
-			return status.loadBalancer
 		}
 	},
 	beforeDestroy(){
@@ -218,4 +204,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

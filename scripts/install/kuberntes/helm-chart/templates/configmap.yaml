@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   labels:
     app: {{ .Chart.Name }}
-  name: kore-board-kubeconfig
+  name: {{ .Chart.Name }}-kubeconfig
 data:
   config: |
 
@@ -13,9 +13,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app: kore-board
-  name: kore-board-nginx
-  namespace: kore
+    app: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}-nginx
+  namespace: {{ .Release.Namespace }}
 data:
   default.conf: |2-
     server {
@@ -23,8 +23,8 @@ data:
         listen  [::]:80;
         server_name  localhost;
 
-        access_log /var/log/nginx/aaaccess.log main;
-        error_log /var/log/nginx/eeerror.log ;
+        access_log /var/log/nginx/access.log main;
+        error_log /var/log/nginx/error.log ;
 
         location / {
             location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2)$ {
@@ -34,7 +34,7 @@ data:
             }
             root   /usr/share/nginx/html;
             index  index.html index.htm;
-            try_files $uri $uri/ /index.html;
+            try_files $uri $uri/index.html $uri/ =404;
         }
 
         error_page   500 502 503 504   /50x.html;
@@ -42,12 +42,24 @@ data:
             root   /usr/share/nginx/html;
         }
 
-        location ~ ^/api/terminal/(.*)  {
-            proxy_pass   http://backend:3001;
+        location ~ ^/api/terminal/ws(.*)  {
+            proxy_pass   http://terminal:3003;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
+            proxy_connect_timeout 1d;
+            proxy_send_timeout 1d;
+            proxy_read_timeout 1d;
+        }
+    
+        location ~ ^/api/terminal/(.*)  {
+            proxy_pass   http://terminal:3003;
+            proxy_redirect              off;
+            proxy_set_header            Host $host;
+            proxy_set_header            X-Real-IP $remote_addr;
+            proxy_set_header            X-Forwarded-For $proxy_add_x_forwarded_for;
+            # proxy_set_header            X-Custom-Referrer $x_custom_referrer;
         }
 
         location ~ ^/api/(.*)  {

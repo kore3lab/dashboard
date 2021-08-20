@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sideDb "github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/database"
+	sideDb "github.com/kore3lab/dashboard-metrics-scraper/pkg/database"
 	_ "github.com/mattn/go-sqlite3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

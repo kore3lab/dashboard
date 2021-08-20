@@ -17,10 +17,6 @@ export default {
 		}
 	},
 	mounted(){
-		// history reset
-		this.$nuxt.$on("resetHistory",(raw) => {
-			this.reset = raw
-		})
 		//  editor
 		this.editor = Ace.edit(this.$el.id);
 		this.editor.setOptions({

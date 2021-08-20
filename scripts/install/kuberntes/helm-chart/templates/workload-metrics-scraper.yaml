@@ -7,14 +7,11 @@ metadata:
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
 spec:
-  type: {{ .Values.metricsScraper.service.type }}
+  type: ClusterIP
   ports:
     - name: http
-{{- if hasKey .Values.metricsScraper.service "nodePort" }}
-      nodePort: {{ .Values.metricsScraper.service.nodePort }}
-{{- end }}
-      port: 8000
       protocol: TCP
+      port: 8000
       targetPort: 8000
   selector:
     app: {{ .Chart.Name }}
@@ -31,7 +28,7 @@ metadata:
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.metricsScraper.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
@@ -46,15 +43,11 @@ spec:
     spec:
       containers:
         - name: metrics-scraper
-          image: ghcr.io/acornsoftlab/kore-board.metrics-scraper:{{ .Chart.AppVersion }}
+          image: ghcr.io/kore3lab/kore-board.metrics-scraper:{{ .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args:
-            - --kubeconfig=/app/.kube/config
-            - --log-level=info
-            - --db-file=/app/data/metrics.db
-          ports:
-            - containerPort: 8000
-              protocol: TCP
+          {{- if .Values.metricsScraper.resources }}
+          resources: {{- toYaml .Values.metricsScraper.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               scheme: HTTP
@@ -62,10 +55,16 @@ spec:
               port: 8000
             initialDelaySeconds: 30
             timeoutSeconds: 30
+          args:
+            - --kubeconfig=/app/.kube/config
+            - --log-level=info
+            - --db-file=/app/data/metrics.db
+          ports:
+            - containerPort: 8000
+              protocol: TCP
           volumeMounts:
-            - mountPath: /app/.kube/config
+            - mountPath: /app/.kube
               name: kubeconfig
-              subPath: config
             - mountPath: /app/data
               name: data-volume
           securityContext:
@@ -77,9 +76,6 @@ spec:
         - name: kubeconfig
           configMap:
             name: kore-board-kubeconfig
-            items:
-            - key: config
-              path: config
         - name: data-volume
       {{- if .Values.metricsScraper.persistence.enabled }}
           persistentVolumeClaim:

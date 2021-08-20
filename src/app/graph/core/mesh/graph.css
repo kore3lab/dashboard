@@ -48,10 +48,6 @@ g.node.warn > .ico {fill:#ffc107; stroke: #FFA500; fill-opacity:0.1;}
 g.edge.warn > line {fill:#ffc107;stroke:#FFA500;}
 g.edge.warn .label {fill:#FFA500;}
 
-/* ERROR  animation */
-@keyframes acorn-anmi-error-frame { 0% {fill: #f8d7da;stroke:#f8d7da;} 50% {fill: #f8d7da;stroke:#FF0000;stroke-width:2px;} }
-@-webkit-keyframes acorn-anmi-error-frame { 0% {fill: #f8d7da;stroke:#f8d7da;} 50% {fill: #f8d7da;stroke:#FF0000;stroke-width:2px}}
-.anmi-error {animation: acorn-anmi-error-frame 1s step-end infinite; -webkit-animation: acorn-anmi-error-frame 1s step-end infinite;}
 
 /* ERROR - node  (node BOX, service, app)  */
 g.nodes.error > rect { fill:#ccc; stroke:#FF0000; fill-opacity:0.1;}
@@ -60,10 +56,6 @@ g.node.error > .ico {fill: #f8d7da;stroke:#FF0000;}
 /* ERROR - edge  */
 g.edge.error > line {fill: #FF0000;stroke:#FF0000;}
 g.edge.error .label {fill:#FF0000;}
-
-/* ERROR - animation (아이콘, 라인)  */
-g.node.error.anmi > .ico {animation: acorn-anmi-error-frame 1s step-end infinite; -webkit-animation: acorn-anmi-error-frame 1s step-end infinite;}
-g.edge.error.anmi > line {animation: acorn-anmi-error-frame 1s step-end infinite; -webkit-animation: acorn-anmi-error-frame 1s step-end infinite;}
 
 /* focus & selected - override 되므로 가장 마지막에 정의 */
 g.nodes.focus > rect {stroke:#007bff; fill:yellow}

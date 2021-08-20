@@ -25,7 +25,7 @@ COMMAND="$2"
 TAG="$3"
 GROUP="$4"
 
-if [ "${GROUP}" == "" ];	then GROUP="ghcr.io/acornsoftlab";	fi
+if [ "${GROUP}" == "" ];	then GROUP="ghcr.io/kore3lab";	fi
 PROJECT="kore-board"
 ROOT="$(pwd)"
 FRONTEND="${GROUP}/${PROJECT}.frontend"
