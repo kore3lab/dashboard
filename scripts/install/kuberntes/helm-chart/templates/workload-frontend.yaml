@@ -46,6 +46,9 @@ spec:
         - name: frontend
           image: ghcr.io/kore3lab/kore-board.frontend:{{ .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.frontend.resources }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: 80
               protocol: TCP

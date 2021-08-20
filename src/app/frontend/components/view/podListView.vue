@@ -47,10 +47,12 @@ export default {
 			]
 		}
 	},
-	watch: {
-		value(newVal) {
+	mounted() {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
+			if(!data) return
 			this.isBusy = true;
-			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}/pods`)
+			let selectUrl = data.kind=="Node"? `nodes/${data.metadata.name}`: `namespaces/${data.metadata.namespace}/${data.kind.toLowerCase()}s/${data.metadata.name}`;
+			this.$axios.get(`/api/clusters/${this.currentContext()}/${selectUrl}/pods`)
 				.then(resp => {
 					this.items = resp.data.pods;
 				}).catch(e => {
@@ -59,7 +61,10 @@ export default {
 				}).finally(()=>{
 					this.isBusy = false
 				});
-		}
+		});
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("view-data-read-completed");
 	}
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="2" ddCols="10"></c-metadata>
+	<c-metadata dtCols="2" ddCols="10"></c-metadata>
 	<!-- 2. Limits -->
 	<div class="row">
 		<div class="col-md-12">
@@ -36,14 +36,12 @@ export default {
 	},
 	data() {
 		return {
-			metadata: {},
 			limits: {}
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
-			this.metadata = data.metadata;
 			data.spec.limits.forEach(el=> {
 				let d = []
 				for(let key in el) {
@@ -52,10 +50,9 @@ export default {
 				this.limits[el["type"]] = d;
 			});
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

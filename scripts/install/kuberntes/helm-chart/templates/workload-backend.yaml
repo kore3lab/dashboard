@@ -43,6 +43,16 @@ spec:
         - name: backend
           image: ghcr.io/kore3lab/kore-board.backend:{{ .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.backend.resources }}
+          resources: {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- end }}
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
           args:
             - --kubeconfig=strategy=configmap,configmap={{ .Chart.Name }}-kubeconfig,namespace={{ .Release.Namespace }},filename=config
             - --metrics-scraper-url=http://metrics-scraper:8000

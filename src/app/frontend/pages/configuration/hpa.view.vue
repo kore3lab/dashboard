@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata v-model="metadata" dtCols="3" ddCols="9">
+	<c-metadata dtCols="3" ddCols="9">
 		<dt class="col-sm-3">Reference</dt>
 		<dd class="col-sm-9">{{ ref.kind }} / <a href="#" @click="$emit('navigate', getViewLink(ref.group, ref.resource, metadata.namespace, ref.name))">{{ ref.name }}</a></dd>
 		<dt class="col-sm-3">Min Pods</dt><dd class="col-sm-9">{{ info.minPods }}</dd>
@@ -21,7 +21,7 @@
 		</div>
 	</div>
 	<!-- 3. evnets -->
-	<c-events class="row" v-model="metadata.uid"></c-events>
+	<c-events class="row"></c-events>
 </div>
 </template>
 <script>
@@ -48,7 +48,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("onReadCompleted", (data) => {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.info = {
@@ -61,11 +61,9 @@ export default {
 			];
 			this.ref = this.getResource(data.spec.scaleTargetRef)
 		});
-		this.$nuxt.$emit("onCreated",'')
 	},
-	methods: {},
 	beforeDestroy(){
-		this.$nuxt.$off("onReadCompleted");
+		this.$nuxt.$off("view-data-read-completed");
 	},
 }
 </script>

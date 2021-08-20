@@ -109,9 +109,11 @@ export default {
 			data: { cpu: {}, memory: {}}
 		}
 	},
-	watch: {
-		value(newVal) {
-			this.$axios.get(`/api/clusters/${this.currentContext()}/${newVal}/metrics`)
+	mounted() {
+		this.$nuxt.$on("view-data-read-completed", (data) => {
+			if(!data) return;
+			let selectUrl = data.kind=="Node"? `nodes/${data.metadata.name}`: `namespaces/${data.metadata.namespace}/${data.kind.toLowerCase()}s/${data.metadata.name}`;
+			this.$axios.get(`/api/clusters/${this.currentContext()}/${selectUrl}/metrics`)
 				.then(resp => {
 					this.isEmpty = true;
 					this.cpu = {limits: 0, requests: 0};
@@ -206,9 +208,10 @@ export default {
 				.catch(e => {
 					this.msghttp(e);
 				});
-
-		}
+		});
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("view-data-read-completed");
 	}
-
 }
 </script>
