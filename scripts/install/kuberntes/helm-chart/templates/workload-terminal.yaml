@@ -40,7 +40,10 @@ spec:
       containers:
         - name: terminal
           image: ghcr.io/kore3lab/kore-board.terminal:{{ .Chart.AppVersion }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.terminal.resources }}
+          resources: {{- toYaml .Values.terminal.resources | nindent 12 }}
+          {{- end }}
           args:
             - --kubeconfig=/app/.kube/config
             - --log-level=info

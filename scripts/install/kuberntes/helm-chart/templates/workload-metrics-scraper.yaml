@@ -45,13 +45,9 @@ spec:
         - name: metrics-scraper
           image: ghcr.io/kore3lab/kore-board.metrics-scraper:{{ .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args:
-            - --kubeconfig=/app/.kube/config
-            - --log-level=info
-            - --db-file=/app/data/metrics.db
-          ports:
-            - containerPort: 8000
-              protocol: TCP
+          {{- if .Values.metricsScraper.resources }}
+          resources: {{- toYaml .Values.metricsScraper.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               scheme: HTTP
@@ -59,6 +55,13 @@ spec:
               port: 8000
             initialDelaySeconds: 30
             timeoutSeconds: 30
+          args:
+            - --kubeconfig=/app/.kube/config
+            - --log-level=info
+            - --db-file=/app/data/metrics.db
+          ports:
+            - containerPort: 8000
+              protocol: TCP
           volumeMounts:
             - mountPath: /app/.kube
               name: kubeconfig
