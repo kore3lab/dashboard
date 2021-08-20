@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Networking"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -47,9 +47,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(policyTypes)="data">
-										<ul class="list-unstyled mb-0">
-											<li v-for="value in data.item.policyTypes" v-bind:key="value" class="mr-1text-md">{{ value }}</li>
-										</ul>
+										<span v-for="value in data.value" v-bind:key="value" class="border-box">{{ value }}</span>
 									</template>
 								</b-table>
 							</div>
@@ -144,4 +142,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

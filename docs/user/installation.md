@@ -81,21 +81,21 @@ $ docker volume create kubeconfig
 
 $ docker run --rm -d --privileged --name terminal \
     -v "kubeconfig:/app/.kube"\
-    ghcr.io/acornsoftlab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
+    ghcr.io/kore3lab/kore-board.terminal:latest --kubeconfig=/app/.kube/config --corsonoff=off
 
 $ docker run --rm -d --name metrics-scraper \
     -v "kubeconfig:/app/.kube"\
     -v "data:/app/data"\
-    ghcr.io/acornsoftlab/kore-board.metrics-scraper:latest --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db
+    ghcr.io/kore3lab/kore-board.metrics-scraper:latest --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db
 
 $ docker run --rm -d --name backend \
     -v "kubeconfig:/app/.kube" \
     --link metrics-scraper:metrics-scraper \
-    ghcr.io/acornsoftlab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003
+    ghcr.io/kore3lab/kore-board.backend:latest --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003
 
 $ docker run --rm -d -p 3000:80 --name frontend\
     --link backend:backend --link terminal:terminal\
-    ghcr.io/acornsoftlab/kore-board.frontend:latest
+    ghcr.io/kore3lab/kore-board.frontend:latest
 ```
 
 * clean-up

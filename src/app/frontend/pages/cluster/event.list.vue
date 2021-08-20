@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Administrator"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -47,10 +47,10 @@
 										</div>
 									</template>
 									<template v-slot:cell(message)="data">
-										<span v-bind:class="data.item.style">{{ data.value }}</span>
+										<span v-bind:class="{'text-danger':data.item.type=='Warning'}">{{ data.value }}</span>
 									</template>
 									<template v-slot:cell(involvedObj)="data">
-										<a href="#" @click="viewModel=getViewLink(data.item.controllers.g, data.item.controllers.k, data.value.namespace, data.value.name); isShowSidebar=true;">{{ data.value.kind }}: {{ data.value.name }}</a>
+										<span>{{ data.value.kind }} : <a href="#" @click="viewModel=getViewLink(data.value.group, data.value.resource, data.item.namespace, data.value.name); isShowSidebar=true;">{{ data.value.name }}</a></span>
 									</template>
 									<template v-slot:cell(source)="data">
 										<span v-for="(val, idx) in data.value" v-bind:key="idx" >{{ val }} </span>
@@ -89,8 +89,8 @@ export default {
 				{ key: "type", label: "Type", sortable: true },
 				{ key: "message", label: "Message", sortable: true },
 				{ key: "namespace", label: "Namespace", sortable: true },
-				{ key: "involvedObj", label: "Involved Object" },
-				{ key: "source", label: "Source" },
+				{ key: "involvedObj", label: "Involved Object", formatter: this.getResource },
+				{ key: "source", label: "Source", formatter: this.formatSource },
 				{ key: "count", label: "Count", sortable: true },
 				{ key: "lastSeen", label: "Last Seen", sortable: true, formatter: this.getElapsedTime },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
@@ -135,12 +135,10 @@ export default {
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
 								involvedObj: el.involvedObject,
-								controllers: this.getController(el.involvedObject),
-								source: Object.entries(el.source).map(([_, value]) => `${value}`),
+								source: el.source,
 								count: el.count,
 								lastSeen: el.lastTimestamp,
-								creationTimestamp: el.metadata.creationTimestamp,
-								style: el.type === 'Warning' ? 'text-danger' : '',
+								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
 						this.onFiltered(this.items);
@@ -152,10 +150,12 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		},
+		formatSource(source, key, item) {
+			return Object.entries(source).map(([_, value]) => `${value}`);
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

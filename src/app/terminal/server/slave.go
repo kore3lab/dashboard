@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/acornsoftlab/dashboard/terminal/webtty"
+	"github.com/kore3lab/dashboard/terminal/webtty"
 )
 
 // Slave - webtty를 통해 처리할 Socket 연계용 인터페이스

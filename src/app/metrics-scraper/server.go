@@ -13,8 +13,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	sideapi "github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/api"
-	sidedb "github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/database"
+	sideapi "github.com/kore3lab/dashboard-metrics-scraper/pkg/api"
+	sidedb "github.com/kore3lab/dashboard-metrics-scraper/pkg/database"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
@@ -23,7 +23,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/config"
+	"github.com/kore3lab/dashboard-metrics-scraper/pkg/config"
 	"github.com/spf13/viper"
 )
 

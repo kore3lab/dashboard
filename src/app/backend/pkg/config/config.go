@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/acornsoftlab/dashboard/pkg/auth"
-	"github.com/acornsoftlab/dashboard/pkg/lang"
+	"github.com/kore3lab/dashboard/pkg/auth"
+	"github.com/kore3lab/dashboard/pkg/lang"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 )
@@ -32,7 +32,7 @@ func init() {
 
 	//set default
 	//*kubeconfig = "strategy=configmap,configmap=kore-board-kubeconfig,namespace=kore,filename=config"
-	*authconfig = lang.NVL(*authconfig, "strategy=cookie,secret=static-token,token=acornsoft")
+	*authconfig = lang.NVL(*authconfig, "strategy=cookie,secret=static-token,token=kore3lab")
 	Value.MetricsScraperUrl = lang.NVL(Value.MetricsScraperUrl, "http://localhost:8000")
 	Value.TerminalUrl = lang.NVL(Value.TerminalUrl, "http://localhost:3003")
 	*logLevel = lang.NVL(*logLevel, "debug")

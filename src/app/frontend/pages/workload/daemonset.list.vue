@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -48,7 +48,9 @@
 									</template>
 									<template v-slot:cell(nodeSelector)="data">
 										<ul class="list-unstyled mb-0">
-											<li v-for="(value, name) in data.item.nodeSelector" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
+											<li v-for="(value, name) in data.item.nodeSelector" v-bind:key="name">
+												<span class="border-box background">{{ name }}={{ value }}</span>
+											</li>
 										</ul>
 									</template>
 									<template v-slot:cell(images)="data">
@@ -93,7 +95,7 @@ export default {
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 			],
 			fields: [],
-			isBusy: false,
+			isBusy: true,
 			items: [],
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
@@ -151,4 +153,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

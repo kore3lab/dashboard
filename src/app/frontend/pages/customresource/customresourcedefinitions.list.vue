@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Custom Resource"></c-navigator>
 				<div class="row mb-2">
@@ -15,7 +15,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -208,4 +208,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

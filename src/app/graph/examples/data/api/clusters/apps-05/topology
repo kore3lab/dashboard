@@ -9,7 +9,7 @@
         },
         {
             "id": "docker://6bdfe41e8c330166a424da213f2f68f75dbbbaccf662468664ae60783b4e3641",
-            "name": "acornsoftlab/acornsoft-dashboard.backend:v0.1.0",
+            "name": "kore3lab/kore-board.backend:v0.1.0",
             "kind": "container",
             "group": "apps-113",
             "labels": ""
@@ -23,7 +23,7 @@
         },
         {
             "id": "docker://ff878a858091017831d26fd7510d97c806e4771535c0a3368c26b3f793133f95",
-            "name": "acornsoftlab/acornsoft-dashboard.dashboard:v0.1.0",
+            "name": "kore3lab/kore-board.dashboard:v0.1.0",
             "kind": "container",
             "group": "apps-113",
             "labels": ""
@@ -37,7 +37,7 @@
         },
         {
             "id": "docker://cb674aae3e279713f7500ecf4c07c31f178637b91be39aec6049ebc1a1429bea",
-            "name": "kubernetesui/metrics-scraper:v1.0.6",
+            "name": "kore3lab/metrics-scraper:v1.0.6",
             "kind": "container",
             "group": "apps-113",
             "labels": ""
@@ -51,7 +51,7 @@
         },
         {
             "id": "docker://bd616a66b8dd2c05ccbfdabac5b2f4c441be8b1732f9ef0640fae8e6a0c8a493",
-            "name": "acornsoftlab/acornsoft-dashboard.frontend:v0.1.0",
+            "name": "kore3lab/kore-board.frontend:v0.1.0",
             "kind": "container",
             "group": "apps-113",
             "labels": ""

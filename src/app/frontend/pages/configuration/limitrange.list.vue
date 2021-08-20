@@ -1,6 +1,6 @@
 <template>
 	<div class="content-wrapper">
-		<div class="content-header">
+		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Configuration"></c-navigator>
 				<div class="row mb-2">
@@ -19,7 +19,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<section class="content">
 			<div class="container-fluid">
@@ -47,7 +47,9 @@
 										</div>
 									</template>
 									<template v-slot:cell(type)="data">
-										<span v-for="(value, idx) in data.item.type" v-bind:key="idx">{{ value }} </span>
+										<ul class="list-unstyled mb-0">
+											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value.type }}</li>
+										</ul>
 									</template>
 								</b-table>
 							</div>
@@ -122,7 +124,7 @@ export default {
 							this.items.push({
 								name: el.metadata.name,
 								namespace: el.metadata.namespace,
-								type: this.getTypes(el.spec.limits),
+								type: el.spec.limits,
 								creationTimestamp: el.metadata.creationTimestamp
 							});
 						});
@@ -134,13 +136,6 @@ export default {
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
-		getTypes(limit) {
-			let list = [];
-			for (let i =0;i<limit.length;i++) {
-				list.push(limit[i].type)
-			}
-			return list
 		}
 	},
 	beforeDestroy(){
@@ -148,4 +143,3 @@ export default {
 	}
 }
 </script>
-<style scoped>label {font-weight: 500;}</style>

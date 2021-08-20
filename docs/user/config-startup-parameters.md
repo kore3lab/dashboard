@@ -10,7 +10,7 @@
 |--kubeconfig           |                                                     |kubeconfig 파일 위치                                                                           |
 |--metrics-scraper-url  |http://localhost:8000                                |metrics-scraper api url                                                                        |
 |--terminal-url         |http://localhost:3003                                |terminal api url                                                                               |
-|--auth                 |strategy=cookie,secret=static-token,token=acornsoft  |인증처리방식 설정                                                                              |
+|--auth                 |strategy=cookie,secret=static-token,token=kore3lab   |인증처리방식 설정                                                                              |
 
 
 * 환경변수 (env)
@@ -21,7 +21,7 @@
 |KUBECONFIG           |                                                     |"--kubeconfig"           |
 |METRICS_SCRAPER_URL  |http://localhost:8000                                |"--metrics-scraper-url"  |
 |TERMINAL_URL         |http://localhost:3003                                |"--terminal-url "        |
-|AUTH                 |strategy=cookie,secret=static-token,token=acornsoft  |"--auth"                 |
+|AUTH                 |strategy=cookie,secret=static-token,token=kore3lab   |"--auth"                 |
 
 
 * Configuration of authentication

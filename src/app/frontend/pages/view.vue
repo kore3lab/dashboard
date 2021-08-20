@@ -1,82 +1,44 @@
 <template>
-	<section class="content border-primary border-left min-vh-100" v-bind:class="{ 'min-vh-100' : errorcheck}">
+	<section class="content-view border-primary border-left min-vh-100" v-bind:class="{ 'min-vh-100' : errorcheck}">
 		<div class="card card-primary m-0 layer" v-bind:class="{ 'min-vh-100' : errorcheck}">
-			<!-- card-header -->
+			<!-- header -->
 			<div class="card-header pt-2 pb-2 position-sticky fixed-top">
-				<h3 class="card-title text-truncate">{{ title }} / {{ (name && name.length >60) ? name.substring(0,60)+'...' : name }}</h3>
+				<h3 class="card-title">{{ title }} / {{ (name && name.length >60) ? name.substring(0,60)+'...' : name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
 						<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
-						<nuxt-link :to="{path: '/terminal', query: {termtype: 'pod',pod: name, namespace: raw.metadata.namespace, cluster: currentContext()}}" v-show="isTerminal" target="_blank">
-							<button id="terminal" class="btn btn-tool" v-show="isTerminal"><i class="fas fa-terminal"></i></button>
-						</nuxt-link>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
 					</span>
 					<button type="button" class="btn btn-tool" @click="$emit('close')"><i class="fas fa-times"></i></button>
 				</div>
 			</div>
-			<b-popover triggers="hover" target="terminal" placement="bottomleft" boundary="window" boundary-padding="0">
-				<ul class="list-unstyled m-0">
-					<li v-for="(val,idx) in containers" v-bind:key="idx" class="mb-1">
-						<span v-if="val.status.value === 'running'" class="text-truncate">
-							<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: name, namespace: raw.metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
-							<button type="button" class="btn btn-tool"><b-badge :variant="val.status.badge" class="mt-1 mb-1 mr-1">&nbsp;</b-badge>{{ val.name }}</button>
-							</nuxt-link>
-						</span>
-					</li>
-				</ul>
-			</b-popover>
 			<!-- error message-->
 			<div class="col-md-12 mt-5 lh-vh-50" v-show="errorcheck"><p class="align-middle text-sm-center">Resource loading has failed: <b>{{ errorMessage }}</b></p></div>
 
-			<b-overlay :show="deleteOverlay.visible" rounded="sm" no-center>
+			<!-- body -->
+			<b-overlay :show="deleteOverlay.visible" no-center>
 				<!--1. not Yaml(editor) -->
 				<div v-show="!isYaml && !errorcheck" class="card-body p-2">
 					<!-- 1.1 meta data -->
-					<div class="row" v-show="isJSON">
-						<div class="col-md-12">
-							<div class="card card-secondary card-outline">
-								<div class="card-body p-2">
-									<dl class="row mb-0">
-										<dt class="col-sm-2 text-truncate">Create at</dt><dd class="col-sm-10">{{ this.getTimestampString(raw.metadata.creationTimestamp)}} ago ({{ raw.metadata.creationTimestamp }})</dd>
-										<dt class="col-sm-2">Name</dt><dd class="col-sm-10">{{ raw.metadata.name }}</dd>
-										<dt v-if="raw.metadata.namespace" class="col-sm-2">Namespace</dt><dd v-if="raw.metadata.namespace" class="col-sm-10">{{ raw.metadata.namespace }}</dd>
-										<dt class="col-sm-2 text-truncate">Annotations</dt>
-										<dd class="col-sm-10 text-truncate">
-											<ul class="list-unstyled mb-0">
-												<li v-for="(value, name) in raw.metadata.annotations" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-											</ul>
-										</dd>
-										<dt class="col-sm-2 text-truncate">Labels</dt>
-										<dd class="col-sm-10">
-											<ul class="list-unstyled mb-0">
-												<li v-for="(value, name) in raw.metadata.labels" v-bind:key="name"><span class="badge badge-secondary font-weight-light text-sm mb-1">{{ name }}={{ value }}</span></li>
-											</ul>
-										</dd>
-										<dt class="col-sm-2 text-truncate">UID</dt><dd class="col-sm-10">{{ raw.metadata.uid }}</dd>
-									</dl>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- 1.2  custom view -->
+					<c-metadata v-show="isJSON" v-model="raw.metadata" dtCols="2" ddCols="10"></c-metadata>
+					<!-- 1.2  view -->
 					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="navigate"/>
 					<!-- 1.3 json-tree -->
 					<div class="row" v-show="isJSON && title !== 'StorageClass'">
 						<div class="col-md-12">
 							<div class="card card-secondary card-outline m-0">
 								<div class="card-header p-2">
-									<h3 class="card-title text-md" v-if="title==='ConfigMap' || title==='Secret'">Data</h3>
-									<h3 class="card-title text-md" v-else-if="title==='ServiceAccount'">Secrets</h3>
-									<h3 class="card-title text-md" v-else-if="title==='Role' || title==='ClusterRole'">Rules</h3>
-									<h3 class="card-title text-md" v-else-if="title==='RoleBinding' || title==='ClusterRoleBinding'">Subjects,RoleRef</h3>
-									<h3 class="card-title text-md" v-else-if="title==='Endpoints'">Subsets</h3>
-									<h3 class="card-title text-md" v-else-if="title==='HorizontalPodAutoscaler'">Spec,Status</h3>
-									<h3 class="card-title text-md" v-else-if="title==='Node'">NodeInfo</h3>
-									<h3 class="card-title text-md" v-else>Specification</h3>
+									<h3 class="card-title" v-if="title==='ConfigMap' || title==='Secret'">Data</h3>
+									<h3 class="card-title" v-else-if="title==='ServiceAccount'">Secrets</h3>
+									<h3 class="card-title" v-else-if="title==='Role' || title==='ClusterRole'">Rules</h3>
+									<h3 class="card-title" v-else-if="title==='RoleBinding' || title==='ClusterRoleBinding'">Subjects,RoleRef</h3>
+									<h3 class="card-title" v-else-if="title==='Endpoints'">Subsets</h3>
+									<h3 class="card-title" v-else-if="title==='HorizontalPodAutoscaler'">Spec,Status</h3>
+									<h3 class="card-title" v-else-if="title==='Node'">NodeInfo</h3>
+									<h3 class="card-title" v-else>Specification</h3>
 								</div>
 								<c-jsontree id="txtSpec" v-model="raw.spec" class="card-body p-2"></c-jsontree>
 							</div>
@@ -116,14 +78,14 @@
 	</section>
 </template>
 <script>
+import VueMetadataView	from "@/components/view/metadataView.vue";
+import VueAceEditor 		from "@/components/aceeditor"
+import VueJsonTree 			from "@/components/jsontree"
 
-import VueAceEditor 	from "@/components/aceeditor"
-import VueJsonTree 		from "@/components/jsontree"
 export default {
-
 	props:["value"],
-
 	components: {
+		"c-metadata": { extends: VueMetadataView },
 		"c-aceeditor": { extends: VueAceEditor },
 		"c-jsontree": { extends: VueJsonTree },
 	},
@@ -134,18 +96,14 @@ export default {
 			url: "",
 			origin: { metadata: {}, spec: {} },
 			raw: { metadata: {}, spec: {} },
-			containers: [],
-			containerCount: 0,
 			deleteLink: '',
 			isYaml: false,
 			isJSON: false,
-			isTerminal: false,
 			deleteOverlay: {
 				visible : false,
 				processing : false,
 				timer: null
 			},
-			localUrl: "",
 			localSrc: "",
 			errorcheck: false,
 			errorMessage: "",
@@ -201,29 +159,11 @@ export default {
 		},
 		url(newVal) {
 			if(!newVal) return;
-			if(newVal !== this.localUrl) {
-				this.localUrl =  newVal;
-				this.onSync();
-			} else {
-				this.onSync();
-			}
+			this.onSync();
 		},
 	},
 	mounted() {
-		this.$emit('close');
-		this.$nuxt.$on("onCreated",() => {
-			this.isCreated = true;
-			this.onSync()
-		})
-		this.$nuxt.$on('Containers', (data) => {
-			this.containerCount = 0
-			this.containers = data
-			if(!data) return
-			data.forEach(el => {
-				if(el.status.value === 'running') this.containerCount++;
-			})
-			if(this.containerCount === 0) this.isTerminal = false;
-		})
+		this.$emit("close");
 	},
 	beforeUpdate() {
 		let el = document.getElementsByTagName("body")
@@ -242,12 +182,11 @@ export default {
 			this.isYaml = false;
 			if (this.delay === 1) return;
 			this.delay++;
-			this.$axios.get(this.localUrl)
+			this.$axios.get(this.url)
 				.then(resp => {
 					this.errorcheck = false;
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
-					this.selfLink = this.getSelfLink(this.raw)
 					if(this.title === "ConfigMap" || this.title === "Secret") this.raw.spec = resp.data.data || {};
 					else if(this.title === "StorageClass") this.raw.spec = {}; // 무시
 					else if(this.title === "Role" || this.title === "ClusterRole") this.raw.spec = resp.data.rules || {};
@@ -257,21 +196,15 @@ export default {
 					else if(this.title === "HorizontalPodAutoscaler") this.raw.spec = {spec: resp.data.spec, status: resp.data.status}
 					else if(this.title === "Node") this.raw.spec = resp.data.status.nodeInfo
 					else this.raw.spec = resp.data.spec || {};
-					this.isTerminal = this.title === 'Pod';
-					if (this.isCreated) {
-						this.$nuxt.$emit("onReadCompleted", this.origin);
-						this.$nuxt.$emit('resetHistory',this.raw);
-					}
 					this.delay = 0;
+					// calcuate selfLink (deprecated metadata.selfLink)
+					let c = this.getResource(this.raw)
+					this.selfLink = this.getApiUrl(c.group, c.resource, this.raw.metadata.namespace, c.name);
+					this.$nuxt.$emit("view-data-read-completed", this.raw);
 				})
 				.catch(e => {
 					this.isError(e);
 				});
-		},
-		getSelfLink(data) {
-			let v = this.getController(data)
-			let url = this.getApiUrl(v.g,v.k,data.metadata.namespace,data.metadata.name)
-			return url
 		},
 		isError(e) {
 			this.errorcheck = true;
@@ -303,7 +236,11 @@ export default {
 				.then( _ => {
 					this.watch();
 				})
-				.catch(e => {this.msghttp(e);});
+				.catch(e => {
+					this.deleteOverlay.visible = false; 
+					this.deleteOverlay.processing = false;
+					this.msghttp(e);
+				});
 		},
 		watch() {
 			if(this.selfLink !== this.deleteLink) {
@@ -347,10 +284,6 @@ export default {
 			this.raw = Object.assign({}, this.origin);
 			this.disabled = false
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("onCreated",'')
-		this.$nuxt.$off('Containers','')
 	}
 }
 
