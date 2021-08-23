@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/kore3lab/dashboard/pkg/config"
 	"github.com/kore3lab/dashboard/pkg/lang"
@@ -76,14 +77,17 @@ func GetNodeListWithUsage(cluster string) (interface{}, error) {
 		return nil, err
 	}
 
+	//timeout 5s
+	timeout := int64(5)
+
 	// node-list
-	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), metaV1.ListOptions{})
+	nodeList, err := apiClient.CoreV1().Nodes().List(context.TODO(), metaV1.ListOptions{TimeoutSeconds: &timeout})
 	if err != nil {
 		return nil, err
 	}
 
 	// self.Workloads.Pods (노드별 파드 수 & running 파드 수)
-	podList, err := apiClient.CoreV1().Pods("").List(context.TODO(), metaV1.ListOptions{})
+	podList, err := apiClient.CoreV1().Pods("").List(context.TODO(), metaV1.ListOptions{TimeoutSeconds: &timeout})
 	if err != nil {
 		return nil, err
 	}
@@ -96,12 +100,13 @@ func GetNodeListWithUsage(cluster string) (interface{}, error) {
 
 	nodes := map[string]*NodeWithMetrics{}
 	summary := NodeMetricsUsage{}
+	d := time.Duration(timeout) * time.Second
+	nodeSummary := ProxyNodeSummary{}
 
 	for _, m := range nodeList.Items {
 
 		// node summary for storage used percentage (/api/v1/nodes/<node name>/proxy/stats/summary)
-		nodeSummary := ProxyNodeSummary{}
-		request := apiClient.CoreV1().RESTClient().Get().Resource("nodes").Name(m.Name).SubResource("proxy").Suffix("stats/summary")
+		request := apiClient.CoreV1().RESTClient().Get().Resource("nodes").Name(m.Name).SubResource("proxy").Suffix("stats/summary").Timeout(d)
 		responseRawArrayOfBytes, err := request.DoRaw(context.Background())
 		if err != nil {
 			log.Warnf("Unable to get %s/proxy/stats/summary (cause=%v)", m, err)
