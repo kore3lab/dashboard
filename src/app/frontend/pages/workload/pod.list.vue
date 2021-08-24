@@ -152,9 +152,9 @@ export default {
 			let selectedStatus = this.selectedStatus;
 			this.items = this.origin.filter(el => {
 				if(selectedStatus.includes("etc")) {
-					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
+					return (selectedStatus.length === 0) || selectedStatus.includes(el.status) || !(this.allStatus.includes(el.status));
 				}
-				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
+				return (selectedStatus.length === 0) || selectedStatus.includes(el.status);
 			});
 			this.totalItems = this.items.length;
 			this.currentPage = 1
@@ -173,7 +173,7 @@ export default {
 							containers: el.status,
 							restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
 							controller: el.metadata.ownerReferences?el.metadata.ownerReferences[0]:null,
-							status: el.status,
+							status: el.status.phase,
 							creationTimestamp: el.metadata.creationTimestamp,
 							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
@@ -195,14 +195,14 @@ export default {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
 
 			filteredItems.forEach(el=> {
-				if(el.status.value === "Running") status.running++;
-				else if(el.status.value === "Pending") status.pending++;
-				else if(el.status.value === "Terminating") status.terminating++;
-				else if(el.status.value === "CrashLoopBackOff") status.crashLoopBackOff++;
-				else if(el.status.value === "ImagePullBackOff") status.imagePullBackOff++;
-				else if(el.status.value === "Completed") status.completed++;
-				else if(el.status.value === "Failed") status.failed++;
-				else if(el.status.value === "ContainerCreating") status.containerCreating++;
+				if(el.status === "Running") status.running++;
+				else if(el.status === "Pending") status.pending++;
+				else if(el.status === "Terminating") status.terminating++;
+				else if(el.status === "CrashLoopBackOff") status.crashLoopBackOff++;
+				else if(el.status === "ImagePullBackOff") status.imagePullBackOff++;
+				else if(el.status === "Completed") status.completed++;
+				else if(el.status === "Failed") status.failed++;
+				else if(el.status === "ContainerCreating") status.containerCreating++;
 				else status.etc++;
 			});
 
