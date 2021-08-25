@@ -146,7 +146,7 @@ export default {
 								type: el.spec.type,
 								clusterIP: el.spec.clusterIP,
 								ports: el.spec.ports,
-								externalIPs: el.spec.externalIPs,
+								externalIPs: el.spec.externalIPs || el.spec.externalName,
 								selector: el.spec.selector,
 								creationTimestamp: el.metadata.creationTimestamp,
 								status: el.status
@@ -176,7 +176,7 @@ export default {
 			if (item.type == "LoadBalancer") {
 				return item.status.loadBalancer.ingress? [item.status.loadBalancer] : ["-"];
 			} else if(item.type == "ExternalName") {
-				return [el.spec.externalName];
+				return [externalIPs];
 			} else {
 				return (externalIPs? externalIPs : ["-"])
 			}
