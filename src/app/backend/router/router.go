@@ -99,6 +99,8 @@ func CreateUrlMappings() {
 		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
 		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 	}
+	// "/namespaces/:NAMESPACE/pods/:NAME/:OP" > pod operate (log,exec)
+	Router.GET("/raw/clusters/:CLUSTER/api/:VERSION/namespaces/:NAMESPACE/pods/:NAME/log", authenticate(), apis.GetPodLogs)
 
 	// RAW-API Grouped
 	//      non-Namespaced
