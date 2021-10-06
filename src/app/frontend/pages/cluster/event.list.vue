@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper">
+  <div class="content-wrapper" v-bind:style="{paddingBottom: contentPadding()}">
 		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Administrator"></c-navigator>

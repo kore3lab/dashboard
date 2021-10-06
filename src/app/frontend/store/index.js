@@ -8,7 +8,8 @@ export const state = () => ({
 		kubernetesVersion: "",
 		platform: "",
 		message: ""
-	}
+	},
+	contentPadding:'2rem'
 });
 export const mutations = {
 	setCurrentContext(state, ctx) {
@@ -29,6 +30,9 @@ export const mutations = {
 	setStatusbar(state, statusbar) {
 		state.statusbar = statusbar;
 	},
+	setContentPadding(state, height){
+		state.contentPadding = height;
+	}
 };
 export const getters = {
 	getCurrentContext(state) {
@@ -49,4 +53,7 @@ export const getters = {
 	getStatusbar(state) {
 		return state.statusbar;
 	},
+	getContentPadding(state){
+		return state.contentPadding;
+	}
 };

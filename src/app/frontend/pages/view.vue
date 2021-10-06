@@ -6,11 +6,11 @@
 				<h3 class="card-title">{{ title }} / {{ (name && name.length >60) ? name.substring(0,60)+'...' : name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
-						<button type="button" class="btn btn-tool" @click="onSync()"><i class="fas fa-sync-alt"></i></button>
+ 						<button type="button" class="btn btn-tool" @click="onSync()" v-b-tooltip.hover title="Reload"><i class="fas fa-sync-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
-						<button type="button" class="btn btn-tool" @click="isYaml=true"><i class="fas fa-edit"></i></button>
-						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true"><i class="fas fa-trash"></i></button>
+						<button type="button" class="btn btn-tool" @click="isYaml=true" v-b-tooltip.hover title="Edit"><i class="fas fa-edit"></i></button>
+						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true" v-b-tooltip.hover title="Delete"><i class="fas fa-trash"></i></button>
 					</span>
 					<button type="button" class="btn btn-tool" @click="$emit('close')"><i class="fas fa-times"></i></button>
 				</div>

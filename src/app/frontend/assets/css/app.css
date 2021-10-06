@@ -5,14 +5,17 @@
 .sidebar::-webkit-scrollbar{ display:none;}
 .brand-link { margin-left: 3.7rem;}
 .layout-fixed .brand-link { width: 13.2rem;}
-.main-footer {padding: .5rem 1rem; height: 2.5rem}
+.main-header {position: fixed; top:0; width:100%}
+.main-footer {padding: .5rem 1rem; min-height: 2.5rem; position: fixed; bottom:0;  width:100%; z-index: 10}
+.main-log {padding: 1rem 1rem; min-height: 10rem; bottom: 1rem; width:100%; position: fixed !important; z-index: 10}
+.margin-right {}
 aside a.brand-link img {width: 1.7em; height:1.7em;}
 #aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
 #aside-contexts > div { margin: .5rem .2rem;}
 #aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
 #aside-contexts p { font-size:x-small; margin: 0;}
 body:not(.layout-top-nav) .content-wrapper {margin-left:0}
-.wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));}
+.wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));  margin-top: 3.5rem; padding-bottom: 2rem;}
 .content-header { padding: .5rem .5rem .2rem .5rem;}
 label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 .brand-link .brand-image {margin-left: .5rem}
@@ -21,11 +24,17 @@ label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
 	body:not(.sidebar-open) .main-sidebar, .main-sidebar::before { margin-left: -17rem;}
 }
 @media (min-width: 1024px) {
-	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-header {
+	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-log, body:not(.sidebar-mini-md) .main-header {
 		margin-left: 17rem;
 	}
-	.sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-header {
+	.sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-log, .sidebar-mini.sidebar-collapse .main-header {
 		margin-left: 7.4rem !important;
+	}
+	body:not(.sidebar-mini-md) .margin-right {
+		margin-right: 17rem;
+	}
+	.sidebar-mini.sidebar-collapse .margin-right {
+		margin-right: 7.4rem !important;
 	}
 	.sidebar-mini.sidebar-collapse .main-sidebar, .sidebar-mini.sidebar-collapse .main-sidebar::before {
 		width: 7.4rem;

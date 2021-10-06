@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper">
+	<div class="content-wrapper" v-bind:style="{paddingBottom: contentPadding()}">
 		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
@@ -81,13 +81,15 @@ import VueNavigator			from "@/components/navigator"
 import VueColumsSelector	from "@/components/columnsSelector"
 import VueView				from "@/pages/view";
 
+
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
 		"c-colums-selector": { extends: VueColumsSelector},
 		"c-view": { extends: VueView }
 	},
-	data() {
+
+  data() {
 		return {
 			selectedNamespace: "",
 			selectedStatus: [],
@@ -126,7 +128,7 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
-			viewModel:{},
+			viewModel:{}
 		}
 	},
 	watch: {
@@ -220,7 +222,7 @@ export default {
 			this.currentPage = 1
 		},
 		formatStatus(status, key, item)  {
-			return this.toPodStatus(item.deletionTimestamp, status);
+			return this.toPodStatus(item.deletionTimestamp, item.containers);
 		},
 		formatContainers(status, key, item) {
 			let list = []
@@ -242,7 +244,7 @@ export default {
 		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected')
+    this.$nuxt.$off('navbar-context-selected');
 	}
 }
 </script>
