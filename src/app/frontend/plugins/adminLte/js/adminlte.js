@@ -1603,6 +1603,7 @@
   var SELECTOR_CONTROL_SIDEBAR_CONTENT = '.control-sidebar-content';
   var SELECTOR_CONTROL_SIDEBAR_BTN = '[data-widget="control-sidebar"]';
   var SELECTOR_FOOTER = '.main-footer';
+  var SELECTOR_LOG = '.main-log';
   var SELECTOR_PUSHMENU_BTN = '[data-widget="pushmenu"]';
   var SELECTOR_LOGIN_BOX = '.login-box';
   var SELECTOR_REGISTER_BOX = '.register-box';
@@ -1650,6 +1651,7 @@
         window: $__default['default'](window).height(),
         header: $__default['default'](SELECTOR_HEADER).length > 0 ? $__default['default'](SELECTOR_HEADER).outerHeight() : 0,
         footer: $__default['default'](SELECTOR_FOOTER).length > 0 ? $__default['default'](SELECTOR_FOOTER).outerHeight() : 0,
+        log: $__default['default'](SELECTOR_LOG).length > 0 ? $__default['default'](SELECTOR_LOG).outerHeight() : 0,
         sidebar: $__default['default'](SELECTOR_SIDEBAR$1).length > 0 ? $__default['default'](SELECTOR_SIDEBAR$1).height() : 0,
         controlSidebar: controlSidebar
       };
@@ -1668,13 +1670,13 @@
         if (max === heights.controlSidebar) {
           $contentSelector.css(this._config.panelAutoHeightMode, max + offset);
         } else if (max === heights.window) {
-          $contentSelector.css(this._config.panelAutoHeightMode, max + offset - heights.header - heights.footer);
+          $contentSelector.css(this._config.panelAutoHeightMode, max + offset - heights.header - heights.log - heights.footer);
         } else {
           $contentSelector.css(this._config.panelAutoHeightMode, max + offset - heights.header);
         }
 
         if (this._isFooterFixed()) {
-          $contentSelector.css(this._config.panelAutoHeightMode, parseFloat($contentSelector.css(this._config.panelAutoHeightMode)) + heights.footer);
+          $contentSelector.css(this._config.panelAutoHeightMode, parseFloat($contentSelector.css(this._config.panelAutoHeightMode)) + heights.log + heights.footer);
         }
       }
 

@@ -235,9 +235,20 @@ func GetPodLogs(c *gin.Context) {
 
 	//  log options (with querystring)
 	options := coreV1.PodLogOptions{}
+	var limitLines = int64(300)
 	query, err := g.ParseQuery()
 	if err == nil {
 		if len(query) > 0 {
+			if query["tailLines"] != nil {
+				var num1, err1 = strconv.Atoi(query["tailLines"][0])
+				if err1 != nil {
+					g.SendMessage(http.StatusBadRequest, err.Error(), err)
+					return
+				}
+				limitLines = int64(num1)
+			}
+			options.TailLines = &limitLines
+
 			if query["container"] != nil {
 				options.Container = query["container"][0]
 			}
@@ -247,6 +258,7 @@ func GetPodLogs(c *gin.Context) {
 			if query["previous"] != nil {
 				options.Previous, _ = strconv.ParseBool(query["previous"][0])
 			}
+			options.Timestamps = true
 		}
 	}
 
