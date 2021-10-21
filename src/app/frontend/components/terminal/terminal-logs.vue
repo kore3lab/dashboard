@@ -65,7 +65,7 @@ export default {
 
 			try {
 				this.logs = [];
-				const response = await fetch(`${this.hostURL}${this.baseURL}?follow=1&container=${this.value.container}&tailLines=${TAIL_LINES}`, { signal: c.signal });
+				const response = await fetch(`${this.hostURL}${this.baseURL}?follow=1&timestamps=0&container=${this.value.container}&tailLines=${TAIL_LINES}`, { signal: c.signal });
 				const reader = response.body.getReader();
 				while (true) {
 					const { value, done } = await reader.read();

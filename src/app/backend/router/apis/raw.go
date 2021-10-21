@@ -258,7 +258,9 @@ func GetPodLogs(c *gin.Context) {
 			if query["previous"] != nil {
 				options.Previous, _ = strconv.ParseBool(query["previous"][0])
 			}
-			options.Timestamps = true
+			if query["timestamps"] != nil {
+				options.Timestamps, _ = strconv.ParseBool(query["timestamps"][0])
+			}
 		}
 	}
 

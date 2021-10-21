@@ -138,7 +138,7 @@ export default {
 		value(newVal) {
 			this.src = newVal.src;
 			this.url = newVal.url;
-			document.getElementsByClassName(`b-sidebar-body`)[0].scrollTop = 0
+			if(this.$el && this.$el.parentElement) this.$el.parentElement.scrollTop = 0
 		},
 		src(newVal) {
 			if(newVal !== this.localSrc) {
@@ -164,10 +164,6 @@ export default {
 	},
 	mounted() {
 		this.$emit("close");
-	},
-	beforeUpdate() {
-		let el = document.getElementsByTagName("body")
-		el[0].style.removeProperty('height')
 	},
 	methods: {
 		navigate(loc) {
