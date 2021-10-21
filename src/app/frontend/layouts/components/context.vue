@@ -1,10 +1,10 @@
 <template>
-	<div id="aside-contexts" class="sidebar-contexts d-flex flex-column sidebar-dark-primary border-right border-secondary">
+	<div class="d-flex flex-column sidebar-dark-primary border-right border-secondary">
 		<div v-for="(ctx, index) in contexts()" :key="ctx" :value="ctx">
 			<b-overlay :show="showOverlay===ctx" rounded="sm">
 				<b-overlay :show="showErrorOverlay===ctx" rounded="sm" variant="white">
-				<template #overlay><b-icon icon="exclamation-circle-fill" font-scale="2" variant="danger"></b-icon></template>
-				<b-button v-bind:id="'btn_aside_cluster_' + ctx" @click="onContextSelected(ctx)" v-bind:class="{active: ctx===currentContext()}" :value="ctx" class="w-100 text-uppercase">{{ ctx.substring(0,1) }}</b-button>
+					<template #overlay><b-icon icon="exclamation-circle-fill" font-scale="2" variant="danger"></b-icon></template>
+					<b-button v-bind:id="'btn_aside_cluster_' + ctx" @click="onContextSelected(ctx)" v-bind:class="{current: ctx===currentContext()}" :value="ctx" class="w-100 text-uppercase" variant="secondary">{{ ctx.substring(0,1) }}</b-button>
 				</b-overlay>
 			</b-overlay>
 			<p class="text-center text-white text-truncate">{{ctx}}</p>

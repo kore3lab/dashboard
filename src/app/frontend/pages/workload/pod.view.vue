@@ -93,11 +93,11 @@
 							<div class="title">
 								<span v-bind:class=" {'badge-success': (val.status.value ==='running' || val.status.value ==='complete' || val.status.value ==='ready'), 'badge-danger':val.status.value==='failed', 'badge-secondary':(val.status.value ==='unknown' || val.status.value==='terminated'),'badge-warning':(val.status.value ==='pending' || val.status.value ==='waiting')}" class="badge mr-1">&nbsp;</span>{{ val.name }}
 								<span v-if="val.status.value === 'running'">
-									<nuxt-link :to="{path: '/terminal', query: {termtype: 'container',pod: metadata.name, namespace: metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
-										<button id="terminal" class="btn btn-tool" v-b-tooltip.hover title="Terminal"><i class="fas fa-terminal" style="color:black"></i></button>
-									</nuxt-link>
 								</span>
-                <button id="logs" class="btn btn-tool" @click="showLogs(val.name)" v-b-tooltip.hover title="Logs"><i class="fas fa-file-alt" style="color:black"></i></button>
+								<nuxt-link  v-if="val.status.value === 'running'" :to="{path: '/terminal', query: {termtype: 'container',pod: metadata.name, namespace: metadata.namespace, cluster: currentContext(),container:val.name}}" target="_blank">
+									<button id="terminal" class="btn pr-0 text-sm" v-b-tooltip.hover title="Shell"><b-icon icon="terminal-fill"></b-icon></button>
+								</nuxt-link>
+								<button  v-if="val.status.value === 'running'" class="btn pl-0  text-sm" @click="onClickShowLogs(val.name)" v-b-tooltip.hover title="Logs"><b-icon icon="card-text"></b-icon></button>
 							</div>
 							<dl class="row">
 								<dt v-if="val.status.value" class="col-sm-2">Status</dt><dd v-if="val.status.value" class="col-sm-10" v-bind:class="{'text-success': (val.status.value ==='running' || val.status.value ==='complete' || val.status.value==='ready'), 'text-danger':val.status.value ==='failed', 'text-warning': (val.status.value ==='pending' || val.status.value ==='waiting'),'text-secondary' :(val.status.value ==='unknown' || val.status.value ==='terminated')}" > {{ val.status.value }}{{ (val.status.ready)? `, ${val.status.ready}` : '' }} {{ (val.status.reason.reason) ? `- ${val.status.reason.reason} (exit code: ${val.status.reason.exitCode})` :''}}</dd>
@@ -238,14 +238,14 @@ export default {
 		});
 	},
 	methods: {
-    showLogs(name) {
-      let containerList = []
-      this.containers.forEach(item =>{
-        containerList.push(item.name);
-      })
-      this.$nuxt.$emit('log-data-created', this.metadata, name, containerList);
-      this.$parent.$parent.$emit('close')
-    },
+		onClickShowLogs(name) {
+			let containerList = []
+			this.containers.forEach(item =>{
+				containerList.push(item.name);
+			})
+			this.$nuxt.$emit("open-terminal", this.metadata.name, "logs", { metadata: this.metadata, container:name, containers:containerList });
+			this.$parent.$parent.$emit('close')
+		},
 		getContainers(d, type) {
 			let specCons = []
 			let statusCon = type ?  d.status.initContainerStatuses : d.status.containerStatuses;

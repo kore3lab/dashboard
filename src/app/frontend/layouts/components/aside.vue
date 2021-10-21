@@ -1,7 +1,7 @@
 <template>
-	<aside class="main-sidebar sidebar-dark-primary elevation-4">
+	<aside class="sidebar-dark-primary elevation-4">
 
-		<c-context />
+		<c-context class="aside-contexts"/>
 
 		<nuxt-link to="/" class="brand-link align-bottom">
 			<img src="/favicon.svg" class="brand-image">
@@ -9,7 +9,7 @@
 		</nuxt-link>
 
 		<!-- Sidebar -->
-		<div class="sidebar">
+		<div class="aside-menus">
 			<!-- Sidebar Menu -->
 			<nav class="mt-2">
 				<ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-compact" data-widget="treeview" role="menu" data-accordion="false">

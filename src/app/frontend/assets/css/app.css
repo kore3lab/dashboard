@@ -1,77 +1,76 @@
-/* layout */
-.main-sidebar, .main-sidebar::before { width: 17rem;}
-.sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before { margin-left: -17rem; }
-.sidebar {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
-.sidebar::-webkit-scrollbar{ display:none;}
-.brand-link { margin-left: 3.7rem;}
-.layout-fixed .brand-link { width: 13.2rem;}
-.main-header {position: fixed; top:0; width:100%}
-.main-footer {padding: .5rem 1rem; min-height: 2.5rem; position: fixed; bottom:0;  width:100%; z-index: 10}
-.main-log {padding: 1rem 1rem; min-height: 10rem; bottom: 1rem; width:100%; position: fixed !important; z-index: 10}
-.margin-right {}
-aside a.brand-link img {width: 1.7em; height:1.7em;}
-#aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
-#aside-contexts > div { margin: .5rem .2rem;}
-#aside-contexts button.active { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
-#aside-contexts p { font-size:x-small; margin: 0;}
-body:not(.layout-top-nav) .content-wrapper {margin-left:0}
-.wrapper .content-wrapper { min-height: calc(100vh - calc(3.5rem + 1px) - calc(2.5rem + 1px));  margin-top: 3.5rem; padding-bottom: 2rem;}
-.content-header { padding: .5rem .5rem .2rem .5rem;}
-label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;}
-.brand-link .brand-image {margin-left: .5rem}
-
+/* layout - default */
+:root {
+  --layout-header-height: 3.5rem;
+  --layout-footer-height: 2.5rem;
+  --layout-aside-width: 17rem;
+  --layout-aside-width-md: 7.4rem;
+  --bg-color: #f4f6f9;
+  --border-color: #e9ecef;
+}
+/* layout - default */
+body.sidebar-mini {overflow:hidden;}
+body.sidebar-mini .main-sidebar { width: var(--layout-aside-width);}
+body.sidebar-mini .main-header { position: fixed; top:0; width:100%; }
+body.sidebar-mini .main-footer { margin:0; padding: .5rem 1rem .5rem calc(var(--layout-aside-width) + 1rem); min-height: var(--layout-footer-height); position: fixed; bottom:0;  width:100%; z-index: 10}
+body.sidebar-mini .main-body { padding: var(--layout-header-height) 0rem var(--layout-footer-height) var(--layout-aside-width) }
+/* layout - sidebar > brand */
+body.sidebar-mini .main-sidebar .brand-link { margin-left: 3.7rem; width: 13.2rem;}
+body.sidebar-mini .main-sidebar .brand-link img.brand-image {width: 1.7em; height:1.7em;margin-left: .5rem}
+/* layout - sidebar > contexts */
+body.sidebar-mini .main-sidebar .aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
+body.sidebar-mini .main-sidebar .aside-contexts > div { margin: .5rem .2rem;}
+body.sidebar-mini .main-sidebar .aside-contexts button.current { border-color: #fd7e14; background-color: rgb(255, 193, 7)}
+body.sidebar-mini .main-sidebar .aside-contexts p { font-size:x-small; margin: 0;}
+/* layout - sidebar > menu */
+body.sidebar-mini .main-sidebar .aside-menus {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
+body.sidebar-mini .main-sidebar .aside-menus::-webkit-scrollbar{ display:none;}
+/* layout - body > splitpanes */
+body.sidebar-mini .main-body .splitpanes__pane.body-pane { overflow-y: auto; background-color: var(--bg-color); }
+body.sidebar-mini .main-body:not(.terminal-closed) .splitpanes__splitter { background-color:transparent; height:.3rem; border-top: .1rem solid #343a40; background-color: var(--bg-color)}
+body.sidebar-mini .main-body.terminal-closed  .splitpanes__splitter { display: none; }
+body.sidebar-mini .main-body .splitpanes__pane.terminal-pane > i { float:right; line-height:1.6rem; padding: .2rem .5rem .2rem .5rem; border-left: 1px dashed #ccc; background-color:#fff; }
+/* layout - body > list-page > header */
+body.sidebar-mini .main-body .content-header { padding: .5rem .5rem .2rem .5rem;}
+body.sidebar-mini .main-body .content-wrapper { margin-left: 0!important; min-height: auto; }
+/* layout - sidebar @media style
+	min-width: 992px (992px 이상)
+		default sidebar : visible 상태, class = body:not(.sidebar-collapse))
+		햄버거 메뉴 click : sidebar 축소, class =  body.sidebar-collapse)
+		sidebar width : 17rem
+	max-width: 992px (992px 미만)
+		default sidebar : hidden 상태, class = body.sidebar-closed
+		햄버거 메뉴 click : sidebar 오픈, class = body.sidebar-open
+*/
+@media (min-width: 992px) {
+	body.sidebar-mini:not(.sidebar-collapse) .main-header {padding-left: var(--layout-aside-width);  margin-left: 0 ;}
+	body.sidebar-mini:not(.sidebar-collapse) .main-body { padding-left: var(--layout-aside-width); }
+	body.sidebar-mini.sidebar-collapse .main-header { padding-left: var(--layout-aside-width-md); margin-left: 0rem !important; }
+	body.sidebar-mini.sidebar-collapse .main-sidebar {width: var(--layout-aside-width-md) }
+	body.sidebar-mini.sidebar-collapse .main-body { padding-left: var(--layout-aside-width-md); }
+	body.sidebar-mini.sidebar-collapse .main-footer { margin-left: 0!important; padding-left: calc(var(--layout-aside-width-md) + 1rem); }
+}
 @media (max-width: 992px) {
-	body:not(.sidebar-open) .main-sidebar, .main-sidebar::before { margin-left: -17rem;}
+	body.sidebar-mini .main-body { padding-left: 0 }
+	body.sidebar-mini:not(.sidebar-open) .main-sidebar { margin-left: calc(var(--layout-aside-width) * -1) }
+	body.sidebar-mini .main-footer { padding-left: 1rem; }
 }
-@media (min-width: 1024px) {
-	body:not(.sidebar-mini-md) .content-wrapper, body:not(.sidebar-mini-md) .main-footer, body:not(.sidebar-mini-md) .main-log, body:not(.sidebar-mini-md) .main-header {
-		margin-left: 17rem;
-	}
-	.sidebar-mini.sidebar-collapse .content-wrapper, .sidebar-mini.sidebar-collapse .main-footer, .sidebar-mini.sidebar-collapse .main-log, .sidebar-mini.sidebar-collapse .main-header {
-		margin-left: 7.4rem !important;
-	}
-	body:not(.sidebar-mini-md) .margin-right {
-		margin-right: 17rem;
-	}
-	.sidebar-mini.sidebar-collapse .margin-right {
-		margin-right: 7.4rem !important;
-	}
-	.sidebar-mini.sidebar-collapse .main-sidebar, .sidebar-mini.sidebar-collapse .main-sidebar::before {
-		width: 7.4rem;
-	}
-}
-
-/* custom  */
-.lh-vh-50 {line-height: 50vh;} .lh-vh-100 {line-height: 100vh;}
-.h-chart { height: 14em;}
-.cursor {cursor:pointer}
-.label {
-	display: inline-grid;
-	border:1px #73b5fc solid;
-	background-color: #eff6fd;
-	padding: 1px 4px;
-	line-height: 1.3rem;
-	border-radius: .25em!important;
-	margin: .1em .2em .1em 0em;
-	color: #0363ca;
-}
-.border-box {
-	display: inline-grid;
-    border: 1px #6c757d dotted;
-	line-height: 1.3rem;
-    padding: 0 .4em;
-    border-radius: .25em!important;
-    margin: .1em .2em .1em 0em;
-    color: #6c757d;
-}
-.border-box.background {
-	background-color: #f3f4f5;
-}
-
-/* table of viewpage*/
+/* override */
+body.sidebar-mini .main-body label:not(.form-check-label):not(.custom-file-label) {font-weight: 400;} 
+/* override > vue-boostrap  */
+table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}
+table.b-table tr:focus { outline: none; }
+table.b-table.table-sm {margin: 0;}
+table.b-table.table-sm tbody > tr {line-height: 1rem; margin-bottom: 0;}
 table.b-table.subset th {font-weight:400; padding: .3rem}
 table.b-table.subset td {font-weight:350; padding: .3rem}
-
+/* custom  */
+.lh-vh-50 {line-height: 50vh;}
+.lh-vh-100 {line-height: 100vh;}
+.h-chart { height: 14em;}
+.cursor {cursor:pointer}
+.label {display: inline-grid;border:1px #73b5fc solid;background-color: #eff6fd;padding: 1px 4px;line-height: 1.3rem;border-radius: .25em!important;margin: .1em .2em .1em 0em;color: #0363ca;}
+.border-box {display: inline-grid;border: 1px #6c757d dotted;line-height: 1.3rem;padding: 0 .4em;border-radius: .25em!important;margin: .1em .2em .1em 0em;color: #6c757d;}
+.border-box.background {background-color: #f3f4f5;}
 /* custom > view */
 section.content-view {font-size: .95rem;}
 section.content-view .card-primary > .card-header {font-size: 1.1rem; line-height: 1.1rem;}
@@ -86,10 +85,3 @@ section.content-view .card-body.group > ul { padding: 0; margin:0; list-style: n
 section.content-view .card-body.group > ul > li { margin-top: .5em }
 section.content-view .card-body.group > ul > li .title { margin: .3rem .3rem; font-weight:400; font-size:1rem }
 section.content-view .card-body.group > ul > li > dl { border: 1px solid #dee2e6!important; margin: 0 0;}
-
-
-/* custom -vue-boostrap  */
-table.b-table > tbody > .table-active, .table.b-table > tbody > .table-active > th, .table.b-table > tbody > .table-active > td {background-color: rgba(0, 0, 0, 0.03);}
-table.b-table tr:focus { outline: none; }
-table.b-table.table-sm {margin: 0;}
-table.b-table.table-sm tbody > tr {line-height: 1rem; margin-bottom: 0;}

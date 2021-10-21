@@ -1,6 +1,6 @@
 <template>
 	<!-- Navbar -->
-	<nav class="main-header navbar navbar-expand navbar-white navbar-light">
+	<nav class="navbar navbar-expand navbar-white navbar-light">
 		<ul class="navbar-nav">
 			<li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li>
 			<li class="nav-item pt-1"><span class="text-lg text-muted">{{this.currentContext()}}</span></li>
@@ -23,4 +23,3 @@ export default {
 	}
 }
 </script>
-
