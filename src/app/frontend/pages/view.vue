@@ -7,7 +7,7 @@
 				<div class="card-tools">
 					<span v-show="!errorcheck">
  						<button type="button" class="btn btn-tool" @click="onSync()" v-b-tooltip.hover title="Reload"><i class="fas fa-sync-alt"></i></button>
-						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i class="fas fa-list-alt"></i></button>
+						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i><del>JSON</del></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
 						<button type="button" class="btn btn-tool" @click="isYaml=true" v-b-tooltip.hover title="Edit"><i class="fas fa-edit"></i></button>
 						<button type="button" class="btn btn-tool" @click="deleteOverlay.visible = true" v-b-tooltip.hover title="Delete"><i class="fas fa-trash"></i></button>
@@ -108,7 +108,6 @@ export default {
 			errorcheck: false,
 			errorMessage: "",
 			errorM: [],
-			isCreated: false,
 			delay: 0,
 			disabled: false,
 			selfLink: "",
@@ -136,26 +135,7 @@ export default {
 			}
 		},
 		value(newVal) {
-			this.src = newVal.src;
-			this.url = newVal.url;
-			if(this.$el && this.$el.parentElement) this.$el.parentElement.scrollTop = 0
-		},
-		src(newVal) {
-			if(newVal !== this.localSrc) {
-				this.component = null;
-				this.isJSON = true;
-				if(this.loader) {
-					this.loader()
-						.then(() => {
-							this.component = () => this.loader();
-							this.isJSON = false;
-						})
-						.catch((ex) => {
-							console.error(ex)
-						})
-				}
-				this.localSrc = newVal;
-			}
+			this.navigate(newVal)
 		},
 		url(newVal) {
 			if(!newVal) return;
@@ -167,10 +147,25 @@ export default {
 	},
 	methods: {
 		navigate(loc) {
-			this.value.name = loc.name;
-			this.value.title = loc.title;
-			this.src = loc.src;
-			this.url = loc.url;
+			if (this.src != loc.src) {
+				this.src = loc.src;
+				if(this.loader) {
+					this.loader()
+						.then(() => {
+							this.component = () => this.loader();
+							this.isJSON = false;
+							if(this.url != loc.url) this.url = loc.url;
+						})
+						.catch((ex) => {
+							console.error(ex)
+						})
+				}
+			} else if(this.url != loc.url) {
+				this.url = loc.url;
+			}
+
+			if(this.value.name != loc.name) this.value.name = loc.name;
+			if(this.value.title != loc.title) this.value.title = loc.title;
 		},
 		// 조회
 		onSync() {
@@ -197,6 +192,7 @@ export default {
 					let c = this.getResource(this.raw)
 					this.selfLink = this.getApiUrl(c.group, c.resource, this.raw.metadata.namespace, c.name);
 					this.$nuxt.$emit("view-data-read-completed", this.raw);
+					if(this.$el && this.$el.parentElement) this.$el.parentElement.scrollTop = 0;
 				})
 				.catch(e => {
 					this.isError(e);
@@ -285,11 +281,5 @@ export default {
 
 </script>
 <style scoped>
-.floating {
-	position: fixed;
-	margin: 0 auto;
-	left: 0;
-	right: 0;
-	top: 5%;
-}
+.floating { position: fixed; margin: 0 auto; left: 0; right: 0; top: 5%;}
 </style>
