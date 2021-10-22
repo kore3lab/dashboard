@@ -6,6 +6,7 @@
 				<h3 class="card-title">{{ title }} / {{ (name && name.length >60) ? name.substring(0,60)+'...' : name }}</h3>
 				<div class="card-tools">
 					<span v-show="!errorcheck">
+ 						<button v-if="navigateStack.length>0" type="button" class="btn btn-tool" @click="onNavigateBack"><i class="fa fa-arrow-left"></i></button>
  						<button type="button" class="btn btn-tool" @click="onSync()" v-b-tooltip.hover title="Reload"><i class="fas fa-sync-alt"></i></button>
 						<button type="button" class="btn btn-tool" v-show="isJSON && component"  @click="isJSON=false"><i><del>JSON</del></i></button>
 						<button type="button" class="btn btn-tool" v-show="!isJSON && component" @click="isJSON=true;isYaml=false"><i>JSON</i></button>
@@ -25,7 +26,7 @@
 					<!-- 1.1 meta data -->
 					<c-metadata v-show="isJSON" v-model="raw.metadata" dtCols="2" ddCols="10"></c-metadata>
 					<!-- 1.2  view -->
-					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="navigate"/>
+					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="onNavigate"/>
 					<!-- 1.3 json-tree -->
 					<div class="row" v-show="isJSON && title !== 'StorageClass'">
 						<div class="col-md-12">
@@ -82,6 +83,26 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueAceEditor 		from "@/components/aceeditor"
 import VueJsonTree 			from "@/components/jsontree"
 
+function NavigateStack() {
+	this.stack = [];
+	this.position = -1;
+	this.init = () => {
+		this.stack = [];
+		this.position = -1;
+	}
+	this.push = (loc) => {
+		this.stack.push(Object.assign({}, loc));
+		this.position = this.stack.length -1;
+	}
+	this.go = (back, callback) => {
+		const pos = (this.stack.length-1) + back;
+		if(pos >= 0) {
+			callback( this.stack[pos] )
+			this.stack = this.stack.splice(0, pos+1);
+		}
+	}
+}
+
 export default {
 	props:["value"],
 	components: {
@@ -92,6 +113,8 @@ export default {
 	data() {
 		return {
 			component: null,
+			title: "",
+			name: "",
 			src: "",
 			url: "",
 			origin: { metadata: {}, spec: {} },
@@ -104,7 +127,7 @@ export default {
 				processing : false,
 				timer: null
 			},
-			localSrc: "",
+			navigateStack: [],
 			errorcheck: false,
 			errorMessage: "",
 			errorM: [],
@@ -117,12 +140,6 @@ export default {
 		loader() {
 			if (!this.src) return null;
 			return () => import(`@/pages/${this.src}`)
-		},
-		title() {
-			return this.value.title;
-		},
-		name() {
-			return this.value.name;
 		}
 	},
 	watch: {
@@ -135,7 +152,8 @@ export default {
 			}
 		},
 		value(newVal) {
-			this.navigate(newVal)
+			this.navigateStack = [];
+			this.navigate(newVal);
 		},
 		url(newVal) {
 			if(!newVal) return;
@@ -146,6 +164,7 @@ export default {
 		this.$emit("close");
 	},
 	methods: {
+		// 보기 페이지 이동
 		navigate(loc) {
 			if (this.src != loc.src) {
 				this.src = loc.src;
@@ -164,8 +183,21 @@ export default {
 				this.url = loc.url;
 			}
 
-			if(this.value.name != loc.name) this.value.name = loc.name;
-			if(this.value.title != loc.title) this.value.title = loc.title;
+			if(this.name != loc.name) this.name = loc.name;
+			if(this.title != loc.title) this.title = loc.title;
+		},
+		// component 페이지 이동 이벤트 처리
+		onNavigate(loc) {
+			this.navigateStack.push( { src : this.src, url : this.url, title: this.title, name : this.name } );
+			this.navigate(loc);
+		},
+		// 뒤로 버튼
+		onNavigateBack() {
+			const pos = (this.navigateStack.length-1);
+			if(pos >= 0) {
+				this.navigate( this.navigateStack[pos] );
+				this.navigateStack = this.navigateStack.splice(0, pos);
+			}
 		},
 		// 조회
 		onSync() {
