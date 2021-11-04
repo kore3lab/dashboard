@@ -50,7 +50,6 @@ export default {
 		}
 	},
 	created() {
-		
 		this.$nuxt.$on("open-terminal", (title, type, param) => {
 			const key = `${title}-${type}`;
 			if(!this.tabs[key]) {
@@ -61,12 +60,14 @@ export default {
 				if (type == "shell") this.$set(this.tabs, key, { title: title, type: "shell", metadata: param.metadata, container: param.container, containers: param.containers } );
 				if (type == "cluster") this.$set(this.tabs, key, { title: title, type: "cluster", cluster: param } );
 				this.$emit("opened", key, Object.keys(this.tabs).length);
-			}
+			} else{
+        if (type === "logs") this.$set(this.tabs, key, { title: title, type: "logs", metadata: param.metadata, container: param.container, containers: param.containers } );
+        this.current_tab = Object.keys(this.tabs).findIndex((v) => v === key);
+      }
 		});
 	},
 	methods: {
 		onActivateTab(idx, prevIdx, ev) {
-
 			const ul = ev.vueTarget.$el.querySelector("ul");
 			const el = ul.querySelector(`li:nth-child(${idx+1})`);
 
@@ -79,7 +80,6 @@ export default {
 			}  else if( x2 > x3 ) {
 				ul.scrollLeft += x2 - x3 + 100;	// hidden right (move to left)
 			}
-
 		},
 		onTerminalCloseClick(k) {
 			this.$delete(this.tabs, k);

@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper">  
+	<div class="content-wrapper">
 		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
@@ -63,6 +63,29 @@
 									<template v-slot:cell(node)="data">
 										<a href="#" @click="viewModel=getViewLink('','nodes', '',  data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
+									<template v-slot:head(menu)="data">
+										<div class="text-center">
+											<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+										</div>
+									</template>
+									<template v-slot:cell(menu)="data">
+										<div class="text-center">
+											<b-dropdown dropdown no-caret variant="link" size="xs" class="m-n2">
+												<template #button-content>
+													<b-button class="btn btn-tool" variant="link" @click="onClickInitMenu(data.value.status)">
+														<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+													</b-button>
+												</template>
+												<b-dropdown-item v-for="(item,index) in menu" v-if="item.type === 'log' || item.visible" :key="index" @mouseover.native="toggleSubMenu($event, index)" @mouseout.native="toggleSubMenu($event, index)" @click="onClickShowLogs(data.value, item.name, item.type)">
+													<b-icon v-bind:icon="item.icon" class="mr-2"></b-icon><span>{{item.title}} <b-icon-caret-right-fill :scale="0.6" v-if="item.children"></b-icon-caret-right-fill></span>
+													<div v-if="item.children" class="dropdown-sub-menu" v-show="item.showSubMenu">
+														<b-dropdown-item dropleft v-for="(d,index) in item.children" v-if="item.title==='log' || d.visible" :key="index" @click="onClickShowLogs(data.value, d.name, item.title)"> <span class="badge badge-success"> {{""}}</span><span class="pl-1 text-xs">{{d.title}}</span>
+														</b-dropdown-item>
+													</div>
+												</b-dropdown-item>
+											</b-dropdown>
+										</div>
+									</template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -76,11 +99,14 @@
 		</b-sidebar>
 	</div>
 </template>
+<style>
+div .dropdown-sub-menu{ position: absolute; white-space: nowrap; min-width: 8rem; right: 100%; left: auto; transform : translate(0, -60%); background-color: #fff; border: 1px solid rgba(0,0,0,.15); border-radius: .25rem;}
+.dropdown-menu {min-width:5rem !important;}
+</style>
 <script>
 import VueNavigator			from "@/components/navigator"
 import VueColumsSelector	from "@/components/columnsSelector"
 import VueView				from "@/pages/view";
-
 
 export default {
 	components: {
@@ -89,7 +115,7 @@ export default {
 		"c-view": { extends: VueView }
 	},
 
-  data() {
+	data() {
 		return {
 			selectedNamespace: "",
 			selectedStatus: [],
@@ -118,7 +144,8 @@ export default {
 				{ key: "node", label: "Node", sortable: true },
 				{ key: "qos", label: "QoS", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
+				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus },
+				{ key: "menu", label: "" }
 			],
 			isBusy: true,
 			origin: [],
@@ -128,12 +155,13 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
-			viewModel:{}
+			viewModel:{},
+			menu: [{title:"terminal", icon:"terminal-fill", type:'terminal', visible:true},{title:'log', icon:"card-text", type:'log', visible:true}]
 		}
 	},
 	watch: {
 		itemsPerPage(n) {
-			this.$storage.global.set("itemsPerPage",n)	// save to localstorage 
+			this.$storage.global.set("itemsPerPage",n)	// save to localstorage
 		}
 	},
 	layout: "default",
@@ -145,6 +173,40 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
+		onClickInitMenu(status){
+			const menu = [{title:"terminal", icon:"terminal-fill", type:'terminal', visible:true},{title:'log', icon:"card-text", type:'log', visible:true}]
+			if(status.containerStatuses && status.containerStatuses.length > 1){
+				const list = [];
+				status.containerStatuses.forEach(item =>{list.push({ title: item.name, name: item.name, visible: item.ready})})
+				let menuList = [];
+				this.menu.forEach(item => {
+					menuList.push({ title: item.title, icon: item.icon, showSubMenu : false, visible: true, children : list})
+				})
+				this.menu = menuList;
+			}else{
+				menu.forEach((item, index) => {
+					menu[index].name = status.containerStatuses[0].name;
+					menu[index].visible = status.containerStatuses[0].ready;
+				})
+				this.menu = menu;
+			}
+		},
+		toggleSubMenu (e, index){
+			if(this.menu[index].children) this.menu[index].showSubMenu = e.type === 'mouseover';
+		},
+		onClickShowLogs(data, name, type) {
+			if(name !== undefined){
+				let containerList = []
+				data.status.containerStatuses.forEach(item =>{
+					containerList.push(item.name);
+				})
+				if(type === 'log') {this.$nuxt.$emit("open-terminal", data.metadata.name, "logs", { metadata: data.metadata, container:name, containers:containerList });}
+				else {
+					let route = this.$router.resolve({path: "/terminal", query: {termtype: 'container',pod: data.metadata.name, namespace: data.metadata.namespace, cluster: this.currentContext(), container:name}})
+					window.open(route.href);
+				}
+			}
+		},
 		onRowSelected(items) {
 			this.isShowSidebar = (items && items.length > 0)
 			if (this.isShowSidebar) this.viewModel = this.getViewLink("", "pods", items[0].namespace, items[0].name)
@@ -179,7 +241,8 @@ export default {
 							creationTimestamp: el.metadata.creationTimestamp,
 							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
-							qos: el.status.qosClass
+							qos: el.status.qosClass,
+							menu: el,
 						});
 					});
 					this.origin = this.items;
@@ -244,7 +307,7 @@ export default {
 		}
 	},
 	beforeDestroy(){
-    this.$nuxt.$off('navbar-context-selected');
+		this.$nuxt.$off('navbar-context-selected');
 	}
 }
 </script>

@@ -249,6 +249,12 @@ func GetPodLogs(c *gin.Context) {
 			}
 			options.TailLines = &limitLines
 
+			if query["sinceTime"] != nil {
+				var timestamp v1.Time
+				timestamp.UnmarshalQueryParameter(query["sinceTime"][0])
+				options.SinceTime =  &timestamp
+			}
+
 			if query["container"] != nil {
 				options.Container = query["container"][0]
 			}
