@@ -1,5 +1,5 @@
 <template>
-	<div class="content-wrapper">
+  <div class="content-wrapper">
 		<section class="content-header">
 			<div class="container-fluid">
 				<c-navigator :group="'Custom Resource / '+ apiQuery.group"></c-navigator>

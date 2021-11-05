@@ -6,6 +6,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"net/url"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
@@ -81,4 +82,18 @@ func (g *Gin) ValidateUrl(params []string) error {
 	}
 	return nil
 
+}
+
+// parse querystrings
+func (g *Gin) ParseQuery() (url.Values, error) {
+
+	u, err := url.Parse(g.C.Request.RequestURI)
+	if err != nil {
+		return nil, err
+	}
+	query, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return nil, err
+	}
+	return query, nil
 }

@@ -28,7 +28,7 @@ export const mutations = {
 	},
 	setStatusbar(state, statusbar) {
 		state.statusbar = statusbar;
-	},
+	}
 };
 export const getters = {
 	getCurrentContext(state) {
@@ -48,5 +48,5 @@ export const getters = {
 	},
 	getStatusbar(state) {
 		return state.statusbar;
-	},
+	}
 };

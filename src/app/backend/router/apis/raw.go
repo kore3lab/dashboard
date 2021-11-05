@@ -7,13 +7,18 @@ package apis
 */
 
 import (
+	"context"
+	"io"
 	"net/http"
-	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kore3lab/dashboard/pkg/app"
 	"github.com/kore3lab/dashboard/pkg/config"
+	log "github.com/sirupsen/logrus"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -113,8 +118,7 @@ func GetRaw(c *gin.Context) {
 	var err error
 
 	ListOptions := v1.ListOptions{}
-	u, _ := url.Parse(c.Request.RequestURI)
-	query, _ := url.ParseQuery(u.RawQuery)
+	query, _ := g.ParseQuery()
 
 	err = v1.Convert_url_Values_To_v1_ListOptions(&query, &ListOptions, nil)
 	if err != nil {
@@ -200,5 +204,115 @@ func PatchRaw(c *gin.Context) {
 	}
 
 	g.Send(http.StatusOK, r)
+
+}
+
+// Get Pod logs
+func GetPodLogs(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	var err error
+
+	// url parameter validation
+	v := []string{"NAMESPACE", "NAME"}
+	if err := g.ValidateUrl(v); err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	// instancing dynamic client
+	client, err := config.Cluster.Client(g.C.Param("CLUSTER"))
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	apiClient, err := client.NewKubernetesClient()
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	//  log options (with querystring)
+	options := coreV1.PodLogOptions{}
+	var limitLines = int64(300)
+	query, err := g.ParseQuery()
+	if err == nil {
+		if len(query) > 0 {
+			if query["tailLines"] != nil {
+				var num1, err1 = strconv.Atoi(query["tailLines"][0])
+				if err1 != nil {
+					g.SendMessage(http.StatusBadRequest, err.Error(), err)
+					return
+				}
+				limitLines = int64(num1)
+			}
+			options.TailLines = &limitLines
+
+			if query["sinceTime"] != nil {
+				var timestamp v1.Time
+				timestamp.UnmarshalQueryParameter(query["sinceTime"][0])
+				options.SinceTime =  &timestamp
+			}
+
+			if query["container"] != nil {
+				options.Container = query["container"][0]
+			}
+			if query["follow"] != nil {
+				options.Follow, _ = strconv.ParseBool(query["follow"][0])
+			}
+			if query["previous"] != nil {
+				options.Previous, _ = strconv.ParseBool(query["previous"][0])
+			}
+			if query["timestamps"] != nil {
+				options.Timestamps, _ = strconv.ParseBool(query["timestamps"][0])
+			}
+		}
+	}
+
+	// get a log stream
+	req := apiClient.CoreV1().Pods(g.C.Param("NAMESPACE")).GetLogs(g.C.Param("NAME"), &options)
+	stream, err := req.Stream(context.TODO())
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+	defer stream.Close()
+
+	// read a stream go-routine
+	chanStream := make(chan []byte, 10)
+	go func() {
+		defer close(chanStream)
+
+		for {
+			buf := make([]byte, 4096)
+			numBytes, err := stream.Read(buf)
+
+			if err != nil {
+				if err != io.EOF {
+					log.Infof("finished log streaming (cause=%s)", err.Error())
+					return
+				} else {
+					if options.Follow == false {
+						log.Debug("log stream is EOF")
+						break
+					} else {
+						time.Sleep(time.Second * 1)
+					}
+				}
+			} else {
+				chanStream <- buf[:numBytes]
+			}
+		}
+	}()
+
+	// write stream to client
+	g.C.Stream(func(w io.Writer) bool {
+		if data, ok := <-chanStream; ok {
+			w.Write(data)
+			return true
+		}
+		return false
+	})
 
 }

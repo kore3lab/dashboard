@@ -98,6 +98,7 @@ func CreateUrlMappings() {
 		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", apis.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
 		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
 		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
+		rawAPI.GET("/:A/:B/:RESOURCE/:NAME/log", apis.GetPodLogs) // "/namespaces/:NAMESPACE/pods/:NAME/log"  > get a pod logs
 	}
 
 	// RAW-API Grouped

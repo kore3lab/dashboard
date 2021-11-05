@@ -160,7 +160,7 @@ Vue.mixin({
 			}
 		},
 		getApiUrl(group, rscName, namespace, name, query) {
-			if(!namespace) namespace = ''
+			if(!namespace) namespace = '';
 			let resource = this.resources()[group][rscName];
 			if (resource) {
 				let url
@@ -169,7 +169,7 @@ Vue.mixin({
 				}else {
 					url = `/raw/clusters/${this.currentContext()}/${group ? "apis" : "api"}/${resource.groupVersion}/${resource.name}`;
 				}
-				return name ? `${url}/${name}${query ? '?' + query : ''}` : url+ (query ? '?' + query : '');
+				return name ? `${url}/${name}${query ? '?' + query : ''}` : url + (query ? '?' + query : '');
 			} else {
 				return "#";
 			}
@@ -203,6 +203,6 @@ Vue.mixin({
 			if(_ === "") this.$store.commit("setStatusbar", _);
 			if (_) this.$store.commit("setStatusbar", _);
 			else return this.$store.getters["getStatusbar"];
-		},
+		}
 	},
 });
