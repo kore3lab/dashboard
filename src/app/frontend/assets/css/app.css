@@ -31,7 +31,7 @@ body.sidebar-mini .main-body.terminal-closed  .splitpanes__splitter { display: n
 body.sidebar-mini .main-body .splitpanes__pane.terminal-pane > i { float:right; line-height:1.6rem; padding: .2rem .5rem .2rem .5rem; border-left: 1px dashed #ccc; background-color:#fff; }
 /* layout - body > list-page > header */
 body.sidebar-mini .main-body .content-header { padding: .5rem .5rem .2rem .5rem;}
-body.sidebar-mini .main-body .content-wrapper { margin-left: 0!important; min-height: auto; }
+body.sidebar-mini .main-body .content-wrapper { margin-left: 0!important; min-height: 100% !important;}
 /* layout - sidebar @media style
 	min-width: 992px (992px 이상)
 		default sidebar : visible 상태, class = body:not(.sidebar-collapse))
