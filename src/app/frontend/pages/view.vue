@@ -166,7 +166,7 @@ export default {
 	methods: {
 		// 보기 페이지 이동
 		navigate(loc) {
-			if (this.src != loc.src) {
+			if (loc.src && this.src != loc.src) {
 				this.src = loc.src;
 				if(this.loader) {
 					this.loader()
@@ -180,6 +180,7 @@ export default {
 						})
 				}
 			} else if(this.url != loc.url) {
+				this.isJSON = (!loc.src);	//if parameter 'src' is empty  ->  display 'json'
 				this.url = loc.url;
 			}
 
