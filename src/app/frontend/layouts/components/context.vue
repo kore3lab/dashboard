@@ -126,12 +126,12 @@ export default {
 								nsList.push({ value: el, text: el });
 							});
 						}
+						if(!nsList.find(d=> {return d.value == this.selectNamespace()})) this.selectNamespace("");
 						this.namespaces(nsList);
 						this.resources(resp.data.currentContext.resources);
 						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());
-						this.$nuxt.$emit("navbar-context-selected");
-						this.$nuxt.$emit("aside-context-selected");
+						this.$nuxt.$emit("context-selected");
 					}
 			}).catch(error=> {
 				this.toast(error.message, "danger");
