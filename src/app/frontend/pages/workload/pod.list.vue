@@ -4,16 +4,7 @@
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Pods</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
-					<div class="col-sm-2 float-left">
-						<div class="input-group input-group-sm" >
-							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
-						</div>
-					</div>
-					<!-- button -->
 					<div class="col-sm-1 text-right">
 						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Workload&crd=Pod`)">Create</b-button>
 					</div>
@@ -22,7 +13,8 @@
 		</section>
 		<section class="content">
 			<div class="container-fluid">
-				<!-- search & filter -->
+				<!-- search & total count & items per page  -->
+				<c-search-form @input="query_All" @keyword="(k)=>{keyword=k}"/>
 				<div class="d-flex">
 					<div class="p-2">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
@@ -63,11 +55,6 @@
 									<template v-slot:cell(node)="data">
 										<a href="#" @click="viewModel=getViewLink('','nodes', '',  data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
-									<template v-slot:head(menu)="data">
-										<div class="text-center">
-											<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
-										</div>
-									</template>
 									<template v-slot:cell(menu)="data">
 										<div class="text-center">
 											<b-dropdown dropdown no-caret variant="link" size="xs" class="m-n2">
@@ -76,10 +63,10 @@
 														<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
 													</b-button>
 												</template>
-												<b-dropdown-item v-for="(item,index) in menu" v-if="item.type === 'log' || item.visible" :key="index" @mouseover.native="toggleSubMenu($event, index)" @mouseout.native="toggleSubMenu($event, index)" @click="onClickShowLogs(data.value, item.name, item.type)">
+												<b-dropdown-item v-for="(item,index) in menu" :key="index" @mouseover.native="toggleSubMenu($event, index)" @mouseout.native="toggleSubMenu($event, index)" @click="onClickShowLogs(data.value, item.name, item.type)">
 													<b-icon v-bind:icon="item.icon" class="mr-2"></b-icon><span>{{item.title}} <b-icon-caret-right-fill :scale="0.6" v-if="item.children"></b-icon-caret-right-fill></span>
 													<div v-if="item.children" class="dropdown-sub-menu" v-show="item.showSubMenu">
-														<b-dropdown-item dropleft v-for="(d,index) in item.children" v-if="item.title==='log' || d.visible" :key="index" @click="onClickShowLogs(data.value, d.name, item.title)"> <span class="badge badge-success"> {{""}}</span><span class="pl-1 text-xs">{{d.title}}</span>
+														<b-dropdown-item dropleft v-for="(d,index) in item.children" :key="index" @click="onClickShowLogs(data.value, d.name, item.title)"> <span class="badge badge-success"> {{""}}</span><span class="pl-1 text-xs">{{d.title}}</span>
 														</b-dropdown-item>
 													</div>
 												</b-dropdown-item>
@@ -99,25 +86,27 @@
 		</b-sidebar>
 	</div>
 </template>
-<style>
+<style scoped>
 div .dropdown-sub-menu{ position: absolute; white-space: nowrap; min-width: 8rem; right: 100%; left: auto; transform : translate(0, -60%); background-color: #fff; border: 1px solid rgba(0,0,0,.15); border-radius: .25rem;}
 .dropdown-menu {min-width:5rem !important;}
 </style>
+
 <script>
 import VueNavigator			from "@/components/navigator"
-import VueColumsSelector	from "@/components/columnsSelector"
+import VueColumsSelector	from "@/components/list/columnsSelector"
+import VueSearchForm		from "@/components/list/searchForm"
 import VueView				from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
 		"c-colums-selector": { extends: VueColumsSelector},
+		"c-search-form": { extends: VueSearchForm},
 		"c-view": { extends: VueView }
 	},
 
 	data() {
 		return {
-			selectedNamespace: "",
 			selectedStatus: [],
 			allStatus: ["Running", "Pending", "Terminating", "CrashLoopBackOff", "ImagePullBackOff", "Completed", "ContainerCreating", "Failed", "etc"],
 			optionsStatus: [
@@ -150,6 +139,8 @@ export default {
 			isBusy: true,
 			origin: [],
 			items: [],
+			currentItems:[],
+			selectIndex: 0,
 			containerStatuses: [],
 			itemsPerPage: this.$storage.global.get("itemsPerPage",10),
 			currentPage: 1,
@@ -165,13 +156,6 @@ export default {
 		}
 	},
 	layout: "default",
-	created() {
-		this.$nuxt.$on("navbar-context-selected", (_) => {
-			this.selectedNamespace = this.selectNamespace()
-			this.selectedClear()
-		});
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
-	},
 	methods: {
 		onClickInitMenu(status){
 			const menu = [{title:"terminal", icon:"terminal-fill", type:'terminal', visible:true},{title:'log', icon:"card-text", type:'log', visible:true}]
@@ -224,9 +208,9 @@ export default {
 			this.currentPage = 1
 		},
 		// 조회
-		query_All() {
+		query_All(d) {
 			this.isBusy = true;
-			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
+			this.$axios.get(this.getApiUrl("","pods", (d && d.namespace) ? d.namespace: this.selectNamespace(), "", d && d.labelSelector? `labelSelector=${d.labelSelector}`: ""))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
@@ -255,6 +239,9 @@ export default {
 		selectedClear() {
 			this.selectedStatus = [];
 			this.query_All()
+		},
+		onFilter(keyword) {
+			this.keyword=keyword
 		},
 		onFiltered(filteredItems) {
 			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
@@ -305,10 +292,6 @@ export default {
 			}
 			return list;
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected');
 	}
 }
 </script>
-<style scoped></style>

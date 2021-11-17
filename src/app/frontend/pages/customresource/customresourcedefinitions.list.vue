@@ -6,6 +6,14 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="content">
+			<div class="container-fluid">
+				<!-- search & total count & items per page  -->
+				<div class="row pb-2">
 					<div class="col-sm-2"><b-form-select v-model="selectedGroup" :options="groupList" size="sm" @input="onChangeGroup"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -13,16 +21,8 @@
 							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
 					</div>
-				</div>
-			</div>
-		</section>
-
-		<section class="content">
-			<div class="container-fluid">
-				<!-- total count & items per page  -->
-				<div class="d-flex flex-row-reverse">
-					<div class="p-2">
-						<b-form inline>
+					<div class="col-sm-8">
+						<b-form inline class="float-right">
 							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
 							<i class="text-secondary ml-2 mr-2">|</i>
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
@@ -65,7 +65,7 @@
 </template>
 <script>
 import VueNavigator			from "@/components/navigator"
-import VueColumsSelector	from "@/components/columnsSelector"
+import VueColumsSelector	from "@/components/list/columnsSelector"
 import VueView				from "@/pages/view";
 
 export default {
@@ -106,10 +106,10 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (_) => {
+		this.$nuxt.$on("context-selected", (_) => {
 			this.query_All()
 		} );
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+		if(this.currentContext()) this.query_All();
 	},
 	methods: {
 		onRowSelected(items) {
@@ -204,7 +204,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected')
+		this.$nuxt.$off("context-selected");
 	}
 }
 </script>

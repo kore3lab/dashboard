@@ -58,7 +58,7 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", () => {
+		this.$nuxt.$on("context-selected", () => {
 			// crd spec 읽어서 template 동적 생성
 			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.crd}`)
 				.then(resp => {
@@ -105,10 +105,10 @@ export default {
 
 				})
 		});
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+		if(this.currentContext()) this.$nuxt.$emit("context-selected");
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("navbar-context-selected");
+		this.$nuxt.$off("context-selected");
 	},
 	methods: {
 		onCreate() {

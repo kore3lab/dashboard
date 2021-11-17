@@ -282,7 +282,7 @@ export default {
 		}
 	},
 	created() {
-		this.$nuxt.$on("navbar-context-selected", () => {
+		this.$nuxt.$on("context-selected", () => {
 			let ctx = this.currentContext();
 			if(!ctx) return;
 			// workloads - available/ready
@@ -342,14 +342,14 @@ export default {
 				.catch(e => { this.msghttp(e);})
 		})
 
-		this.$nuxt.$emit("navbar-context-selected",);
+		this.$nuxt.$emit("context-selected",);
 		this.timer = setInterval(function(){
-			this.$nuxt.$emit("navbar-context-selected");
+			this.$nuxt.$emit("context-selected");
 		}.bind(this), 30*1000);
 
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("navbar-context-selected")
+		this.$nuxt.$off("context-selected")
 		clearInterval(this.timer)
 	}
 }
