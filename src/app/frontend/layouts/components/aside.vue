@@ -138,7 +138,7 @@ export default {
 		}
 	},
 	created() {
-		this.$nuxt.$on("aside-context-selected", (_) => {
+		this.$nuxt.$on("context-selected", (_) => {
 			this.crdList = {}
 			for(let r in this.resources()) {
 				if( !r.endsWith("k8s.io") && r.indexOf(".") > 0 ) {
@@ -157,7 +157,7 @@ export default {
 		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("aside-context-selected")
+		this.$nuxt.$off("context-selected")
 	}
 }
 </script>

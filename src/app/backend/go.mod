@@ -3,6 +3,7 @@ module github.com/kore3lab/dashboard
 go 1.15
 
 require (
+	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/astaxie/beego v1.12.2
 	github.com/gin-gonic/gin v1.7.0
@@ -28,6 +29,7 @@ require (
 	k8s.io/api v0.19.3
 	k8s.io/apimachinery v0.19.3
 	k8s.io/client-go v0.19.3
+	k8s.io/klog/v2 v2.2.0
 	k8s.io/metrics v0.19.2
 	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
 )

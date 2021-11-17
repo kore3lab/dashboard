@@ -2,6 +2,7 @@ export const state = () => ({
 	currentContext: "",		// currentContext
 	contexts: [], 			// context list
 	namespaces: [],			// currentContext namespace 리스트
+	labelSelector: [],		// labelSelector
 	selectNamespace: "",	// select Namespace
 	resources: [],			// currentContext resource 리스트
 	statusbar: {
@@ -19,6 +20,9 @@ export const mutations = {
 	},
 	setNamespaces(state, namespaces) {
 		state.namespaces = namespaces;
+	},
+	setLabelSelector(state, labelSelector) {
+		state.labelSelector = labelSelector;
 	},
 	setSelectNamespace(state, selectNamespace) {
 		state.selectNamespace = selectNamespace;
@@ -39,6 +43,9 @@ export const getters = {
 	},
 	getNamespaces(state) {
 		return state.namespaces;
+	},
+	getLabelSelector(state) {
+		return state.labelSelector;
 	},
 	getSelectNamespace(state) {
 		return state.selectNamespace;
