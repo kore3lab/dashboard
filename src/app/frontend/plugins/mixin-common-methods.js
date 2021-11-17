@@ -179,6 +179,11 @@ Vue.mixin({
 			if (_) this.$store.commit("setNamespaces", _);
 			else return this.$store.getters["getNamespaces"];
 		},
+		// Get currentContext's namespaces
+		labelSelector(_) {
+			if (_) this.$store.commit("setLabelSelector", _);
+			else return this.$store.getters["getLabelSelector"];
+		},
 		// Get contexts
 		contexts(_) {
 			if (_) this.$store.commit("setContexts", _);

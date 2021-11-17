@@ -4,16 +4,7 @@
 			<div class="container-fluid">
 				<c-navigator :group="'Custom Resource / '+ apiQuery.group"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2 text-capitalize">{{apiQuery.name.charAt(0)}}</span><span class="text-capitalize">{{apiQuery.name}}</span></h1></div>
-					<div v-if="$route.query.scope === 'Namespaced' || $route.query.ns === 'true'" class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
-					<div class="col-sm-2 float-left">
-						<div class="input-group input-group-sm" >
-							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
-						</div>
-					</div>
-					<!-- button -->
 					<div class="col-sm-1 text-right">
 						<b-button variant="primary" size="sm" @click="$router.push(`customresource.create?group=${apiQuery.group}&name=${apiQuery.name}&crd=${crdQuery.name}&version=${crdQuery.version}`)">Create</b-button>
 					</div>
@@ -23,10 +14,17 @@
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- total count & items per page  -->
-				<div class="d-flex flex-row-reverse">
-					<div class="p-2">
-						<b-form inline>
+				<!-- search & total count & items per page  -->
+				<div class="row pb-2">
+					<div v-if="$route.query.scope === 'Namespaced' || $route.query.ns === 'true'" class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
+					<div class="col-sm-2 float-left">
+						<div class="input-group input-group-sm" >
+							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
+							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
+						</div>
+					</div>
+					<div class="col-sm-10">
+						<b-form inline class="float-right">
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
 							<span class="text-sm align-middle ml-2">Total : {{ totalItems }}</span>
 						</b-form>
