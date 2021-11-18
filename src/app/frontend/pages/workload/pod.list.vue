@@ -18,7 +18,7 @@
 				<div class="d-flex">
 					<div class="p-2">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
-							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="removeFilterStatus">All</button>
 							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onChangeStatus" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
@@ -36,7 +36,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table hover selectable show-empty select-mode="single" @sort-changed="currentPage=1" @row-selected="onRowSelected" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table hover selectable show-empty select-mode="single" @sort-changed="currentPage=1" @row-selected="onRowSelected" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="filterStatus" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -133,7 +133,7 @@ export default {
 				{ key: "node", label: "Node", sortable: true },
 				{ key: "qos", label: "QoS", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus },
+				{ key: "status", label: "Status", sortable: true},
 				{ key: "menu", label: "" }
 			],
 			isBusy: true,
@@ -200,9 +200,9 @@ export default {
 			let selectedStatus = this.selectedStatus;
 			this.items = this.origin.filter(el => {
 				if(selectedStatus.includes("etc")) {
-					return (selectedStatus.length === 0) || selectedStatus.includes(el.status) || !(this.allStatus.includes(el.status));
+					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
 				}
-				return (selectedStatus.length === 0) || selectedStatus.includes(el.status);
+				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
 			});
 			this.totalItems = this.items.length;
 			this.currentPage = 1
@@ -221,7 +221,7 @@ export default {
 							containers: el.status,
 							restartCount: el.status.containerStatuses ? el.status.containerStatuses.map(x => x.restartCount).reduce((accumulator, currentValue) => accumulator + currentValue, 0) : 0,
 							controller: el.metadata.ownerReferences?el.metadata.ownerReferences[0]:null,
-							status: el.status.phase,
+							status: this.toPodStatus(el.metadata.deletionTimestamp, el.status),
 							creationTimestamp: el.metadata.creationTimestamp,
 							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
@@ -230,49 +230,29 @@ export default {
 						});
 					});
 					this.origin = this.items;
-					this.onFiltered(this.items);
+					this.filterStatus(this.items);
 					this.onChangeStatus()
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
-		selectedClear() {
+		removeFilterStatus() {
 			this.selectedStatus = [];
 			this.query_All()
 		},
-		onFilter(keyword) {
-			this.keyword=keyword
-		},
-		onFiltered(filteredItems) {
-			let status = { running:0, pending:0, failed:0, terminating:0, crashLoopBackOff:0, imagePullBackOff:0, completed:0, containerCreating:0, etc:0 }
-
-			filteredItems.forEach(el=> {
-				if(el.status === "Running") status.running++;
-				else if(el.status === "Pending") status.pending++;
-				else if(el.status === "Terminating") status.terminating++;
-				else if(el.status === "CrashLoopBackOff") status.crashLoopBackOff++;
-				else if(el.status === "ImagePullBackOff") status.imagePullBackOff++;
-				else if(el.status === "Completed") status.completed++;
-				else if(el.status === "Failed") status.failed++;
-				else if(el.status === "ContainerCreating") status.containerCreating++;
-				else status.etc++;
-			});
-
-			this.optionsStatus[0].text = status.running >0 ? `Running (${status.running})`: "Running";
-			this.optionsStatus[1].text = status.pending >0 ? `Pending (${status.pending})`: "Pending";
-			this.optionsStatus[2].text = status.terminating >0 ? `Terminating (${status.terminating})`: "Terminating";
-			this.optionsStatus[3].text = status.crashLoopBackOff >0 ? `CrashLoopBackOff (${status.crashLoopBackOff})`: "CrashLoopBackOff";
-			this.optionsStatus[4].text = status.imagePullBackOff >0 ? `ImagePullBackOff (${status.imagePullBackOff})`: "ImagePullBackOff";
-			this.optionsStatus[5].text = status.completed >0 ? `Completed (${status.completed})`: "Completed";
-			this.optionsStatus[6].text = status.containerCreating >0 ? `ContainerCreating (${status.containerCreating})`: "ContainerCreating";
-			this.optionsStatus[7].text = status.failed >0 ? `Failed (${status.failed})`: "Failed";
-			this.optionsStatus[8].text = status.etc >0 ? `etc (${status.etc})`: "etc";
-
-			this.totalItems = filteredItems.length;
+		filterStatus(items) {
+			let opts = { }
+			this.fieldsAll = {};
+			items.forEach(d=> {
+				opts[d.status.value] =  (opts[d.status.value] ? opts[d.status.value]: 0) + 1;
+			})
+			this.optionsStatus = [];
+			this.totalItems = 0;
+			for (const [k, v] of Object.entries(opts)) {
+				this.optionsStatus.push({ text: `${k} (${v})`, value: k })
+				this.totalItems += v;
+			}
 			this.currentPage = 1
-		},
-		formatStatus(status, key, item)  {
-			return this.toPodStatus(item.deletionTimestamp, item.containers);
 		},
 		formatContainers(status, key, item) {
 			let list = []
