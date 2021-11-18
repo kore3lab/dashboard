@@ -109,8 +109,8 @@ export default {
 		},
 		// context select
 		onContextSelected(ctx) {
-			if (!ctx) return
-
+			if(this.contexts().length == 0) return;
+			if(!ctx || !this.contexts().find(d=>d==ctx)) ctx = this.contexts()[0];
 			this.showOverlay = ctx;
 			this.showErrorOverlay = "";
 			this.$axios.get(`/api/contexts/${ctx}`)
