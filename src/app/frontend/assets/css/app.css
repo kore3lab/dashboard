@@ -28,8 +28,7 @@ body.sidebar-mini .main-sidebar .aside-menus::-webkit-scrollbar{ display:none;}
 /* layout - body > splitpanes */
 body.sidebar-mini .main-body .splitpanes__pane.body-pane { overflow-y: auto; background-color: var(--bg-color); }
 body.sidebar-mini .main-body:not(.terminal-closed) .splitpanes__splitter { background-color:transparent; height:.3rem; border-top: .1rem solid #343a40; background-color: var(--bg-color)}
-body.sidebar-mini .main-body.terminal-closed  .splitpanes__splitter { display: none; }
-body.sidebar-mini .main-body .splitpanes__pane.terminal-pane > i { float:right; line-height:1.6rem; padding: .2rem .5rem .2rem .5rem; border-left: 1px dashed #ccc; background-color:#fff; }
+body.sidebar-mini .main-body.terminal-closed .splitpanes__splitter { display: none; }
 /* layout - body > list-page > header */
 body.sidebar-mini .main-body .content-header { padding: .5rem .5rem .2rem .5rem;}
 body.sidebar-mini .main-body .content-wrapper { margin-left: 0!important; min-height: 100% !important;}
