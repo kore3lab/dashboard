@@ -21,7 +21,7 @@
 	</div>
 </div>
 </template>
-<style>
+<style scroped>
 div.terminal-content .body-wrapper p.logs {margin-bottom:0; font-size: .825rem;}
 mark{background-color: #3593f8;}
 </style>
@@ -119,20 +119,23 @@ export default {
 			}
 			if(this.matchVal !== ""){
 				let list = [];
-				this.logs.forEach( item => { list.push(item.replace(/<(\/mark|mark)([^>]*)>/gi,"")) })
-				list.forEach((item, index) => {
-					const startIndex = item.toUpperCase().indexOf(this.matchVal.toUpperCase());
-					if (startIndex !== -1) {
-						let re1 = new RegExp(this.matchVal, "gi");
-						const word = item.slice(startIndex, startIndex+this.matchVal.length)
-						list[index] = item.replace(re1, `<mark>${word}</mark>`);
-						if(this.offsetFlag){
-							this.$el.querySelectorAll("p.logs")[index].scrollIntoView();
-							this.offsetFlag = false;
+				this.logs.forEach( item => { 
+					list.push(item.replace(/<(\/mark|mark)([^>]*)>/gi,"")) })
+					list.forEach((item, index) => {
+						const startIndex = item.toUpperCase().indexOf(this.matchVal.toUpperCase());
+						if (startIndex !== -1) {
+							let re1 = new RegExp(this.matchVal, "gi");
+							const word = item.slice(startIndex, startIndex+this.matchVal.length)
+							list[index] = item.replace(re1, `<mark>${word}</mark>`);
+							if(this.offsetFlag){
+								this.$el.querySelectorAll("p.logs")[index].scrollIntoView();
+								this.offsetFlag = false;
+							}
 						}
-					}
-				})
-				this.logs = list;
+					})
+					this.logs = list;
+			} else {
+				this.logs = this.logs.map( d=> { return d.replace(/<(\/mark|mark)([^>]*)>/gi,"") });
 			}
 		},
 		onChangeContainer(value) {

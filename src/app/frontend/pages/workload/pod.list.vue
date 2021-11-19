@@ -18,8 +18,8 @@
 				<div class="d-flex">
 					<div class="p-2">
 						<b-form-group class="mb-0 font-weight-light overflow-auto">
-							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="removeFilterStatus">All</button>
-							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onChangeStatus" class="float-left"></b-form-checkbox-group>
+							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="onSelectedStatus([])">All</button>
+							<b-form-checkbox-group v-model="selectedStatus" :options="optionsStatus" button-variant="light" font="light" switches size="sm" @input="onSelectedStatus" class="float-left"></b-form-checkbox-group>
 						</b-form-group>
 					</div>
 					<div class="ml-auto p-2">
@@ -36,7 +36,7 @@
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body table-responsive p-0">
-								<b-table hover selectable show-empty select-mode="single" @sort-changed="currentPage=1" @row-selected="onRowSelected" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="filterStatus" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
+								<b-table hover selectable show-empty select-mode="single" @sort-changed="currentPage=1" @row-selected="onRowSelected" ref="grdSheet1" :items="items" :fields="fields" :filter="keyword" :filter-included-fields="filterOn" @filtered="onFiltered" :current-page="currentPage" :per-page="itemsPerPage" :busy="isBusy" class="text-sm">
 									<template #table-busy>
 										<div class="text-center text-success lh-vh-50">
 											<b-spinner type="grow" variant="success" class="align-middle mr-2"></b-spinner>
@@ -56,22 +56,19 @@
 										<a href="#" @click="viewModel=getViewLink('','nodes', '',  data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
 									<template v-slot:cell(menu)="data">
-										<div class="text-center">
-											<b-dropdown dropdown no-caret variant="link" size="xs" class="m-n2">
-												<template #button-content>
-													<b-button class="btn btn-tool" variant="link" @click="onClickInitMenu(data.value.status)">
-														<i class="fas fa-ellipsis-v" aria-hidden="true"></i>
-													</b-button>
-												</template>
-												<b-dropdown-item v-for="(item,index) in menu" :key="index" @mouseover.native="toggleSubMenu($event, index)" @mouseout.native="toggleSubMenu($event, index)" @click="onClickShowLogs(data.value, item.name, item.type)">
-													<b-icon v-bind:icon="item.icon" class="mr-2"></b-icon><span>{{item.title}} <b-icon-caret-right-fill :scale="0.6" v-if="item.children"></b-icon-caret-right-fill></span>
-													<div v-if="item.children" class="dropdown-sub-menu" v-show="item.showSubMenu">
-														<b-dropdown-item dropleft v-for="(d,index) in item.children" :key="index" @click="onClickShowLogs(data.value, d.name, item.title)"> <span class="badge badge-success"> {{""}}</span><span class="pl-1 text-xs">{{d.title}}</span>
-														</b-dropdown-item>
-													</div>
-												</b-dropdown-item>
-											</b-dropdown>
-										</div>
+										<b-dropdown dropdown no-caret no-prefetch variant="link" size="xs" class="m-n2 text-center">
+											<template #button-content>
+												<b-button class="btn btn-tool" variant="link"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></b-button>
+											</template>
+											<b-dropdown-item v-for="(item,index) in data.value" :key="index" class="columns-context-menu"  @click="if(item.containers.length==1) openTerminal(item.containers[0])">
+												<b-icon v-bind:icon="item.icon" class="mr-2"></b-icon><span>{{ item.title }}<b-icon-caret-right-fill :scale="0.6" v-if="item.containers.length>1"></b-icon-caret-right-fill></span>
+												<div v-if="item.containers.length>1" class="sub">
+													<b-dropdown-item dropleft v-for="(d,i) in item.containers" :key="i" @click="openTerminal(d)">
+														<span :class="{'badge-success': d.ready, 'badge-warning': !d.ready}" class="badge ">&nbsp;</span><span class="pl-1 text-xs" >{{d.title}}</span>
+													</b-dropdown-item>
+												</div>
+											</b-dropdown-item>
+										</b-dropdown>
 									</template>
 								</b-table>
 							</div>
@@ -87,8 +84,8 @@
 	</div>
 </template>
 <style scoped>
-div .dropdown-sub-menu{ position: absolute; white-space: nowrap; min-width: 8rem; right: 100%; left: auto; transform : translate(0, -60%); background-color: #fff; border: 1px solid rgba(0,0,0,.15); border-radius: .25rem;}
-.dropdown-menu {min-width:5rem !important;}
+.columns-context-menu .sub{ display:none; position: absolute; white-space: nowrap; min-width: 8rem; right: 100%; left: auto; transform : translate(0, -60%); background-color: #fff; border: 1px solid rgba(0,0,0,.15); border-radius: .25rem;}
+.columns-context-menu:hover .sub { display: block;}
 </style>
 
 <script>
@@ -107,6 +104,7 @@ export default {
 
 	data() {
 		return {
+			dd: {},
 			selectedStatus: [],
 			allStatus: ["Running", "Pending", "Terminating", "CrashLoopBackOff", "ImagePullBackOff", "Completed", "ContainerCreating", "Failed", "etc"],
 			optionsStatus: [
@@ -134,7 +132,7 @@ export default {
 				{ key: "qos", label: "QoS", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 				{ key: "status", label: "Status", sortable: true},
-				{ key: "menu", label: "" }
+				{ key: "menu", label: "", sortable: true, formatter: this.formatMenu }
 			],
 			isBusy: true,
 			origin: [],
@@ -146,8 +144,7 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
-			viewModel:{},
-			menu: [{title:"terminal", icon:"terminal-fill", type:'terminal', visible:true},{title:'log', icon:"card-text", type:'log', visible:true}]
+			viewModel:{}
 		}
 	},
 	watch: {
@@ -156,56 +153,13 @@ export default {
 		}
 	},
 	layout: "default",
+	created() {
+		this.$nuxt.$on("context-selected", () => {this.selectedStatus = []});	// chanag context -> set empty the selected status
+	},
 	methods: {
-		onClickInitMenu(status){
-			const menu = [{title:"terminal", icon:"terminal-fill", type:'terminal', visible:true},{title:'log', icon:"card-text", type:'log', visible:true}]
-			if(status.containerStatuses && status.containerStatuses.length > 1){
-				const list = [];
-				status.containerStatuses.forEach(item =>{list.push({ title: item.name, name: item.name, visible: item.ready})})
-				let menuList = [];
-				this.menu.forEach(item => {
-					menuList.push({ title: item.title, icon: item.icon, showSubMenu : false, visible: true, children : list})
-				})
-				this.menu = menuList;
-			}else{
-				menu.forEach((item, index) => {
-					menu[index].name = status.containerStatuses[0].name;
-					menu[index].visible = status.containerStatuses[0].ready;
-				})
-				this.menu = menu;
-			}
-		},
-		toggleSubMenu (e, index){
-			if(this.menu[index].children) this.menu[index].showSubMenu = e.type === 'mouseover';
-		},
-		onClickShowLogs(data, name, type) {
-			if(name !== undefined){
-				let containerList = []
-				data.status.containerStatuses.forEach(item =>{
-					containerList.push(item.name);
-				})
-				if(type === 'log') {this.$nuxt.$emit("open-terminal", data.metadata.name, "logs", { metadata: data.metadata, container:name, containers:containerList });}
-				else {
-					let route = this.$router.resolve({path: "/terminal", query: {termtype: 'container',pod: data.metadata.name, namespace: data.metadata.namespace, cluster: this.currentContext(), container:name}})
-					window.open(route.href);
-				}
-			}
-		},
 		onRowSelected(items) {
 			this.isShowSidebar = (items && items.length > 0)
 			if (this.isShowSidebar) this.viewModel = this.getViewLink("", "pods", items[0].namespace, items[0].name)
-		},
-		//  status 필터링
-		onChangeStatus() {
-			let selectedStatus = this.selectedStatus;
-			this.items = this.origin.filter(el => {
-				if(selectedStatus.includes("etc")) {
-					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
-				}
-				return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
-			});
-			this.totalItems = this.items.length;
-			this.currentPage = 1
 		},
 		// 조회
 		query_All(d) {
@@ -226,21 +180,18 @@ export default {
 							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
 							qos: el.status.qosClass,
-							menu: el,
+							containerStatuses: el.status.containerStatuses
 						});
 					});
 					this.origin = this.items;
-					this.filterStatus(this.items);
-					this.onChangeStatus()
+					this.onFiltered(this.items);
+					this.selectedStatus = [];
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
-		removeFilterStatus() {
-			this.selectedStatus = [];
-			this.query_All()
-		},
-		filterStatus(items) {
+		onFiltered(items) {
+			//calc. status count
 			let opts = { }
 			this.fieldsAll = {};
 			items.forEach(d=> {
@@ -254,7 +205,23 @@ export default {
 			}
 			this.currentPage = 1
 		},
-		formatContainers(status, key, item) {
+		//  selected status 
+		onSelectedStatus(selectedStatus) {
+			if (selectedStatus.length ==0) {
+				if(this.selectedStatus.length > 0) this.selectedStatus = [];
+				this.items = this.origin;
+			} else {
+				this.items = this.origin.filter(el => {
+					if(selectedStatus.includes("etc")) {
+						return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
+					}
+					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
+				});
+			}
+			this.totalItems = this.items.length;
+			this.currentPage = 1
+		},
+		formatContainers(status) {
 			let list = []
 			if ( status.initContainerStatuses ) {
 				status.initContainerStatuses.forEach(el=> {
@@ -271,7 +238,59 @@ export default {
 				});
 			}
 			return list;
-		}
+		},
+		formatMenu(v, key, item) {
+			if(!item.containerStatuses) return [];
+
+			let terminals = [];
+			let logs = [];
+			let containers = [];
+
+			item.containerStatuses.forEach(d => {
+				containers.push(d.name);
+			});
+			item.containerStatuses.forEach(d => {
+				logs.push ({
+					title: d.name,
+					ready: d.ready,
+					type: "logs",
+					query: {
+						metadata: { name: item.name, namespace:item.namespace }, 
+						container: d.name, 
+						containers: containers
+					}
+				});
+				terminals.push ({
+					title: d.name,
+					ready: d.ready,
+					type: "terminal",
+					query: {
+						termtype: "container", 
+						pod: item.name, 
+						namespace: item.namespace, 
+						cluster: this.currentContext(), 
+						container: d.name
+					}
+				});
+			});
+
+			return [
+				{ title:"Logs", icon:"card-text", name:item.name, containers: logs  },
+				{ title:"Terminal", icon:"terminal-fill",  name:item.name, containers: terminals }
+			];
+
+		},
+		openTerminal(d) {
+			if(d.type === "logs") {
+				this.$nuxt.$emit("open-terminal", d.query.metadata.name, "logs", d.query);
+			} else {
+				const route = this.$router.resolve( { path: "/terminal", query: d.query } );
+				window.open(route.href);
+			}
+		},
+	},
+	beforeDestroy(){
+		this.$nuxt.$off("context-selected");
 	}
 }
 </script>

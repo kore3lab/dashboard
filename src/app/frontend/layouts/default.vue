@@ -7,8 +7,9 @@
 				<nuxt/>
 			</c-pane>
 			<c-pane v-show="isTerminal" class="terminal-pane" :size="paneSize">
-				<i @click="isMinimize = !isMinimize" v-bind:class="{'fa-angle-up':isMinimize, 'fa-angle-down':!isMinimize }" class="fas cursor text-secondary"></i>
-				<c-terminal @opened="onTerminalOpened" @closed="onTerminalClosed" />
+				<!--<i class="fas cursor text-secondary fa-window-close"></i>
+				<i @click="isMinimize = !isMinimize" v-bind:class="{'fa-angle-up':isMinimize, 'fa-angle-down':!isMinimize }" class="fas cursor text-secondary"></i>-->
+				<c-terminal @opened="onTerminalOpened" @closed="onTerminalClosed" @maximize="isMinimize=false" @minimize="isMinimize=true" />
 			</c-pane>
 		</c-splitpanes>
 		<c-footer class="main-footer"/>
@@ -68,19 +69,14 @@ export default {
 				this.isMinimize = false;
 			}
 		},
-		onTerminalClosed(key, len) {
-			if(len == 0) {
-				this.paneSize = 0;
-				this.isTerminal = false;
-				if(this.isMinimize) {
-					this.beforePaneSize = 0;
-					this.isMinimize = false;
-				}
-				
+		onTerminalClosed() {
+			this.paneSize = 0;
+			this.isTerminal = false;
+			if(this.isMinimize) {
+				this.beforePaneSize = 0;
+				this.isMinimize = false;
 			}
 		}
-	},
-	beforeDestroy(){
 	}
 }
 </script>
