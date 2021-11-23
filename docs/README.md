@@ -3,6 +3,7 @@
 * [Developer Guide](./developer/README.md)
 
   * [Getting started](./developer/getting-started.md)
+  * [Architecture](./developer/architecture.md)
   * [API Specification](./developer/api-specification.md)
   * [Packaging Helm-chart](./developer/helm-chart.md)
   * [Web-Terminal Developer Guide](./developer/app-terminal.md)
