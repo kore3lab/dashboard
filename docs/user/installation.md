@@ -40,6 +40,7 @@ $ kubectl delete -f ./scripts/install/kuberntes/recommended.yaml
 * Installation
 
 ```
+$ kubectl create ns kore
 $ helm install -n kore kore-board ./scripts/install/kuberntes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \

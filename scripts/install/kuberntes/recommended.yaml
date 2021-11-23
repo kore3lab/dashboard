@@ -8,10 +8,10 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  labels:
-    app: kore-board
   name: kore-board
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
 
 ---
 
@@ -19,6 +19,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: clusterrolebinding-kore-board
+  labels:
+    app.kubernetes.io/part-of: kore-board
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -32,10 +34,10 @@ subjects:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  labels:
-    app: kore-board
   name: kore-board-kubeconfig
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
 data:
   config: |
 
@@ -44,40 +46,40 @@ data:
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: metrics-scraper
 spec:
   ports:
     - port: 8000
       targetPort: 8000
   selector:
-    app: kore-board
-    kore.board: metrics-scraper
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: metrics-scraper
 
 ---
 
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: metrics-scraper
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kore-board
-      kore.board: metrics-scraper
+      app.kubernetes.io/part-of: kore-board
+      app.kubernetes.io/component: metrics-scraper
   template:
     metadata:
       labels:
-        app: kore-board
-        kore.board: metrics-scraper
+        app.kubernetes.io/part-of: kore-board
+        app.kubernetes.io/component: metrics-scraper
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:
@@ -131,11 +133,11 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: backend
   name: backend
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: backend
 spec:
   type: ClusterIP
   ports:
@@ -144,30 +146,30 @@ spec:
       protocol: TCP
       targetPort: 3001
   selector:
-    app: kore-board
-    kore.board: backend
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: backend
 
 ---
 
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: backend
   name: backend
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kore-board
-      kore.board: backend
+      app.kubernetes.io/part-of: kore-board
+      app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        app: kore-board
-        kore.board: backend
+        app.kubernetes.io/part-of: kore-board
+        app.kubernetes.io/component: backend
     spec:
       containers:
         - name: backend
@@ -203,11 +205,11 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: frontend
   name: frontend
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: frontend
 spec:
   type: NodePort
   ports:
@@ -217,18 +219,18 @@ spec:
       protocol: TCP
       targetPort: 80
   selector:
-    app: kore-board
-    kore.board: frontend
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: frontend
 
 ---
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  labels:
-    app: kore-board
   name: kore-board-nginx
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
 data:
   default.conf: |2-
     server {
@@ -352,22 +354,22 @@ data:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: frontend
   name: frontend
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kore-board
-      kore.board: frontend
+      app.kubernetes.io/part-of: kore-board
+      app.kubernetes.io/component: frontend
   template:
     metadata:
       labels:
-        app: kore-board
-        kore.board: frontend
+        app.kubernetes.io/part-of: kore-board
+        app.kubernetes.io/component: frontend
     spec:
       containers:
         - name: frontend
@@ -412,40 +414,40 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: terminal
   name: terminal
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: terminal
 spec:
   ports:
     - port: 3003
       targetPort: 3003
   selector:
-    app: kore-board
-    kore.board: terminal
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: terminal
 
 ---
 
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  labels:
-    app: kore-board
-    kore.board: terminal
   name: terminal
   namespace: kore
+  labels:
+    app.kubernetes.io/part-of: kore-board
+    app.kubernetes.io/component: terminal
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kore-board
-      kore.board: terminal
+      app.kubernetes.io/part-of: kore-board
+      app.kubernetes.io/component: terminal
   template:
     metadata:
       labels:
-        app: kore-board
-        kore.board: terminal
+        app.kubernetes.io/part-of: kore-board
+        app.kubernetes.io/component: terminal
     spec:
       containers:
         - name: terminal
