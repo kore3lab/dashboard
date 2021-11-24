@@ -1,7 +1,7 @@
 <template>
 <div class="row">
 	<div v-if="!noNamespace" class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="dispatchInput"></b-form-select></div>
-	<div class="col-sm-2 float-left">
+	<div v-if="!noKeyword" class="col-sm-2 float-left">
 		<div class="input-group input-group-sm" >
 			<b-form-input v-model="keyword" class="form-control float-right" placeholder="Search" @input="$emit('keyword',keyword)"></b-form-input>
 			<div class="input-group-append"><button type="submit" class="btn btn-default" @click="dispatchInput"><i class="fas fa-search"></i></button></div>
@@ -19,7 +19,8 @@
 export default {
 	props: {
 		noLabelSelector: Boolean,
-		noNamespace: Boolean
+		noNamespace: Boolean,
+		noKeyword: Boolean
 	},
 	data () {
 		return {
@@ -46,7 +47,17 @@ export default {
 	},
 	created(){
 		this.$nuxt.$on("context-selected", this.dispatchInput);
-		if(this.currentContext()) this.dispatchInput();
+	},
+	mounted() {
+		if(this.currentContext()) {
+			this.$axios.get(`/api/contexts/${this.currentContext()}/namespaces`)
+				.then((resp)=>{
+					if (resp.data.namespaces)  this.namespaces(resp.data.namespaces);
+					this.dispatchInput();
+				}).catch(error=> {
+					this.toast(error.message, "danger");
+				})
+		}
 	},
 	methods: {
 		dispatchInput() {

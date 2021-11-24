@@ -47,62 +47,71 @@ export default {
 		return {
 			badge: this.$route.query.crd ? this.$route.query.crd.substring(0,1): "P",
 			url: this.$route.query.url,
-			raw: {},
-			crdQuery: {
-				group: this.$route.query.group,
-				name: this.$route.query.name,
-				crd: this.$route.query.crd,
-				version: this.$route.query.version
-			}
+			raw: {}
 		}
+	},
+	computed: {
+		crdQuery: {
+			get () {
+				return {
+					group: this.$route.query.group,		//ex. networking.istio.io
+					crd: this.$route.query.crd,			//ex. virtualservices
+					name: this.$route.query.name,		//ex. VirtualService
+					version: this.$route.query.version	//ex. v1beta1
+				}
+			},
+		},
 	},
 	layout: "default",
 	created() {
 		this.$nuxt.$on("context-selected", () => {
 			// crd spec 읽어서 template 동적 생성
-			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.crd}`)
+			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.crd}.${this.crdQuery.group}`)
 				.then(resp => {
 					// properties 재귀호출 함수
 					let fn_el_loop =function(props, d) {
 						if (!props) return
-						for(let nm in props) {
+						for(const nm in props) {
+							let el;
 							if (props[nm]["type"] == "object") {
-								d[nm] = {};
-								fn_el_loop(props[nm]["properties"], d[nm])
+								el = {}
+								fn_el_loop(props[nm]["properties"], el)
 							} else if (props[nm]["type"] == "integer") {
-								d[nm] = 0
+								el = 0
+							} else if (props[nm]["type"] == "number") {
+								el = 0
 							} else if (props[nm]["type"] == "boolean") {
-								d[nm] = true
-							} else {
-								d[nm] = ""
+								el = true
+							} else if (props[nm]["type"] == "array") {
+								el = [];
+								if(props[nm].items["properties"]) fn_el_loop(props[nm].items["properties"], el);
+							} else if (props[nm]["type"] == "string") {
+								el = ""
 							}
+							if (el && Array.isArray(d)) d.push(el); else  d[nm] = el;
 						}
 					}
-
 					// template 생성
 					let d = {
 						kind: resp.data.spec.names.kind,
-						apiVersion: `${resp.data.spec.group}/${this.crdQuery.version}`,
+						apiVersion: `${this.crdQuery.group}/${this.crdQuery.version}`,
 						metadata: {
 							name: "default"
 						}
 					}
 					if(resp.data.spec.scope == "Namespaced") d.metadata.namespace = "default"
-					resp.data.spec.versions.find(el => {
-						if(el.name === this.crdQuery.version && el.schema.openAPIV3Schema) {
-							if(el.schema.openAPIV3Schema.properties) {
-								fn_el_loop(el.schema.openAPIV3Schema.properties, d)
-							}
-							
-						}
-					})
-					if(!d.kind) d.kind = resp.data.spec.names.kind;
-					if(!d.apiVersion) d.apiVersion = `${resp.data.spec.group}/${this.crdQuery.version}`;
-					if(!d.metadata["name"]) d.metadata["name"] = "default";
-					if(resp.data.spec.scope == "Namespaced") d.metadata.namespace = "default"
 
+					// structure (https://kubernetes.io/docs/reference/using-api/deprecation-guide/#customresourcedefinition-v122)
+					let properties;
+					if( resp.data.apiVersion == "apiextensions.k8s.io/v1") {
+						const version = resp.data.spec.versions.find(el => el.name= this.crdQuery.version);
+						if(version && version.schema && version.schema.openAPIV3Schema ) properties = version.schema.openAPIV3Schema.properties;
+					} else {
+						if(resp.data.spec.validation && resp.data.spec.openAPIV3Schema)	properties = resp.data.spec.validation.openAPIV3Schema.properties;
+					}
+
+					if(properties) fn_el_loop(properties, d);
 					this.raw = d;
-
 				})
 		});
 		if(this.currentContext()) this.$nuxt.$emit("context-selected");

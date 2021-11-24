@@ -120,14 +120,7 @@ export default {
 						this.toast(resp.data["error"], "warning")
 					} else {
 						this.currentContext(ctx ? ctx : resp.data.currentContext.name);
-						let nsList = [{ value: "", text: "All Namespaces" }];
-						if (resp.data.currentContext.namespaces) {
-							resp.data.currentContext.namespaces.forEach(el => {
-								nsList.push({ value: el, text: el });
-							});
-						}
-						if(!nsList.find(d=> {return d.value == this.selectNamespace()})) this.selectNamespace("");
-						this.namespaces(nsList);
+						this.namespaces(resp.data.currentContext.namespaces);
 						this.resources(resp.data.currentContext.resources);
 						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());

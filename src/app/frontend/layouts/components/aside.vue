@@ -151,8 +151,8 @@ export default {
 	methods: {
 		toCRDLink(crd) {
 			let a = crd.groupVersion.split("/");
-			//return {path: `/customresource/customresource.list?crd=${crd.name}.${a[0]}&version=${a[1]}`}
-			let query = (a.length > 1) ? {crd: `${crd.name}.${a[0]}`, version: a[1]} : {crd: `${crd.name}.${a[0]}`, version: ""}
+			let query = {group: a[0], crd: crd.name,  name:crd.kind, version: ""};
+			if (a.length > 1) query.version = a[1];
 			return {path: '/customresource/customresource.list', query: query}
 		}
 	},

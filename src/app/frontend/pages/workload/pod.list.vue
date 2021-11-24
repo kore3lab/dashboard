@@ -106,7 +106,6 @@ export default {
 		return {
 			dd: {},
 			selectedStatus: [],
-			allStatus: ["Running", "Pending", "Terminating", "CrashLoopBackOff", "ImagePullBackOff", "Completed", "ContainerCreating", "Failed", "etc"],
 			optionsStatus: [
 				{ text: "Running", value: "Running" },
 				{ text: "Pending", value: "Pending" },
@@ -208,16 +207,11 @@ export default {
 		//  selected status 
 		onSelectedStatus(selectedStatus) {
 			if (selectedStatus.length ==0) {
-				if(this.selectedStatus.length > 0) this.selectedStatus = [];
 				this.items = this.origin;
 			} else {
-				this.items = this.origin.filter(el => {
-					if(selectedStatus.includes("etc")) {
-						return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value) || !(this.allStatus.includes(el.status.value));
-					}
-					return (selectedStatus.length === 0) || selectedStatus.includes(el.status.value);
-				});
+				this.items = this.origin.filter(el => selectedStatus.includes(el.status.value));
 			}
+			this.selectedStatus = selectedStatus;
 			this.totalItems = this.items.length;
 			this.currentPage = 1
 		},

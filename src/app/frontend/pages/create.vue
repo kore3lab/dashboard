@@ -79,25 +79,7 @@ export default {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
 					this.toast("Apply OK", "info");
-
-					if(this.crd === 'Namespace') {
-						this.$axios.get(`/api/clusters?ctx=${this.currentContext()}`)
-							.then((resp)=>{
-								let nsList = [{ value: "", text: "All Namespaces" }];
-								if (resp.data.currentContext.namespaces) {
-									resp.data.currentContext.namespaces.forEach(el => {
-										nsList.push({ value: el, text: el });
-									});
-								}
-								this.namespaces(nsList);
-								this.$router.go(-1);
-							}).catch(error=> {
-								this.toast(error.message, "danger");
-							})
-					} else  {
-						this.$router.go(-1);
-					}
-
+					this.$router.go(-1);
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false; });
