@@ -4,7 +4,6 @@
 			<div class="container-fluid">
 				<c-navigator group="Custom Resource"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
 				</div>
 			</div>
@@ -43,7 +42,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<nuxt-link :to="{path: '/customresource/customresource.list', query: {crd: `${data.item.plural}.${data.item.group}`, version: data.item.version }}" class="mr-2">{{ data.value.name }}</nuxt-link>
+										<nuxt-link :to="{path: '/customresource/customresource.list', query: {group:data.item.group, crd: data.item.plural, name: data.item.name.name, version: data.item.version }}" class="mr-2">{{ data.value.name }}</nuxt-link>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">

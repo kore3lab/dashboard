@@ -47,12 +47,13 @@ func CreateUrlMappings() {
 	// contexts API
 	contextsAPI := Router.Group("/api/contexts", authenticate())
 	{
-		contextsAPI.GET("", apis.ListContexts)                     // list contexts
-		contextsAPI.POST("", apis.CreateContexts)                  // create contexts (kubeconfig yaml)
-		contextsAPI.GET("/:CLUSTER", apis.GetContext)              // get a context (context meta-data : resources & namespaces)
-		contextsAPI.GET("/:CLUSTER/config", apis.GetContextConfig) // get a context (server, user, context)
-		contextsAPI.POST("/:CLUSTER", apis.AddContext)             // add a context (server, user, context)
-		contextsAPI.DELETE("/:CLUSTER", apis.DeleteContext)        // delete a context
+		contextsAPI.GET("", apis.ListContexts)                             // list contexts
+		contextsAPI.POST("", apis.CreateContexts)                          // create contexts (kubeconfig yaml)
+		contextsAPI.GET("/:CLUSTER", apis.GetContext)                      // get a context (context meta-data : resources & namespaces)
+		contextsAPI.GET("/:CLUSTER/config", apis.GetContextConfig)         // get a context (server, user, context)
+		contextsAPI.GET("/:CLUSTER/namespaces", apis.GetContextNamespaces) // get namespaces
+		contextsAPI.POST("/:CLUSTER", apis.AddContext)                     // add a context (server, user, context)
+		contextsAPI.DELETE("/:CLUSTER", apis.DeleteContext)                // delete a context
 	}
 
 	// custom API
@@ -89,15 +90,15 @@ func CreateUrlMappings() {
 	Router.GET("/raw/clusters/:CLUSTER/api/", authenticate(), apis.GetRaw) // Core APIVersions
 	rawAPI := Router.Group("/raw/clusters/:CLUSTER/api/:VERSION", authenticate(), route())
 	{
-		rawAPI.GET("", apis.GetRaw)                             // ""                                       > core apiGroup - APIResourceLis
-		rawAPI.GET("/:A", apis.GetRaw)                          // "/:RESOURCE"                             > core apiGroup - list
-		rawAPI.GET("/:A/:B", apis.GetRaw)                       // "/:RESOURCE/:NAME"                       > core apiGroup - get
-		rawAPI.DELETE("/:A/:B", apis.DeleteRaw)                 // "/:RESOURCE/:NAME"                       > core apiGroup - delete
-		rawAPI.PATCH("/:A/:B", apis.PatchRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - patch
-		rawAPI.GET("/:A/:B/:RESOURCE", apis.GetRaw)             // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
-		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", apis.GetRaw)       // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
-		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw) // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
-		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
+		rawAPI.GET("", apis.GetRaw)                               // ""                                       > core apiGroup - APIResourceLis
+		rawAPI.GET("/:A", apis.GetRaw)                            // "/:RESOURCE"                             > core apiGroup - list
+		rawAPI.GET("/:A/:B", apis.GetRaw)                         // "/:RESOURCE/:NAME"                       > core apiGroup - get
+		rawAPI.DELETE("/:A/:B", apis.DeleteRaw)                   // "/:RESOURCE/:NAME"                       > core apiGroup - delete
+		rawAPI.PATCH("/:A/:B", apis.PatchRaw)                     // "/:RESOURCE/:NAME"                       > core apiGroup - patch
+		rawAPI.GET("/:A/:B/:RESOURCE", apis.GetRaw)               // "/namespaces/:NAMESPACE/:RESOURCE"       > namespaced core apiGroup - list
+		rawAPI.GET("/:A/:B/:RESOURCE/:NAME", apis.GetRaw)         // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - get
+		rawAPI.DELETE("/:A/:B/:RESOURCE/:NAME", apis.DeleteRaw)   // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - delete
+		rawAPI.PATCH("/:A/:B/:RESOURCE/:NAME", apis.PatchRaw)     // "/namespaces/:NAMESPACE/:RESOURCE/:NAME" > namespaced core apiGroup - patch
 		rawAPI.GET("/:A/:B/:RESOURCE/:NAME/log", apis.GetPodLogs) // "/namespaces/:NAMESPACE/pods/:NAME/log"  > get a pod logs
 	}
 
