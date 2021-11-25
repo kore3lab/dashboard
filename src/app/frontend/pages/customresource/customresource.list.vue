@@ -133,7 +133,14 @@ export default {
 					}
 					this.query_All();
 				})
-				//.catch(e => { this.msghttp(e);})
+				.catch(e => { 
+					if (e.response && e.response.status == 404) {
+						return this.$nuxt.error({
+							statusCode: 404, 
+							redirect: "/customresource/customresourcedefinitions.list",
+							message: `${this.crdQuery.crd} ${this.crdQuery.group}/${this.crdQuery.version} is not found` });
+					} else this.msghttp(e);
+				})
 		});
 		if(this.currentContext()) this.$nuxt.$emit("context-selected");
 
@@ -166,7 +173,7 @@ export default {
 					this.origin = this.items;
 					this.onFiltered(this.items);
 				})
-				//.catch(e => { this.msghttp(e);})
+				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {

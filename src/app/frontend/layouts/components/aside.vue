@@ -1,7 +1,7 @@
 <template>
 	<aside class="sidebar-dark-primary elevation-4">
 
-		<c-context class="aside-contexts"/>
+		<c-context class="aside-contexts" @input="onContextSelected"/>
 
 		<nuxt-link to="/" class="brand-link align-bottom">
 			<img src="/favicon.svg" class="brand-image">
@@ -117,10 +117,10 @@
 	</aside>
 </template>
 <script>
-import Context	from './context.vue'
+import VueContext	from "@/layouts/components/context.vue";
 export default {
 	components: {
-		"c-context": Context,
+		"c-context": VueContext,
 	},
 	data() {
 		return {
@@ -137,8 +137,11 @@ export default {
 			crdList: {}
 		}
 	},
-	created() {
-		this.$nuxt.$on("context-selected", (_) => {
+	methods: {
+		onContextSelected(data) {
+			this.namespaces(data.currentContext.namespaces);
+			this.resources(data.currentContext.resources);
+			this.statusbar({message: "", kubernetesVersion: data.currentContext.kubernetesVersion, platform: data.currentContext.platform})
 			this.crdList = {}
 			for(let r in this.resources()) {
 				if( !r.endsWith("k8s.io") && r.indexOf(".") > 0 ) {
@@ -146,18 +149,14 @@ export default {
 				}
 			};
 			this.isVisible.crdGroup = {};
-		});
-	},
-	methods: {
+			this.$nuxt.$emit("context-selected");
+		},
 		toCRDLink(crd) {
 			let a = crd.groupVersion.split("/");
 			let query = {group: a[0], crd: crd.name,  name:crd.kind, version: ""};
 			if (a.length > 1) query.version = a[1];
 			return {path: '/customresource/customresource.list', query: query}
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("context-selected")
 	}
 }
 </script>

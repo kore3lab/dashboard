@@ -71,7 +71,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.$nuxt.$on("navbar-set-context-selected", (ctx) => this.onContextSelected(ctx) );
+		this.$nuxt.$on("set-context-selected", this.onContextSelected);
 	},
 	methods: {
 		// context select
@@ -120,11 +120,8 @@ export default {
 						this.toast(resp.data["error"], "warning")
 					} else {
 						this.currentContext(ctx ? ctx : resp.data.currentContext.name);
-						this.namespaces(resp.data.currentContext.namespaces);
-						this.resources(resp.data.currentContext.resources);
-						this.statusbar({message: "", kubernetesVersion: resp.data.currentContext.kubernetesVersion, platform: resp.data.currentContext.platform})
 						localStorage.setItem("currentContext", this.currentContext());
-						this.$nuxt.$emit("context-selected");
+						this.$emit("input", resp.data);
 					}
 			}).catch(error=> {
 				this.toast(error.message, "danger");
