@@ -42,7 +42,7 @@
 											<li v-for="value in data.value" v-bind:key="value">{{ value }}</li>
 										</ul>
 									</template>
-									<template v-slot:cell(externalIPs)="data">
+									<template v-slot:cell(externals)="data">
 										<ul class="list-unstyled mb-0">
 											<li v-for="(value, idx) in data.value" v-bind:key="idx">{{ value }}</li>
 										</ul>
@@ -90,7 +90,7 @@ export default {
 				{ key: "type", label: "Type", sortable: true },
 				{ key: "clusterIP", label: "Cluster IP", sortable: true },
 				{ key: "ports", label: "Ports", sortable: true, formatter: this.formatPorts },
-				{ key: "externalIPs", label: "External IP", sortable: true, formatter: this.formatExternalIPs },
+				{ key: "externals", label: "Externals", sortable: true, formatter: this.formatExternals },
 				{ key: "selector", label: "Selector", sortable: true },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
 				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
@@ -133,7 +133,7 @@ export default {
 								type: el.spec.type,
 								clusterIP: el.spec.clusterIP,
 								ports: el.spec.ports,
-								externalIPs: el.spec.externalIPs || el.spec.externalName,
+								externals: el.spec.externalIPs || el.spec.externalName,
 								selector: el.spec.selector,
 								creationTimestamp: el.metadata.creationTimestamp,
 								status: el.status
@@ -159,13 +159,13 @@ export default {
 				return "Active";
 			}
 		},
-		formatExternalIPs(externalIPs, key, item) {
+		formatExternals(externals, key, item) {
 			if (item.type == "LoadBalancer") {
-				return item.status.loadBalancer.ingress? [item.status.loadBalancer] : ["-"];
+				return item.status.loadBalancer.ingress? item.status.loadBalancer.ingress : ["-"];
 			} else if(item.type == "ExternalName") {
-				return [externalIPs];
+				return [externals];
 			} else {
-				return (externalIPs? externalIPs : ["-"])
+				return (externals? externals : ["-"])
 			}
 		},
 		formatPorts(ports, key, item) {
