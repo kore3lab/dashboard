@@ -99,22 +99,19 @@ export default {
 				let user = this.kubeconfig.users.find(el=> el.name === this.selected.context["user"]);
 
 				this.showOverlay = true;
-				this.$axios.post(`/api/contexts/${clusterName}`,{
-					"cluster": Object.assign({}, cluster.cluster),
-					"user": Object.assign({}, user.user)
-				}).then( resp => {
-					if(resp.data && resp.data.contexts) {
-						this.contexts(resp.data.contexts);
-						// context 목록에서 현재 context 가 존재하지 않는다면
-						// context 선택 이벤트 발생
-						let cur = this.currentContext();
-						if( !resp.data.contexts.find(e=> {return e===cur }) ) {
-							this.$nuxt.$emit("navbar-set-context-selected", clusterName);
+				this.$axios.post(`/api/contexts/${clusterName}`,{ cluster: Object.assign({}, cluster.cluster), user: Object.assign({}, user.user)})
+					.then( resp => {
+						if(resp.data && resp.data.contexts) {
+							this.contexts(resp.data.contexts);	// set contexts
+							// 현재 context 가 목록에 없다면 새로 추가한 cluster 를  context로 선택
+							const currentContext = this.currentContext();
+							if( !resp.data.contexts.find(d=> {return d==currentContext }) ) {
+								this.$nuxt.$emit("set-context-selected", clusterName);
+							}
+							this.toast("Add a cluster.. OK", "success");
 						}
-						this.toast("Add a cluster.. OK", "success");
-					}
-
-				}).catch(e => { this.msghttp(e) } ).finally( () => { this.showOverlay = false; } );
+					}).catch(e => { this.msghttp(e) } )
+					.finally( () => { this.showOverlay = false; } );
 			} catch (ex) {
 				this.toast(`Add a cluster failed ${ex}`,"danger") 
 			}
