@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="3" ddCols="9"  @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="3" ddCols="9"  @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-3">Status</dt><dd class="col-sm-9" v-bind:class="{ 'text-success': status.phase=='Active' }">{{ status.phase }}</dd>
 		<dt class="col-sm-3">Resource Quotas</dt>
 		<dd class="col-sm-9"><span v-if="quotas.length==0">-</span><span v-for="(val, idx) in quotas" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'resourcequotas', metadata.name,val))">{{ val }} </a></span></dd>
@@ -14,6 +14,7 @@
 import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView }
 	},
@@ -24,8 +25,11 @@ export default {
 			limits: []
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.status = data.status;
 			this.quotas = [];
@@ -43,12 +47,7 @@ export default {
 					this.limits.push(el.metadata.name)
 				})
 			});
-
-		});
-	},
-	methods: {},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>

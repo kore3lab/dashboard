@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="3" ddCols="9">
+	<c-metadata v-model="value" dtCols="3" ddCols="9">
 		<dt class="col-sm-3">Group</dt><dd class="col-sm-9">{{ info.group }}</dd>
 		<dt class="col-sm-3">Version</dt><dd class="col-sm-9">{{ info.version }}</dd>
 		<dt class="col-sm-3">Stored versions</dt><dd class="col-sm-9">{{ info.storedVersions }}</dd>
@@ -53,6 +53,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueJsonTree 		from "@/components/jsontree";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": {extends: VueJsonTree},
@@ -75,8 +76,11 @@ export default {
 			],
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.info = {
 				group: data.spec.group,
@@ -89,18 +93,13 @@ export default {
 			}
 			this.printerColumns = this.getPrinterColumns(data.spec)
 			this.validation = data.spec.validation || data.spec.versions?.[0]?.schema || {}
-		});
-	},
-	methods: {
+		},
 		getPrinterColumns(spec) {
 			const columns = spec.versions.find(a => spec.versions[0]?.name ?? spec.version === a.name)?.additionalPrinterColumns ??
 					spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath}))
 					.filter(column => column.name !== 'Age') ?? [];
 			return columns;
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>

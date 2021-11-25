@@ -29,8 +29,11 @@ export default {
 			events: []
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.events = [];
 			this.$axios.get(this.getApiUrl('','events','', '',`fieldSelector=involvedObject.uid=${data.metadata.uid}`))
@@ -39,10 +42,7 @@ export default {
 				}).catch(ex => {
 					console.error(ex.message);
 				});
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
 	}
 }
 </script>

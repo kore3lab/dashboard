@@ -1,9 +1,9 @@
 <template>
 <div>
 	<!-- 1. charts -->
-	<c-charts class="row"></c-charts>
+	<c-charts v-model="value" class="row"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Replicas</dt><dd class="col-sm-10">{{ info.replicas }}</dd>
 		<dt class="col-sm-2">Strategy Type</dt><dd class="col-sm-10">{{ info.strategyType }}</dd>
 		<dt class="col-sm-2">Conditions</dt>
@@ -12,9 +12,9 @@
 		</dd>
 	</c-metadata>
 	<!-- 3. pods -->
-	<c-podlist class="row" @navigate="$emit('navigate',arguments[0])"></c-podlist>
+	<c-podlist v-model="value" class="row" @navigate="$emit('navigate',arguments[0])"></c-podlist>
 	<!-- 4. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 </div>
 </template>
 <script>
@@ -24,6 +24,7 @@ import VueChartsView	from "@/components/view/metricsChartsView.vue";
 import VuePodListView	from "@/components/view/podListView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView },
@@ -36,8 +37,11 @@ export default {
 			info: {}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.spec = data.spec;
 			this.info = {
@@ -45,10 +49,7 @@ export default {
 				strategyType: data.spec.strategy.type,
 				conditions: data.status.conditions? data.status.conditions.sort( (a,b)=> {return a.type < b.type ? -1 : a.type > b.type ? 1 : 0;} ): []
 			}
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>

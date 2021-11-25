@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="3" ddCols="9">
+	<c-metadata v-model="value" dtCols="3" ddCols="9">
 		<dt class="col-sm-3">Reference</dt>
 		<dd class="col-sm-9">{{ ref.kind }} / <a href="#" @click="$emit('navigate', getViewLink(ref.group, ref.resource, metadata.namespace, ref.name))">{{ ref.name }}</a></dd>
 		<dt class="col-sm-3">Min Pods</dt><dd class="col-sm-9">{{ info.minPods }}</dd>
@@ -21,7 +21,7 @@
 		</div>
 	</div>
 	<!-- 3. evnets -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 </div>
 </template>
 <script>
@@ -30,6 +30,7 @@ import VueEventsView		from "@/components/view/eventsView.vue";
 import VueJsonTree			from "@/components/jsontree";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": { extends: VueJsonTree },
@@ -47,8 +48,11 @@ export default {
 			metrics: []
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.info = {
@@ -60,10 +64,7 @@ export default {
 				{name: "Resource cpu on Pods (as a percentage of request)", metric: `${data.status.currentCPUUtilizationPercentage ? data.status.currentCPUUtilizationPercentage + '%': "<unknown>"} / ${data.spec.targetCPUUtilizationPercentage?data.spec.targetCPUUtilizationPercentage:"0"}%`}
 			];
 			this.ref = this.getResource(data.spec.scaleTargetRef)
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>

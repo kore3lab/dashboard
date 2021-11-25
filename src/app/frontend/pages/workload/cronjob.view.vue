@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1.metdata -->
-	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Schedule</dt><dd class="col-sm-10">{{ info.schedule }}</dd>
 		<dt class="col-sm-2">Active</dt><dd class="col-sm-10">{{ info.active }}</dd>
 		<dt class="col-sm-2">Suspend</dt><dd class="col-sm-10">{{ info.suspend }}</dd>
@@ -33,7 +33,7 @@
 		</div>
 	</div>
 	<!-- 3.events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 </div>
 </template>
 <script>
@@ -41,6 +41,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView 	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -51,8 +52,11 @@ export default {
 			jobs: []
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.info = {
 				schedule: data.spec.schedule,
@@ -80,12 +84,7 @@ export default {
 					this.msghttp(e);
 					this.jobs = [];
 				});
-
-		});
-	},
-	methods: {},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
 	}
 }
 </script>

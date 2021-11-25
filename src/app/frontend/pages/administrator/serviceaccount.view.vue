@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="3" ddCols="9" @navigate="$emit('navigate', arguments[0])">
 		<dt v-if="imagePullSecrets.length>0" class="col-sm-3">ImagePullSecrets</dt>
 		<dd v-if="imagePullSecrets.length>0" class="col-sm-9"><span v-for="(value, idx) in imagePullSecrets" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('','secrets',metadata.namespace,value.name))">{{ value.name }}</a></span></dd>
 	</c-metadata>
@@ -30,7 +30,7 @@
 		</div>
 	</div>
 	<!--3. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -39,6 +39,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -51,15 +52,16 @@ export default {
 			isShow: {},
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.imagePullSecrets = data.imagePullSecrets? data.imagePullSecrets: [];
 			this.secrets = this.secrets ?this.getSecrets(data.secrets):[];
-		});
-	},
-	methods: {
+		},
 		getSecrets(secrets) {
 			this.isShow = [];
 			if(!secrets) return
@@ -81,9 +83,6 @@ export default {
 			})
 			return list
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>

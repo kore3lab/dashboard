@@ -1,9 +1,9 @@
 <template>
 <div>
 	<!-- 1. charts -->
-	<c-charts class="row"></c-charts>
+	<c-charts v-model="value" class="row"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata dtCols="3" ddCols="9">
+	<c-metadata v-model="value" dtCols="3" ddCols="9">
 		<dt class="col-sm-3">Capacity</dt><dd class="col-sm-9">{{ info.capacity }}</dd>
 		<dt class="col-sm-3">Allocatable</dt><dd class="col-sm-9">{{ info.allocatable }}</dd>
 		<dt class="col-sm-3">Addresses</dt>
@@ -27,9 +27,9 @@
 		</dd>
 	</c-metadata>
 	<!-- 3. pods -->
-	<c-podlist class="row" namespace="true" @navigate="$emit('navigate',arguments[0])"></c-podlist>
+	<c-podlist v-model="value" class="row" namespace="true" @navigate="$emit('navigate',arguments[0])"></c-podlist>
 	<!-- 4. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -41,6 +41,7 @@ import VueChartsView	from "@/components/view/metricsChartsView.vue";
 import VuePodListView	from "@/components/view/podListView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": { extends: VueJsonTree },
@@ -56,8 +57,11 @@ export default {
 			}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 
 			let regexp = /\B(?=(\d{3})+(?!\d))/g;
@@ -73,9 +77,7 @@ export default {
 				conditions: data.status.conditions? data.status.conditions.filter(el=> {return el.status=='True'}): [],
 				taints: data.spec.taints?data.spec.taints:[],
 			};
-		});
-	},
-	methods: {
+		},
 		tranMemory(memory) {
 			let mem;
 			if (memory.includes('Gi')){
@@ -89,9 +91,6 @@ export default {
 			}
 			return mem
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>
