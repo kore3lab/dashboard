@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadta -->
-	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Selector</dt>
 		<dd class="col-sm-10">
 			<span v-for="(val, idx) in info.selector" v-bind:key="idx" class="border-box background">{{ val }}</span>
@@ -49,7 +49,7 @@
 		</div>
 	</div>
 	<!-- 4. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -58,6 +58,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -73,8 +74,11 @@ export default {
 			],
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.info = {
 				selector: data.spec.selector? this.stringifyLabels(data.spec.selector):[] ,
@@ -86,9 +90,7 @@ export default {
 				ports: this.toEndpointList(data.spec.ports,data.spec.type) || "",
 			};
 			this.endpoints = this.getEndpoints(data);
-		});
-	},
-	methods: {
+		},
 		getEndpoints(data) {
 			let list =[];
 			this.$axios.get(`${this.getApiUrl('', 'endpoints', data.metadata.namespace)}/${data.metadata.name}`)
@@ -111,9 +113,6 @@ export default {
 			}
 			return list;
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>

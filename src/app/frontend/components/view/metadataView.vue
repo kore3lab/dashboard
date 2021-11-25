@@ -66,7 +66,7 @@
 import VueJsonTree		from "@/components/jsontree";
 
 export default {
-	props:["dtCols","ddCols","size"],
+	props:["value", "dtCols","ddCols","size"],
 	components: {
 		"c-jsontree": { extends: VueJsonTree }
 	},
@@ -92,8 +92,11 @@ export default {
 			}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.controlledBy = data.metadata.ownerReferences?this.getResource(data.metadata.ownerReferences[0]):{};
@@ -117,12 +120,7 @@ export default {
 				}
 				this.workloadSpec.selector =  spec.selector ? spec.selector.matchLabels: {}
 			}
-
-
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
 	}
 }
 </script>

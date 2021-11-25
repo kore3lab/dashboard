@@ -109,8 +109,13 @@ export default {
 			data: { cpu: {}, memory: {}}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(val) {
+			if(val) this.onSync(val);
+		}
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return;
 			let selectUrl = data.kind=="Node"? `nodes/${data.metadata.name}`: `namespaces/${data.metadata.namespace}/${data.kind.toLowerCase()}s/${data.metadata.name}`;
 			this.$axios.get(`/api/clusters/${this.currentContext()}/${selectUrl}/metrics`)
@@ -208,10 +213,8 @@ export default {
 				.catch(e => {
 					this.msghttp(e);
 				});
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
+
 	}
 }
 </script>

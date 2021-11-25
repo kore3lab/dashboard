@@ -41,6 +41,7 @@
 <script>
 
 export default {
+	props:["value"],
 	data() {
 		return {
 			metadata: {},
@@ -54,8 +55,11 @@ export default {
 			],
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.info = {
@@ -69,11 +73,7 @@ export default {
 			};
 			this.involvedObject = [this.getResource(data.involvedObject)];
 			this.involvedObject[0]["fieldPath"] = data.involvedObject["fieldPath"]
-		});
-	},
-	methods: {},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>

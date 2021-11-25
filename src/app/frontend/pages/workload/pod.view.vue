@@ -1,9 +1,9 @@
 <template>
 <div>
 	<!-- 1. chart -->
-	<c-charts class="row"></c-charts>
+	<c-charts v-model="value" class="row"></c-charts>
 	<!-- 2. metadata -->
-	<c-metadata dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
+	<c-metadata v-model="value" dtCols="2" ddCols="10" @navigate="$emit('navigate', arguments[0])">
 		<dt class="col-sm-2">Status</dt>
 		<dd class="col-sm-10" v-bind:class="status.style">{{ status.value }}</dd>
 		<dt class="col-sm-2">Node</dt>
@@ -174,7 +174,7 @@
 	</div>
 
 	<!-- 6. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -186,6 +186,7 @@ import VueChartsView	from "@/components/view/metricsChartsView.vue";
 
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-jsontree": { extends: VueJsonTree },
@@ -205,8 +206,11 @@ export default {
 			info: {}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if (!data) return
 			this.metadata = data.metadata;
 			this.nodeName = data.spec.nodeName;
@@ -234,9 +238,7 @@ export default {
 					}
 				})
 			}
-		});
-	},
-	methods: {
+		},
 		onClickShowLogs(name) {
 			let containerList = []
 			this.containers.forEach(item =>{
@@ -373,9 +375,6 @@ export default {
 			);
 			return probe;
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
 	}
 }
 </script>
