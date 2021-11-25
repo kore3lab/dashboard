@@ -93,7 +93,6 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			groupList: [{value: "", text: "All Groups"}],
-			checkList : [],
 			isShowSidebar: false,
 			viewModel:{},
 		}
@@ -126,13 +125,13 @@ export default {
 		},
 		// 조회
 		query_All() {
-			this.groupList = [{value: "", text: "All Groups"}]
 			this.isBusy = true;
+			this.groupList = [{value: "", text: "All Groups"}]
 			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
-						this.setGroup(el.spec.group)
+						if(!this.groupList.find(d=> {return d.value == el.spec.group})) this.groupList.push({value: el.spec.group, text: el.spec.group});
 						this.items.push({
 							name: this.getName(el.spec.names.kind,el.metadata.name),
 							group: el.spec.group,
@@ -144,6 +143,8 @@ export default {
 						});
 					});
 					this.origin = this.items;
+					if(!this.groupList.find(d=> {return d.value == this.selectedGroup})) this.selectedGroup = "";
+					if(this.selectedGroup !="") this.onChangeGroup();
 					this.onFiltered(this.items);
 				})
 				.catch(e => { this.msghttp(e);})
@@ -165,17 +166,6 @@ export default {
 					return v[i].name
 				}
 			}
-		},
-		setGroup(gr) {
-			if(this.checkList.find(element => element === gr)) {
-				return
-			}else {
-				this.checkList.push(gr)
-			}
-			this.groupList.push({
-				value: gr,
-				text: gr
-			})
 		},
 		getPrinterColumns(spec) {
 			const columns = spec.versions.find(a => this.getColumnsVersion(spec) === a.name)?.additionalPrinterColumns ??

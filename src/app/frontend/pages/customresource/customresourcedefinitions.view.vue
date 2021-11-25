@@ -91,14 +91,10 @@ export default {
 				conversion: data.spec.conversion,
 				conditions: data.status?.conditions ?? []
 			}
-			this.printerColumns = this.getPrinterColumns(data.spec)
-			this.validation = data.spec.validation || data.spec.versions?.[0]?.schema || {}
-		},
-		getPrinterColumns(spec) {
-			const columns = spec.versions.find(a => spec.versions[0]?.name ?? spec.version === a.name)?.additionalPrinterColumns ??
-					spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath}))
+			this.printerColumns = data.spec.versions.find(a => data.spec.versions[0]?.name ?? data.spec.version === a.name)?.additionalPrinterColumns ??
+					data.spec.additionalPrinterColumns?.map(({ JSONPath, ...rest}) => ({ ...rest, jsonPath: JSONPath}))
 					.filter(column => column.name !== 'Age') ?? [];
-			return columns;
+			this.validation = data.spec.validation || data.spec.versions?.[0]?.schema || {}
 		}
 	}
 }
