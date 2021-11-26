@@ -100,7 +100,7 @@
 											<ul class="nav d-block nav-treeview">
 												<li v-for="(crd, crdnm) in group"  :key="crdnm" class="nav-item" >
 													<nuxt-link :to="toCRDLink(crd)"  class="nav-link pl-2 pt-0 pb-0" replace>
-														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.name }}</p>
+														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.kind }}</p>
 													</nuxt-link>
 												</li>
 											</ul>
@@ -116,6 +116,12 @@
 		</div>
 	</aside>
 </template>
+<style scoped>
+.aside-menus .nav-link {color:#c2c7d0; }
+.aside-menus .nuxt-link-active:focus {background-color : rgba(255,255,255,.2)!important; }
+.aside-menus .nuxt-link-exact-active {background-color : rgba(255,255,255,.2); }
+</style>
+
 <script>
 import VueContext	from "@/layouts/components/context.vue";
 export default {
