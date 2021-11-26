@@ -6,7 +6,8 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">T</span>Topology</h1></div>
-					<div class="col-sm-1 text-right"><b-button variant="primary" size="sm" @click="query">Reload</b-button></div>
+					<div class="col-sm-1 text-right"><b-button variant="light" @click="query"><b-icon-arrow-repeat></b-icon-arrow-repeat></b-button></div>
+
 				</div>
 			</div>
 		</section>

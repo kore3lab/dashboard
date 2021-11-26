@@ -4,7 +4,7 @@
 			<div class="container-fluid">
 				<c-navigator group="Custom Resource"></c-navigator>
 				<div class="row mb-2">
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions  <nuxt-link :to="{path:'/create', query: {group:'Custom Resource', crd:'CustomResourceDefinition'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
 				</div>
 			</div>
 		</section>

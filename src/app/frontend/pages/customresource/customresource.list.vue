@@ -5,10 +5,7 @@
 				<c-navigator :group="'Custom Resource / '+ crdQuery.group"></c-navigator>
 				<div class="row mb-2">
 					<div class="col-sm">
-						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{crdQuery.name.charAt(0)}}</span><span>{{ crdQuery.name }}</span></h1>
-					</div>
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`customresource.create?group=${crdQuery.group}&crd=${crdQuery.crd}&version=${crdQuery.version}&name=${crdQuery.name}`)">Create</b-button>
+						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2 text-capitalize">{{crdQuery.name.charAt(0)}}</span><span>{{ crdQuery.name }}</span> <nuxt-link :to="{path:'/customresource/customresource.create', query: crdQuery}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1>
 					</div>
 				</div>
 			</div>

@@ -8,7 +8,7 @@
 				<c-navigator :group="'Custom Resource / '+ crdQuery.group"></c-navigator>
 				<div class="row mb-2">
 					<div class="col-sm-10">
-						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Create {{ crdQuery.name }}</h1>
+						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2 text-capitalize">{{badge}}</span>{{ title }}</h1>
 					</div>
 					<div class="col-sm-2 text-right">
 						<b-button variant="primary" size="sm"  @click="onCreate">Create</b-button>
@@ -45,8 +45,7 @@ export default {
 	},
 	data() {
 		return {
-			badge: this.$route.query.crd ? this.$route.query.crd.substring(0,1): "P",
-			url: this.$route.query.url,
+			badge: (this.$route.query.crd && this.$route.query.crd.length >0) ? this.$route.query.crd.substring(0,1): "C",
 			raw: {}
 		}
 	},
@@ -64,6 +63,7 @@ export default {
 	},
 	layout: "default",
 	created() {
+		this.title = `Create ${["A", "E", "I", "O", "U", "a", "e", "i", "o", "u"].includes(this.badge)?"an":"a"} ${this.crdQuery.name}`;
 		this.$nuxt.$on("context-selected", () => {
 			// crd spec 읽어서 template 동적 생성
 			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.crd}.${this.crdQuery.group}`)

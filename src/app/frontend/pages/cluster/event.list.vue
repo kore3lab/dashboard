@@ -5,13 +5,9 @@
 				<c-navigator group="Administrator"></c-navigator>
 				<div class="row mb-2">
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">E</span>Events</h1></div>
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Configuration&crd=ResourceQuota`)">Create</b-button>
-					</div>
 				</div>
 			</div>
 		</section>
-
 		<section class="content">
 			<div class="container-fluid">
 				<!-- search & total count & items per page  -->
