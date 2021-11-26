@@ -4,10 +4,7 @@
 			<div class="container-fluid">
 				<c-navigator group="Cluster"></c-navigator>
 				<div class="row mb-2">
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">N</span>Namespaces</h1></div>
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Cluster&crd=Namespace`)">Create</b-button>
-					</div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">N</span>Namespaces <nuxt-link :to="{path:'/create', query: {group:'Cluster', crd:'Namespace'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
 				</div>
 			</div>
 		</section>

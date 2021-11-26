@@ -4,10 +4,7 @@
 			<div class="container-fluid">
 				<c-navigator group="Workload"></c-navigator>
 				<div class="row mb-2">
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">S</span>Stateful Sets</h1></div>
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Workload&crd=StatefulSet`)">Create</b-button>
-					</div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">S</span>Stateful Sets <nuxt-link :to="{path:'/create', query: {group:'Workload', crd:'StatefulSet'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
 				</div>
 			</div>
 		</section>
