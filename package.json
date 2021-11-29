@@ -1,6 +1,6 @@
 {
   "name": "kore-board",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Kubernetes multi-clusters dashboard",
   "repository": {
     "type": "git",
