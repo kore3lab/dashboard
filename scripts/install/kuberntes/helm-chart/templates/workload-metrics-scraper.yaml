@@ -1,11 +1,16 @@
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: {{ .Chart.Name }}
-    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: metrics-scraper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: metrics-scraper
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
   type: ClusterIP
   ports:
@@ -14,30 +19,48 @@ spec:
       port: 8000
       targetPort: 8000
   selector:
-    app: {{ .Chart.Name }}
-    kore.board: metrics-scraper
+    app.kubernetes.io/name: metrics-scraper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: metrics-scraper
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
 
 ---
 
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  labels:
-    app: {{ .Chart.Name }}
-    kore.board: metrics-scraper
   name: metrics-scraper
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: metrics-scraper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: metrics-scraper
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
-      kore.board: metrics-scraper
+      app.kubernetes.io/name: metrics-scraper
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/version: {{ .Chart.AppVersion }}
+      app.kubernetes.io/managed-by: helm
+      app.kubernetes.io/component: metrics-scraper
+      app.kubernetes.io/part-of: {{ .Chart.Name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
-        kore.board: metrics-scraper
+        app.kubernetes.io/name: metrics-scraper
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/managed-by: helm
+        app.kubernetes.io/component: metrics-scraper
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
       annotations:
         seccomp.security.alpha.kubernetes.io/pod: 'runtime/default'
     spec:

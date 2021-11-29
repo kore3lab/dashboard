@@ -6,14 +6,17 @@
 				<div class="row mb-2">
 					<!-- title & search -->
 					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">T</span>Topology</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query(); selectNamespace(selectedNamespace);"></b-form-select></div>
-					<div class="col-sm-1 text-right"><b-button variant="primary" size="sm" @click="$nuxt.$emit('navbar-context-selected',currentContext)">Reload</b-button></div>
+					<div class="col-sm-1 text-right"><b-button variant="light" @click="query"><b-icon-arrow-repeat></b-icon-arrow-repeat></b-button></div>
+
 				</div>
 			</div>
 		</section>
 		<!-- Main content -->
 		<section class="content">
 			<div class="container-fluid">
+				<!-- search  -->
+				<c-search-form class="mb-2" no-label-selector no-keyword @input="query" />
+				<!-- graph  -->
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
@@ -29,50 +32,41 @@
 	</div>
 </template>
 <script>
-import * as graph	from "../../static/kore3lab.graph/kore3lab.graph.topology"
-import VueNavigator from "@/components/navigator"
+import * as graph		from "../../static/kore3lab.graph/kore3lab.graph.topology"
+import VueNavigator		from "@/components/navigator"
+import VueSearchForm	from "@/components/list/searchForm"
 
 export default {
 	components: {
-		"c-navigator": { extends: VueNavigator }
+		"c-navigator": { extends: VueNavigator },
+		"c-search-form": { extends: VueSearchForm}
 	},
 	data() {
-		let ns = this.$route.query.namespace;
 		return {
-			selectedNamespace: ns ? ns: "",
-			nodeLen: 0
 		}
 	},
 	layout: "default",
-	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.selectedNamespace = this.selectNamespace()
-			this.query()
-		});
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("navbar-context-selected")
-	},
 	methods: {
-		query() {
+		query(d) {
 			this.$data.start = (new Date()).getTime();
+			const ns = (d && d.namespace) ? d.namespace: this.selectNamespace();
+
 			let url = `/api/clusters/${this.currentContext()}/topology`;
-			if (this.$data.selectedNamespace !== "") url += `/namespaces/${this.$data.selectedNamespace}`;
+			if (ns) url += `/namespaces/${this.selectNamespace()}`;
 
 			let g = new graph.TopologyGraph("#wrapGraph");
 			this.$axios.get(url)
-					.then( resp => {
-						this.$data.nodeLen = resp.data.nodes.length;
-						g.config({
-							topology:{
-								simulation: {
-									alphaDecay:0.3
-								}
+				.then( resp => {
+					this.$data.nodeLen = resp.data.nodes.length;
+					g.config({
+						topology:{
+							simulation: {
+								alphaDecay:0.3
 							}
-						}).data(resp.data).render();
-					})
-					.catch(e => { this.msghttp(e);})
+						}
+					}).data(resp.data).render();
+				})
+				.catch(e => { this.msghttp(e);})
 		}
 	}
 }

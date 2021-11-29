@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="3" ddCols="9">
+	<c-metadata v-model="value" dtCols="3" ddCols="9">
 		<dt v-if="metadata.finalizers" class="col-sm-3">Finalizers</dt>
 		<dd v-if="metadata.finalizers" class="col-sm-9">
 			<ul class="list-unstyled mb-0">
@@ -46,7 +46,7 @@
 		</div>
 	</div>
 	<!-- 4. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -55,6 +55,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -72,8 +73,11 @@ export default {
 			],
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.metadata = data.metadata;
 			this.info = {
@@ -99,10 +103,7 @@ export default {
 					})
 					this.pvList = list
 			})
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
 	}
 }
 </script>

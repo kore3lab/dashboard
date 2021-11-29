@@ -2,20 +2,10 @@
   <div class="content-wrapper">
 		<section class="content-header">
 			<div class="container-fluid">
-				<c-navigator :group="'Custom Resource / '+ apiQuery.group"></c-navigator>
+				<c-navigator :group="'Custom Resource / '+ crdQuery.group"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2 text-capitalize">{{apiQuery.name.charAt(0)}}</span><span class="text-capitalize">{{apiQuery.name}}</span></h1></div>
-					<div v-if="$route.query.scope === 'Namespaced' || $route.query.ns === 'true'" class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
-					<div class="col-sm-2 float-left">
-						<div class="input-group input-group-sm" >
-							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
-						</div>
-					</div>
-					<!-- button -->
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`customresource.create?group=${apiQuery.group}&name=${apiQuery.name}&crd=${crdQuery.name}&version=${crdQuery.version}`)">Create</b-button>
+					<div class="col-sm">
+						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2 text-capitalize">{{crdQuery.name.charAt(0)}}</span><span>{{ crdQuery.name }}</span> <nuxt-link :to="{path:'/customresource/customresource.create', query: crdQuery}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1>
 					</div>
 				</div>
 			</div>
@@ -23,10 +13,11 @@
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- total count & items per page  -->
-				<div class="d-flex flex-row-reverse">
-					<div class="p-2">
-						<b-form inline>
+				<!-- search & total count  -->
+				<div class="row pb-2">
+					<div class="col-sm-10"><c-search-form no-label-selector :no-namespace="!isNamespaced" @input="query_All" @keyword="(k)=>{keyword=k}"/></div>
+					<div class="col-sm-2">
+						<b-form inline class="float-right">
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
 							<span class="text-sm align-middle ml-2">Total : {{ totalItems }}</span>
 						</b-form>
@@ -58,20 +49,21 @@
 	</div>
 </template>
 <script>
-import VueNavigator from "@/components/navigator"
-import VueView		from "@/pages/view";
-import jsonpath		from "jsonpath"
+import VueNavigator 	from "@/components/navigator"
+import VueView			from "@/pages/view";
+import VueSearchForm	from "@/components/list/searchForm"
+import jsonpath			from "jsonpath"
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
+		"c-search-form": { extends: VueSearchForm},
 		"c-view": { extends: VueView }
 	},
 	data() {
 		return {
-			selectedNamespace: "",
 			keyword: "",
-			filterOn: ["name"],
+			filterOn: [".metadata.name"],
 			fields: [],
 			isBusy: false,
 			origin: [],
@@ -81,15 +73,20 @@ export default {
 			totalItems: 0,
 			isShowSidebar: false,
 			viewModel:{},
-			crdQuery: {
-				name: this.$route.query.crd,
-				version: this.$route.query.version
-			},
-			apiQuery: {
-				group: "",
-				name: ""
-			}
+			isNamespaced: false
 		}
+	},
+	computed: {
+		crdQuery: {
+			get () {
+				return {
+					group: this.$route.query.group,		//ex. networking.istio.io
+					crd: this.$route.query.crd,			//ex. virtualservices
+					name: this.$route.query.name,		//ex. VirtualService
+					version: this.$route.query.version	//ex. v1beta1
+				}
+			},
+		},
 	},
 	layout: "default",
 	watch: {
@@ -97,50 +94,63 @@ export default {
 			this.$storage.global.set("itemsPerPage",n)
 		},
 		crdQuery(d) {
-			if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+			if(this.currentContext()) this.$nuxt.$emit("context-selected");
 		}
 	},
-	watchQuery: ["crd","version"],
-	async asyncData({ query }) {
-		return {crdQuery : {name: query.crd, version: query.version}}
-	},
+	watchQuery: ["group","crd", "version", "name"],
 	created() {
-		this.$nuxt.$on("navbar-context-selected", () => {
-
+		this.$nuxt.$on("context-selected", () => {
 			//crd 정보조회
-			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.name}`)
+			this.$axios.get(`${this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions")}/${this.crdQuery.crd}.${this.crdQuery.group}`)
 				.then((resp) => {
-					//컬럼 정의
+					//column - name
 					this.fields.push({ key: ".metadata.name", label: "Name", sortable: true })
-					if (resp.data.spec.scope=="Namespaced") this.fields.push({key: ".metadata.namespace", label: "Namespace", sortable: true})
-					let version = resp.data.spec.versions.find(el => el.name= this.crdQuery.version);
 
-					if(version.additionalPrinterColumns) {
-						version.additionalPrinterColumns.forEach(c => {
-							this.fields.push({key: c.jsonPath, label: c.name, sortable: true})
+					//column - namespace
+					this.isNamespaced = (resp.data.spec.scope=="Namespaced")
+					if (this.isNamespaced) this.fields.push({key: ".metadata.namespace", label: "Namespace", sortable: true})
+
+					// custom columns (https://kubernetes.io/docs/reference/using-api/deprecation-guide/#customresourcedefinition-v122)
+					let additionalPrinterColumns;
+					if( resp.data.apiVersion == "apiextensions.k8s.io/v1") {
+						const version = resp.data.spec.versions.find(el => el.name= this.crdQuery.version);
+						if(version) additionalPrinterColumns = version.additionalPrinterColumns;
+					} else {
+						//v1beta1
+						additionalPrinterColumns = resp.data.spec.additionalPrinterColumns;
+					}
+					if(additionalPrinterColumns) {
+						additionalPrinterColumns.forEach(c => {
+							this.fields.push({key: c.jsonPath || c.JSONPath, label: c.name, sortable: true})
 						});
 					}
+					//column - age
 					if(! this.fields.find(e => e.key == ".metadata.creationTimestamp") ) {
 						this.fields.push({key: ".metadata.creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime})
 					}
-					// crd 정보 (group, name)
-					this.apiQuery = {group: resp.data.spec["group"], name: resp.data.spec.names["plural"]}
 					this.query_All();
 				})
-				//.catch(e => { this.msghttp(e);})
+				.catch(e => { 
+					if (e.response && e.response.status == 404) {
+						return this.$nuxt.error({
+							statusCode: 404, 
+							redirect: "/customresource/customresourcedefinitions.list",
+							message: `${this.crdQuery.crd} ${this.crdQuery.group}/${this.crdQuery.version} is not found` });
+					} else this.msghttp(e);
+				})
 		});
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+		if(this.currentContext()) this.$nuxt.$emit("context-selected");
 
 	},
 	methods: {
 		onRowSelected(items) {
 			this.isShowSidebar = (items && items.length > 0)
-			if (this.isShowSidebar) this.viewModel = this.getViewLink(this.apiQuery.group, this.apiQuery.name, items[0][".metadata.namespace"], items[0][".metadata.name"])
+			if (this.isShowSidebar) this.viewModel = this.getViewLink(this.crdQuery.group, this.crdQuery.crd, items[0][".metadata.namespace"], items[0][".metadata.name"])
 		},
 		// 조회
-		query_All() {
+		query_All(d) {
 			this.isBusy = true;
-			this.$axios.get(this.getApiUrl(this.apiQuery.group, this.apiQuery.name,this.selectedNamespace))
+			this.$axios.get(this.getApiUrl(this.crdQuery.group, this.crdQuery.crd, (d && d.namespace) ? d.namespace: this.selectNamespace()))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
@@ -160,16 +170,16 @@ export default {
 					this.origin = this.items;
 					this.onFiltered(this.items);
 				})
-				//.catch(e => { this.msghttp(e);})
+				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false;});
 		},
 		onFiltered(filteredItems) {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
-		},
+		}
 	},
 	beforeDestroy(){
-		this.$nuxt.$off("navbar-context-selected")
+		this.$nuxt.$off("context-selected")
 	}
 }
 </script>

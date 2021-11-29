@@ -176,8 +176,23 @@ Vue.mixin({
 		},
 		// Get currentContext's namespaces
 		namespaces(_) {
-			if (_) this.$store.commit("setNamespaces", _);
-			else return this.$store.getters["getNamespaces"];
+			if (_) {
+				let nsList = [{ value: "", text: "All Namespaces" }];
+				if (_) {
+					_.forEach(el => {
+						nsList.push({ value: el, text: el });
+					});
+				}
+				if(!nsList.find(d=> {return d.value == this.selectNamespace()})) this.selectNamespace("");
+				this.$store.commit("setNamespaces", nsList);
+			} else {
+				return this.$store.getters["getNamespaces"];
+			}
+		},
+		// Get a label selector
+		labelSelector(_) {
+			if (_) this.$store.commit("setLabelSelector", _);
+			else return this.$store.getters["getLabelSelector"];
 		},
 		// Get contexts
 		contexts(_) {

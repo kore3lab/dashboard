@@ -14,7 +14,7 @@ body.sidebar-mini .main-header { position: fixed; top:0; width:100%; }
 body.sidebar-mini .main-footer { margin:0; padding: .5rem 1rem .5rem calc(var(--layout-aside-width) + 1rem); min-height: var(--layout-footer-height); position: fixed; bottom:0;  width:100%; z-index: 10}
 body.sidebar-mini .main-body { padding: var(--layout-header-height) 0rem var(--layout-footer-height) var(--layout-aside-width) }
 /* layout - sidebar > brand */
-body.sidebar-mini .main-sidebar .brand-link { margin-left: 3.7rem; width: 13.2rem;}
+body.sidebar-mini .main-sidebar .brand-link { margin-left: 3.7rem; width: 13.2rem; height: var(--layout-header-height);}
 body.sidebar-mini .main-sidebar .brand-link img.brand-image {width: 1.7em; height:1.7em;margin-left: .5rem}
 /* layout - sidebar > contexts */
 body.sidebar-mini .main-sidebar .aside-contexts {width:3.7rem; position:absolute;min-height:100vh; padding: 1.5rem .3rem; }
@@ -23,12 +23,12 @@ body.sidebar-mini .main-sidebar .aside-contexts button.current { border-color: #
 body.sidebar-mini .main-sidebar .aside-contexts p { font-size:x-small; margin: 0;}
 /* layout - sidebar > menu */
 body.sidebar-mini .main-sidebar .aside-menus {margin-left: 3.7rem; padding: 0; padding-left: .1rem;}
+body.sidebar-mini .main-sidebar .aside-menus nav { overflow:auto; height: calc(100vh - var(--layout-header-height))}
 body.sidebar-mini .main-sidebar .aside-menus::-webkit-scrollbar{ display:none;}
 /* layout - body > splitpanes */
 body.sidebar-mini .main-body .splitpanes__pane.body-pane { overflow-y: auto; background-color: var(--bg-color); }
 body.sidebar-mini .main-body:not(.terminal-closed) .splitpanes__splitter { background-color:transparent; height:.3rem; border-top: .1rem solid #343a40; background-color: var(--bg-color)}
-body.sidebar-mini .main-body.terminal-closed  .splitpanes__splitter { display: none; }
-body.sidebar-mini .main-body .splitpanes__pane.terminal-pane > i { float:right; line-height:1.6rem; padding: .2rem .5rem .2rem .5rem; border-left: 1px dashed #ccc; background-color:#fff; }
+body.sidebar-mini .main-body.terminal-closed .splitpanes__splitter { display: none; }
 /* layout - body > list-page > header */
 body.sidebar-mini .main-body .content-header { padding: .5rem .5rem .2rem .5rem;}
 body.sidebar-mini .main-body .content-wrapper { margin-left: 0!important; min-height: 100% !important;}

@@ -137,6 +137,49 @@ func GetContext(c *gin.Context) {
 
 }
 
+func GetContextNamespaces(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	// query "ctx" 가 공백이면 default context  사용
+	ctx := lang.NVL(c.Param("CLUSTER"), config.Cluster.DefaultContext)
+
+	namespaces := []string{}
+
+	// client
+	client, err := config.Cluster.Client(ctx)
+	if err != nil {
+		g.SendMessage(http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	// namespaces
+	k8sClient, err := client.NewKubernetesClient()
+	if err != nil {
+		g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+		return
+	}
+
+	timeout := int64(6)
+	options := v1.ListOptions{TimeoutSeconds: &timeout} //timeout 6s
+	nsList, err := k8sClient.CoreV1().Namespaces().List(context.TODO(), options)
+	if err != nil {
+		// namespace 를 가져오지 못하면 클라이언트에 contexts 리스트만 리턴해준다
+		g.Send(http.StatusPartialContent, map[string]interface{}{
+			"currentContext": ctx,
+			"namespaces":     []string{},
+		})
+		return
+	}
+	for _, ns := range nsList.Items {
+		namespaces = append(namespaces, ns.GetObjectMeta().GetName())
+	}
+
+	g.Send(http.StatusOK, map[string]interface{}{
+		"currentContext": ctx,
+		"namespaces":     namespaces,
+	})
+
+}
 func DeleteContext(c *gin.Context) {
 	g := app.Gin{C: c}
 

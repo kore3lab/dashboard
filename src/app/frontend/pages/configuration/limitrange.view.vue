@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="2" ddCols="10"></c-metadata>
+	<c-metadata v-model="value" dtCols="2" ddCols="10"></c-metadata>
 	<!-- 2. Limits -->
 	<div class="row">
 		<div class="col-md-12">
@@ -31,6 +31,7 @@
 import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView }
 	},
@@ -39,8 +40,11 @@ export default {
 			limits: {}
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			data.spec.limits.forEach(el=> {
 				let d = []
@@ -49,10 +53,7 @@ export default {
 				}
 				this.limits[el["type"]] = d;
 			});
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>

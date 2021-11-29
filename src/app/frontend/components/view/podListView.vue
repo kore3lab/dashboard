@@ -47,8 +47,11 @@ export default {
 			]
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.isBusy = true;
 			let selectUrl = data.kind=="Node"? `nodes/${data.metadata.name}`: `namespaces/${data.metadata.namespace}/${data.kind.toLowerCase()}s/${data.metadata.name}`;
@@ -61,10 +64,7 @@ export default {
 				}).finally(()=>{
 					this.isBusy = false
 				});
-		});
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
+		}
 	}
 }
 </script>

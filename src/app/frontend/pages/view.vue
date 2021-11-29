@@ -24,9 +24,9 @@
 				<!--1. not Yaml(editor) -->
 				<div v-show="!isYaml && !errorcheck" class="card-body p-2">
 					<!-- 1.1 meta data -->
-					<c-metadata v-show="isJSON" v-model="raw.metadata" dtCols="2" ddCols="10"></c-metadata>
+					<c-metadata v-show="isJSON" v-model="raw" dtCols="2" ddCols="10"></c-metadata>
 					<!-- 1.2  view -->
-					<component :is="component" v-if="component" v-show="!isJSON" v-model="value" @navigate="onNavigate"/>
+					<component :is="component" v-if="component" v-show="!isJSON" v-model="raw" @navigate="onNavigate"/>
 					<!-- 1.3 json-tree -->
 					<div class="row" v-show="isJSON && title !== 'StorageClass'">
 						<div class="col-md-12">
@@ -82,26 +82,6 @@
 import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueAceEditor 		from "@/components/aceeditor"
 import VueJsonTree 			from "@/components/jsontree"
-
-function NavigateStack() {
-	this.stack = [];
-	this.position = -1;
-	this.init = () => {
-		this.stack = [];
-		this.position = -1;
-	}
-	this.push = (loc) => {
-		this.stack.push(Object.assign({}, loc));
-		this.position = this.stack.length -1;
-	}
-	this.go = (back, callback) => {
-		const pos = (this.stack.length-1) + back;
-		if(pos >= 0) {
-			callback( this.stack[pos] )
-			this.stack = this.stack.splice(0, pos+1);
-		}
-	}
-}
 
 export default {
 	props:["value"],
@@ -166,7 +146,7 @@ export default {
 	methods: {
 		// 보기 페이지 이동
 		navigate(loc) {
-			if (this.src != loc.src) {
+			if (loc.src && this.src != loc.src) {
 				this.src = loc.src;
 				if(this.loader) {
 					this.loader()
@@ -180,6 +160,7 @@ export default {
 						})
 				}
 			} else if(this.url != loc.url) {
+				this.isJSON = (!loc.src);	//if parameter 'src' is empty  ->  display 'json'
 				this.url = loc.url;
 			}
 
@@ -223,7 +204,6 @@ export default {
 					// calcuate selfLink (deprecated metadata.selfLink)
 					let c = this.getResource(this.raw)
 					this.selfLink = this.getApiUrl(c.group, c.resource, this.raw.metadata.namespace, c.name);
-					this.$nuxt.$emit("view-data-read-completed", this.raw);
 					if(this.$el && this.$el.parentElement) this.$el.parentElement.scrollTop = 0;
 				})
 				.catch(e => {

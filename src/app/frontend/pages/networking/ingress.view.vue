@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="2" ddCols="10">
+	<c-metadata v-model="value" dtCols="2" ddCols="10">
 		<dt class="col-sm-2">Ports</dt><dd class="col-sm-10">{{ info.ports }}</dd>
 		<dt v-if="info.tls" class="col-sm-2">TLS</dt><dd v-if="info.tls" class="col-sm-10"><span v-for="(val,idx) in info.tls" v-bind:key="idx">{{ val }} </span></dd>
 	</c-metadata>
@@ -35,7 +35,7 @@
 		</div>
 	</div>
 	<!-- 4. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -44,6 +44,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -63,8 +64,11 @@ export default {
 			],
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.info = {
 				ports : this.getPorts(data),
@@ -75,9 +79,7 @@ export default {
 				ip : data.status.loadBalancer.ingress[0].ip ?? "-",
 				hostname : data.status.loadBalancer.ingress[0].hostname ?? "-"
 			}]
-		});
-	},
-	methods: {
+		},
 		getPorts(data) {
 			const ports = [];
 			const { spec: { tls, rules, backend, defaultBackend } } = data;
@@ -115,9 +117,6 @@ export default {
 				})
 			}
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>

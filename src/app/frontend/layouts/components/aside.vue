@@ -1,7 +1,7 @@
 <template>
 	<aside class="sidebar-dark-primary elevation-4">
 
-		<c-context class="aside-contexts"/>
+		<c-context class="aside-contexts" @input="onContextSelected"/>
 
 		<nuxt-link to="/" class="brand-link align-bottom">
 			<img src="/favicon.svg" class="brand-image">
@@ -100,7 +100,7 @@
 											<ul class="nav d-block nav-treeview">
 												<li v-for="(crd, crdnm) in group"  :key="crdnm" class="nav-item" >
 													<nuxt-link :to="toCRDLink(crd)"  class="nav-link pl-2 pt-0 pb-0" replace>
-														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.name }}</p>
+														<p class="text-truncate mw-100"><b-icon icon="dot"></b-icon>{{ crd.kind }}</p>
 													</nuxt-link>
 												</li>
 											</ul>
@@ -116,11 +116,17 @@
 		</div>
 	</aside>
 </template>
+<style scoped>
+.aside-menus .nav-link {color:#c2c7d0; }
+.aside-menus .nuxt-link-active:focus {background-color : rgba(255,255,255,.2)!important; }
+.aside-menus .nuxt-link-exact-active {background-color : rgba(255,255,255,.2); }
+</style>
+
 <script>
-import Context	from './context.vue'
+import VueContext	from "@/layouts/components/context.vue";
 export default {
 	components: {
-		"c-context": Context,
+		"c-context": VueContext,
 	},
 	data() {
 		return {
@@ -137,8 +143,11 @@ export default {
 			crdList: {}
 		}
 	},
-	created() {
-		this.$nuxt.$on("aside-context-selected", (_) => {
+	methods: {
+		onContextSelected(data) {
+			this.namespaces(data.currentContext.namespaces);
+			this.resources(data.currentContext.resources);
+			this.statusbar({message: "", kubernetesVersion: data.currentContext.kubernetesVersion, platform: data.currentContext.platform})
 			this.crdList = {}
 			for(let r in this.resources()) {
 				if( !r.endsWith("k8s.io") && r.indexOf(".") > 0 ) {
@@ -146,18 +155,14 @@ export default {
 				}
 			};
 			this.isVisible.crdGroup = {};
-		});
-	},
-	methods: {
+			this.$nuxt.$emit("context-selected");
+		},
 		toCRDLink(crd) {
 			let a = crd.groupVersion.split("/");
-			//return {path: `/customresource/customresource.list?crd=${crd.name}.${a[0]}&version=${a[1]}`}
-			let query = (a.length > 1) ? {crd: `${crd.name}.${a[0]}`, version: a[1]} : {crd: `${crd.name}.${a[0]}`, version: ""}
+			let query = {group: a[0], crd: crd.name,  name:crd.kind, version: ""};
+			if (a.length > 1) query.version = a[1];
 			return {path: '/customresource/customresource.list', query: query}
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("aside-context-selected")
 	}
 }
 </script>

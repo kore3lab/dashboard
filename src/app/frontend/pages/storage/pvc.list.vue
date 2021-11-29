@@ -4,29 +4,18 @@
 			<div class="container-fluid">
 				<c-navigator group="Storage"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Persistent Volume Claims</h1></div>
-					<div class="col-sm-2"><b-form-select v-model="selectedNamespace" :options="namespaces()" size="sm" @input="query_All(); selectNamespace(selectedNamespace);"></b-form-select></div>
-					<div class="col-sm-2 float-left">
-						<div class="input-group input-group-sm" >
-							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
-						</div>
-					</div>
-					<!-- button -->
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Storage&crd=PersistentVolumeClaim`)">Create</b-button>
-					</div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">P</span>Persistent Volume Claims <nuxt-link :to="{path:'/create', query: {group:'Storage', crd:'PersistentVolumeClaim'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
 				</div>
 			</div>
 		</section>
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- total count & items per page  -->
-				<div class="d-flex flex-row-reverse">
-					<div class="p-2">
-						<b-form inline>
+				<!-- search & total count & items per page  -->
+				<div class="row pb-2">
+					<div class="col-sm-10"><c-search-form  @input="query_All" @keyword="(k)=>{keyword=k}"/></div>
+					<div class="col-sm-2">
+						<b-form inline class="float-right">
 							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
 							<i class="text-secondary ml-2 mr-2">|</i>
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
@@ -77,18 +66,19 @@
 </template>
 <script>
 import VueNavigator			from "@/components/navigator"
-import VueColumsSelector	from "@/components/columnsSelector"
+import VueColumsSelector	from "@/components/list/columnsSelector"
+import VueSearchForm		from "@/components/list/searchForm"
 import VueView				from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
 		"c-colums-selector": { extends: VueColumsSelector},
+		"c-search-form": { extends: VueSearchForm},
 		"c-view": { extends: VueView }
 	},
 	data() {
 		return {
-			selectedNamespace: "",
 			keyword: "",
 			filterOn: ["name"],
 			fields: [],
@@ -119,22 +109,29 @@ export default {
 		}
 	},
 	layout: "default",
-	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.selectedNamespace = this.selectNamespace()
-			this.getPods()
-		});
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
-	},
 	methods: {
 		onRowSelected(items) {
 			this.isShowSidebar = (items && items.length > 0)
 			if (this.isShowSidebar) this.viewModel = this.getViewLink('', 'persistentvolumeclaims', items[0].namespace, items[0].name)
 		},
 		// 조회
-		query_All() {
+		async query_All(d) {
 			this.isBusy = true;
-			this.$axios.get(this.getApiUrl("","persistentvolumeclaims",this.selectedNamespace))
+
+			const ns = (d && d.namespace) ? d.namespace: this.selectNamespace();
+			const labels = d && d.labelSelector? `labelSelector=${d.labelSelector}`: "";
+
+			// 개선필요
+			try {
+				let resp = await this.$axios.get(this.getApiUrl("","pods", ns, "", labels))
+				resp.data.items.forEach(el => {
+					this.getPodname(el)
+				});
+			} catch (e) {
+				this.msghttp(e);
+			}
+
+			this.$axios.get(this.getApiUrl("","persistentvolumeclaims", ns, "", labels))
 					.then((resp) => {
 						this.items = [];
 						resp.data.items.forEach(el => {
@@ -165,18 +162,6 @@ export default {
 				namespace: item.namepsace
 			}
 		},
-		// pod List 조회 이후 query_All 실행
-		getPods() {
-			this.isBusy = true;
-			this.$axios.get(this.getApiUrl("","pods",this.selectedNamespace))
-					.then((resp) => {
-						resp.data.items.forEach(el => {
-							this.getPodname(el)
-						});
-					})
-					.catch(e => { this.msghttp(e);})
-					.finally(()=> this.query_All());
-		},
 		getPvc(el) {
 			let list = []
 			for(let i=0;i<this.pvcPod.length;i++) {
@@ -203,9 +188,6 @@ export default {
 				}
 			}
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>

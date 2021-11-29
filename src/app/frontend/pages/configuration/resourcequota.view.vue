@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="2" ddCols="10">
+	<c-metadata v-model="value" dtCols="2" ddCols="10">
 		<dt class="col-sm-2">Quotas</dt>
 		<dd class="col-sm-10">
 			<ul v-for="(val, idx) in quotas" v-bind:key="idx" class="list-unstyled mb-0">
@@ -30,6 +30,7 @@
 import VueMetadataView	from "@/components/view/metadataView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView }
 	},
@@ -44,14 +45,15 @@ export default {
 			]
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.quotas = this.getQuotas(data.status)
 			this.scopeSelector = this.getScope(data.spec.scopeSelector)
-		});
-	},
-	methods: {
+		},
 		getQuotas(status) {
 			let list = [];
 			let temp;
@@ -115,9 +117,6 @@ export default {
 			
 			return val;
 		},
-	},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+	}
 }
 </script>

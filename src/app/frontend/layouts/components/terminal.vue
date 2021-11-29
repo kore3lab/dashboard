@@ -1,9 +1,13 @@
 <template>
 <div class="h-100">
-	<b-tabs ref="tabs" v-model="current_tab" @changed="current_tab = (Object.keys(tabs).length -1)" @activate-tab="onActivateTab" class="h-100" content-class="terminal-content-class" nav-class="terminal-nav-class" nav-wrapper-class="terminal-nav-wrapper-class" active-tab-class="terminal-active-tab-class" active-nav-item-class="terminal-active-nav-item-class text-bold">
+	<div class="terminal-buttons">
+		<i @click="onMinMaxClick" v-bind:class="{'fa-angle-up':isMinimize, 'fa-angle-down':!isMinimize }" class="fas cursor text-secondary"></i>
+		<i @click="onCloseClick" class="fas cursor text-secondary fa-window-close"></i>
+	</div>
+	<b-tabs ref="terminalTabs" v-model="current_tab" @changed="current_tab = (Object.keys(tabs).length -1)" @activate-tab="onActivateTab" class="h-100" content-class="terminal-content-class" nav-class="terminal-nav-class" nav-wrapper-class="terminal-nav-wrapper-class" active-tab-class="terminal-active-tab-class" active-nav-item-class="terminal-active-nav-item-class text-bold">
 		<b-tab v-for="(d, k) in  tabs" :key="k" title-item-class="terminal-title-item-class" title-link-class="terminal-title-link-class text-sm">
 			<template #title>
-				<i class="fas fa-file-alt mr-1"></i>{{ d.title }}<i class="fas cursor fa-times ml-1 text-secondary" @click="onTerminalCloseClick(k)"></i>
+				<i class="fas fa-file-alt mr-1"></i>{{ d.title }}<i class="fas cursor fa-times ml-1 text-secondary" @click="onTabCloseClick(k)"></i>
 			</template>
 			<c-terminal-logs v-if="d.type=='logs'" v-model="tabs[k]" class="terminal-content"/>
 			<div v-else-if="d.type=='shell'"></div>
@@ -12,7 +16,9 @@
 	</b-tabs>
 </div>
 </template>
-<style>
+<style scroped>
+.terminal-buttons { float:right; background-color:transparent; padding-right: .8rem }
+.terminal-buttons > i { line-height:1.6rem;  padding: .2rem .3rem; }
 /* terminal) b-tabs classes */
 div.terminal-nav-wrapper-class { padding-right: 2.5rem; border-bottom: 1px solid #ccc; background-color:var(--bg-color)}
 	ul.terminal-nav-class { height:2rem; border-bottom: 0; flex-wrap: nowrap; white-space: nowrap; overflow: auto; -ms-overflow-style: none; /* IE and Edge */ scrollbar-width: none; /* Firefox */}
@@ -47,6 +53,7 @@ export default {
 		return {
 			tabs : {},
 			current_tab: 0,
+			isMinimize: false,
 		}
 	},
 	created() {
@@ -61,9 +68,9 @@ export default {
 				if (type == "cluster") this.$set(this.tabs, key, { title: title, type: "cluster", cluster: param } );
 				this.$emit("opened", key, Object.keys(this.tabs).length);
 			} else{
-        if (type === "logs") this.$set(this.tabs, key, { title: title, type: "logs", metadata: param.metadata, container: param.container, containers: param.containers } );
-        this.current_tab = Object.keys(this.tabs).findIndex((v) => v === key);
-      }
+				if (type == "logs") this.$set(this.tabs, key, { title: title, type: "logs", metadata: param.metadata, container: param.container, containers: param.containers } );
+				this.current_tab = Object.keys(this.tabs).findIndex((v) => v === key);
+			}
 		});
 	},
 	methods: {
@@ -81,10 +88,21 @@ export default {
 				ul.scrollLeft += x2 - x3 + 100;	// hidden right (move to left)
 			}
 		},
-		onTerminalCloseClick(k) {
-			this.$delete(this.tabs, k);
-			this.$emit("closed", k, Object.keys(this.tabs).length);
+		onMinMaxClick() {
+			this.isMinimize = !this.isMinimize;
+			if(this.isMinimize) this.$emit("minimize");
+			else  this.$emit("maximize");
 		},
+		onTabCloseClick(k) {
+			this.$delete(this.tabs, k);
+			if(Object.keys(this.tabs).length==0) this.$emit("closed");
+		},
+		onCloseClick() {
+			for(const key of Object.keys(this.tabs)) {
+				this.$delete(this.tabs, key);
+			}
+			this.$emit("closed");
+		}
 	},
 	beforeDestroy(){
 		this.$nuxt.$off("open-terminal");

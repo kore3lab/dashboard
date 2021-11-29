@@ -1,19 +1,28 @@
 kind: Service
 apiVersion: v1
 metadata:
-  labels:
-    app: {{ .Chart.Name }}
-    kore.board: terminal
   name: terminal
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: terminal
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: terminal
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 spec:
   type: ClusterIP
   ports:
     - port: 3003
       targetPort: 3003
   selector:
-    app: {{ .Chart.Name }}
-    kore.board: terminal
+    app.kubernetes.io/name: terminal
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: terminal
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
 
 ---
 
@@ -21,21 +30,35 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: {{ .Chart.Name }}
-    kore.board: terminal
+    app.kubernetes.io/name: terminal
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/component: terminal
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
   name: terminal
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
-      kore.board: terminal
+      app.kubernetes.io/name: terminal
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/version: {{ .Chart.AppVersion }}
+      app.kubernetes.io/managed-by: helm
+      app.kubernetes.io/component: terminal
+      app.kubernetes.io/part-of: {{ .Chart.Name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
-        kore.board: terminal
+        app.kubernetes.io/name: terminal
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/managed-by: helm
+        app.kubernetes.io/component: terminal
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     spec:
       containers:
         - name: terminal

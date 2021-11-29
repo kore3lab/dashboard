@@ -4,8 +4,15 @@
 			<div class="container-fluid">
 				<c-navigator group="Custom Resource"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions</h1></div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">C</span>Custom Resource Definitions  <nuxt-link :to="{path:'/create', query: {group:'Custom Resource', crd:'CustomResourceDefinition'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="content">
+			<div class="container-fluid">
+				<!-- search & total count & items per page  -->
+				<div class="row pb-2">
 					<div class="col-sm-2"><b-form-select v-model="selectedGroup" :options="groupList" size="sm" @input="onChangeGroup"></b-form-select></div>
 					<div class="col-sm-2 float-left">
 						<div class="input-group input-group-sm" >
@@ -13,16 +20,8 @@
 							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
 						</div>
 					</div>
-				</div>
-			</div>
-		</section>
-
-		<section class="content">
-			<div class="container-fluid">
-				<!-- total count & items per page  -->
-				<div class="d-flex flex-row-reverse">
-					<div class="p-2">
-						<b-form inline>
+					<div class="col-sm-8">
+						<b-form inline class="float-right">
 							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
 							<i class="text-secondary ml-2 mr-2">|</i>
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
@@ -43,7 +42,7 @@
 										</div>
 									</template>
 									<template v-slot:cell(name)="data">
-										<nuxt-link :to="{path: '/customresource/customresource.list', query: {crd: `${data.item.plural}.${data.item.group}`, version: data.item.version }}" class="mr-2">{{ data.value.name }}</nuxt-link>
+										<nuxt-link :to="{path: '/customresource/customresource.list', query: {group:data.item.group, crd: data.item.plural, name: data.item.name.name, version: data.item.version }}" class="mr-2">{{ data.value.name }}</nuxt-link>
 									</template>
 									<template v-slot:cell(labels)="data">
 										<ul class="list-unstyled mb-0">
@@ -65,7 +64,7 @@
 </template>
 <script>
 import VueNavigator			from "@/components/navigator"
-import VueColumsSelector	from "@/components/columnsSelector"
+import VueColumsSelector	from "@/components/list/columnsSelector"
 import VueView				from "@/pages/view";
 
 export default {
@@ -94,7 +93,6 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			groupList: [{value: "", text: "All Groups"}],
-			checkList : [],
 			isShowSidebar: false,
 			viewModel:{},
 		}
@@ -106,10 +104,10 @@ export default {
 	},
 	layout: "default",
 	created() {
-		this.$nuxt.$on("navbar-context-selected", (_) => {
+		this.$nuxt.$on("context-selected", (_) => {
 			this.query_All()
 		} );
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
+		if(this.currentContext()) this.query_All();
 	},
 	methods: {
 		onRowSelected(items) {
@@ -127,13 +125,13 @@ export default {
 		},
 		// 조회
 		query_All() {
-			this.groupList = [{value: "", text: "All Groups"}]
 			this.isBusy = true;
+			this.groupList = [{value: "", text: "All Groups"}]
 			this.$axios.get(this.getApiUrl("apiextensions.k8s.io","customresourcedefinitions"))
 				.then((resp) => {
 					this.items = [];
 					resp.data.items.forEach(el => {
-						this.setGroup(el.spec.group)
+						if(!this.groupList.find(d=> {return d.value == el.spec.group})) this.groupList.push({value: el.spec.group, text: el.spec.group});
 						this.items.push({
 							name: this.getName(el.spec.names.kind,el.metadata.name),
 							group: el.spec.group,
@@ -145,6 +143,8 @@ export default {
 						});
 					});
 					this.origin = this.items;
+					if(!this.groupList.find(d=> {return d.value == this.selectedGroup})) this.selectedGroup = "";
+					if(this.selectedGroup !="") this.onChangeGroup();
 					this.onFiltered(this.items);
 				})
 				.catch(e => { this.msghttp(e);})
@@ -166,17 +166,6 @@ export default {
 					return v[i].name
 				}
 			}
-		},
-		setGroup(gr) {
-			if(this.checkList.find(element => element === gr)) {
-				return
-			}else {
-				this.checkList.push(gr)
-			}
-			this.groupList.push({
-				value: gr,
-				text: gr
-			})
 		},
 		getPrinterColumns(spec) {
 			const columns = spec.versions.find(a => this.getColumnsVersion(spec) === a.name)?.additionalPrinterColumns ??
@@ -204,7 +193,7 @@ export default {
 		},
 	},
 	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected')
+		this.$nuxt.$off("context-selected");
 	}
 }
 </script>

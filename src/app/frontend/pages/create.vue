@@ -8,7 +8,7 @@
 				<c-navigator :group="group"></c-navigator>
 				<div class="row mb-2">
 					<div class="col-sm-10">
-						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ badge }}</span>Create {{ crd }}</h1>
+						<h1 class="m-0 text-dark"><span class="badge badge-info mr-2">{{ badge }}</span>{{ title }}</h1>
 					</div>
 					<div class="col-sm-2 text-right">
 						<b-button variant="primary" size="sm"  @click="onCreate">Create</b-button>
@@ -48,15 +48,19 @@ export default {
 	data() {
 		return {
 			isBusy:false,
-			badge: this.$route.query.crd ? this.$route.query.crd.substring(0,1): "P",
+			title: "",
+			badge: (this.$route.query.crd && this.$route.query.crd.length >0) ? this.$route.query.crd.substring(0,1): "P",
 			group: this.$route.query.group ?  this.$route.query.group: "Workload",
-			crd : this.$route.query.crd ?  this.$route.query.crd: "pod",
+			crd : this.$route.query.crd ?  this.$route.query.crd: "Pod",
 			url: this.$route.query.url,
 			raw: { metadata: {}, spec: {} },
 			template: null
 		}
 	},
 	layout: "default",
+	created() {
+		this.title = `Create ${["A", "E", "I", "O", "U", "a", "e", "i", "o", "u"].includes(this.badge)?"an":"a"} ${this.crd}`;
+	},
 	mounted() {
 		try {
 			let filename = this.crd.toLowerCase().replaceAll(" ", "");
@@ -79,25 +83,7 @@ export default {
 					this.origin = Object.assign({}, resp.data);
 					this.raw = resp.data;
 					this.toast("Apply OK", "info");
-
-					if(this.crd === 'Namespace') {
-						this.$axios.get(`/api/clusters?ctx=${this.currentContext()}`)
-							.then((resp)=>{
-								let nsList = [{ value: "", text: "All Namespaces" }];
-								if (resp.data.currentContext.namespaces) {
-									resp.data.currentContext.namespaces.forEach(el => {
-										nsList.push({ value: el, text: el });
-									});
-								}
-								this.namespaces(nsList);
-								this.$router.go(-1);
-							}).catch(error=> {
-								this.toast(error.message, "danger");
-							})
-					} else  {
-						this.$router.go(-1);
-					}
-
+					this.$router.go(-1);
 				})
 				.catch(e => { this.msghttp(e);})
 				.finally(()=> { this.isBusy = false; });

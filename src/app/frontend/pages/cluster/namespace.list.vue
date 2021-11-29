@@ -4,34 +4,18 @@
 			<div class="container-fluid">
 				<c-navigator group="Cluster"></c-navigator>
 				<div class="row mb-2">
-					<!-- title & search -->
-					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">N</span>Namespaces</h1></div>
-					<div class="col-sm-2 float-left">
-						<div class="input-group input-group-sm" >
-							<b-form-input id="txtKeyword" v-model="keyword" class="form-control float-right" placeholder="Search"></b-form-input>
-							<div class="input-group-append"><button type="submit" class="btn btn-default" @click="query_All"><i class="fas fa-search"></i></button></div>
-						</div>
-					</div>
-					<!-- button -->
-					<div class="col-sm-1 text-right">
-						<b-button variant="primary" size="sm" @click="$router.push(`/create?context=${currentContext()}&group=Cluster&crd=Namespace`)">Create</b-button>
-					</div>
+					<div class="col-sm"><h1 class="m-0 text-dark"><span class="badge badge-info mr-2">N</span>Namespaces <nuxt-link :to="{path:'/create', query: {group:'Cluster', crd:'Namespace'}}"><b-icon-plus-circle variant="secondary" font-scale="0.7"></b-icon-plus-circle></nuxt-link></h1></div>
 				</div>
 			</div>
 		</section>
 
 		<section class="content">
 			<div class="container-fluid">
-				<!-- search & filter -->
-				<div class="d-flex">
-					<div class="p-2">
-						<b-form-group class="mb-0 font-weight-light overflow-auto">
-							<button type="submit" class="btn btn-default btn-sm float-left mr-2" @click="selectedClear">All</button>
-							<b-form-checkbox-group v-model="selectedPhase" :options="optionsPhase" button-variant="light" font="light" switches size="sm" @input="onChangePhase" class="float-left"></b-form-checkbox-group>
-						</b-form-group>
-					</div>
-					<div class="ml-auto p-2">
-						<b-form inline>
+				<!-- search & total count & items per page  -->
+				<div class="row pb-2">
+					<div class="col-sm-10"><c-search-form  no-namespace @input="query_All" @keyword="(k)=>{keyword=k}"/></div>
+					<div class="col-sm-2">
+						<b-form inline class="float-right">
 							<c-colums-selector name="grdSheet1" v-model="fields" :fields="fieldsAll" ></c-colums-selector>
 							<i class="text-secondary ml-2 mr-2">|</i>
 							<b-form-select size="sm" :options="this.var('ITEMS_PER_PAGE')" v-model="itemsPerPage"></b-form-select>
@@ -72,13 +56,15 @@
 </template>
 <script>
 import VueNavigator			from "@/components/navigator"
-import VueColumsSelector	from "@/components/columnsSelector"
+import VueColumsSelector	from "@/components/list/columnsSelector"
+import VueSearchForm		from "@/components/list/searchForm"
 import VueView				from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
 		"c-colums-selector": { extends: VueColumsSelector},
+		"c-search-form": { extends: VueSearchForm},
 		"c-view": { extends: VueView }
 	},
 	data() {
@@ -113,12 +99,6 @@ export default {
 		}
 	},
 	layout: "default",
-	created() {
-		this.$nuxt.$on("navbar-context-selected", (ctx) => {
-			this.selectedClear()
-		} );
-		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
-	},
 	methods: {
 		onChangePhase() {
 			let selectedPhase = this.selectedPhase;
@@ -133,11 +113,11 @@ export default {
 			if (this.isShowSidebar) this.viewModel = this.getViewLink('', 'namespaces', items[0].namespace, items[0].name)
 		},
 		// 조회
-		query_All() {
+		query_All(d) {
 			this.isBusy = true;
 			let c = false
 			let sel = this.selectNamespace()
-			this.$axios.get(this.getApiUrl("","namespaces"))
+			this.$axios.get(this.getApiUrl("","namespaces","", "", d && d.labelSelector? `labelSelector=${d.labelSelector}`: ""))
 				.then((resp) => {
 					this.items = [];
 					let nsList = [{ value: "", text: "All Namespaces" }];
@@ -152,7 +132,6 @@ export default {
 						});
 					});
 					if(!c) this.selectNamespace(nsList[0].value)
-					this.namespaces(nsList);
 					this.origin = this.items;
 					this.onFiltered(this.items);
 					this.onChangePhase()
@@ -179,9 +158,6 @@ export default {
 			this.totalItems = filteredItems.length;
 			this.currentPage = 1
 		}
-	},
-	beforeDestroy(){
-		this.$nuxt.$off('navbar-context-selected')
 	}
 }
 </script>

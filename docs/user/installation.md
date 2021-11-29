@@ -13,8 +13,12 @@ $ kubectl get po  -n kube-system | grep metrics-server
 # installation
 $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
+* if necessary, add a startup option `--kubelet-insecure-tls` 
 
-* add startup option `--kubelet-insecure-tls` 
+* or apply "metrics-server" with options `--kubelet-insecure-tls`
+```
+$ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/metrics-server/metrics-server-v0.5.1-kubelet-insecure-tls.yaml
+```
 
 ## Kubernetes
 
@@ -36,6 +40,7 @@ $ kubectl delete -f ./scripts/install/kuberntes/recommended.yaml
 * Installation
 
 ```
+$ kubectl create ns kore
 $ helm install -n kore kore-board ./scripts/install/kuberntes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \

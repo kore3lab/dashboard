@@ -1,7 +1,7 @@
 <template>
 <div>
 	<!-- 1. metadata -->
-	<c-metadata dtCols="2" ddCols="10"></c-metadata>
+	<c-metadata v-model="value" dtCols="2" ddCols="10"></c-metadata>
 	<!-- 2. rules -->
 	<div class="row">
 		<div class="col-md-12">
@@ -23,7 +23,7 @@
 		</div>
 	</div>
 	<!-- 3. events -->
-	<c-events class="row"></c-events>
+	<c-events v-model="value" class="row"></c-events>
 
 </div>
 </template>
@@ -32,6 +32,7 @@ import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueEventsView	from "@/components/view/eventsView.vue";
 
 export default {
+	props:["value"],
 	components: {
 		"c-metadata": { extends: VueMetadataView },
 		"c-events": { extends: VueEventsView }
@@ -41,15 +42,14 @@ export default {
 			rules: []
 		}
 	},
-	mounted() {
-		this.$nuxt.$on("view-data-read-completed", (data) => {
+	watch: {
+		value(d) { this.onSync(d) }
+	},
+	methods: {
+		onSync(data) {
 			if(!data) return
 			this.rules = data.rules?data.rules:{};
-		});
-	},
-	methods: {},
-	beforeDestroy(){
-		this.$nuxt.$off("view-data-read-completed");
-	},
+		}
+	}
 }
 </script>
