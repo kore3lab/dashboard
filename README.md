@@ -13,7 +13,7 @@ Kore보드는 쿠버네티스 다중 클러스터 관리를 위한 웹 기반 UI
 ### Installation
 
 ```
-$ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/kuberntes/recommended.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/kubernetes/recommended.yaml
 ```
 
 See [Installation Guide](./docs/user/installation.md) page for more information
