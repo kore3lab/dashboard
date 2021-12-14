@@ -3,13 +3,13 @@
 * validation
 
 ```
-$ helm lint scripts/install/kuberntes/helm-chart
+$ helm lint scripts/install/kubernetes/helm-chart
 ```
 
 * output to yaml
 
 ```
-$ helm template -n kore kore-board scripts/install/kuberntes/helm-chart \
+$ helm template -n kore kore-board scripts/install/kubernetes/helm-chart \
   --set frontend.service.type=NodePort \
   --set frontend.service.nodePort=30080
 ```
@@ -18,7 +18,7 @@ $ helm template -n kore kore-board scripts/install/kuberntes/helm-chart \
 
 ```
 $ kubectl create ns kore
-$ helm template --debug -n kore kore-board scripts/install/kuberntes/helm-chart \
+$ helm template --debug -n kore kore-board scripts/install/kubernetes/helm-chart \
   --set frontend.service.type=NodePort \
   --set frontend.service.nodePort=30080 \
   | kubectl apply -n kore -f -
@@ -28,7 +28,7 @@ $ helm template --debug -n kore kore-board scripts/install/kuberntes/helm-chart 
 * dry-run
 
 ```
-$ helm install --dry-run -n kore kore-board scripts/install/kuberntes/helm-chart \
+$ helm install --dry-run -n kore kore-board scripts/install/kubernetes/helm-chart \
   --set frontend.service.type=NodePort \
   --set frontend.service.nodePort=30080
 ```
@@ -36,6 +36,6 @@ $ helm install --dry-run -n kore kore-board scripts/install/kuberntes/helm-chart
 * packaging helm-chart
 
 ```
-$ helm package scripts/install/kuberntes/helm-chart  -d scripts/install/kuberntes   # packaging  (tgz file 생성)
-$ helm repo index scripts/install/kuberntes                                         # index.yaml 파일 생성/수정
+$ helm package scripts/install/kubernetes/helm-chart  -d scripts/install/kubernetes   # packaging  (tgz file 생성)
+$ helm repo index scripts/install/kubernetes                                         # index.yaml 파일 생성/수정
 ```
