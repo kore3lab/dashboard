@@ -1,9 +1,10 @@
 import * as d3		from "d3";
-import {UI}			from "../utils/lang";
-import {GraphBase}	from "./graph.base";
-import "./toolbar.css";
+import {UI}			from "@/components/graph/utils/lang";
+import {GraphBase}	from "@/components/graph/graph.base";
+import "@/components/graph/toolbar.css";
 
 export class LegendModel {
+	y:number = 0
 	header:string
 	rows:Array<{label:string, ico:string}> = []
 }

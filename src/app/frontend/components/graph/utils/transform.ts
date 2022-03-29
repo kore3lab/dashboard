@@ -2,9 +2,9 @@ import {Lang as lang}	from "./lang";
 
 export class Transform {
 
-	x:number
-	y:number
-	k:number
+	x:number = 0
+	y:number = 0
+	k:number = 0
 	private _element:Element;
 
 	constructor(el:Element) {
@@ -19,7 +19,7 @@ export class Transform {
 		this._element = el;
 		this.x = 0, this.y = 0, this.k = 1;
 
-		let transform:string = el.getAttribute("transform");
+		let transform:string = el.getAttribute("transform") || "" ;
 		if(transform) {
 			let offset:number = transform.indexOf("translate");
 			if(offset>=0) {

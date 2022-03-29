@@ -11,8 +11,10 @@
     "esModuleInterop": true,
     "allowJs": true,
     "sourceMap": true,
-    "strict": false,
-    "noEmit": false,
+    "strict": true,
+    "noEmit": true,
+	//"strictPropertyInitialization": false,
+	"strictNullChecks": false,
     "experimentalDecorators": true,
     "baseUrl": ".",
     "paths": {

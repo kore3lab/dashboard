@@ -1,11 +1,11 @@
 import * as d3Select			from "d3-selection";
 import * as d3Force				from "d3-force";
 import * as d3Drag				from "d3-drag";
-import {GraphBase}				from "../graph.base";
-import {LegendModel, Toolbar}	from "../toolbar";
-import {ConfigModel}			from "../../model/models";
-import {Topology as model}		from "../../model/graph.model"
-import "./graph.css";
+import {GraphBase}				from "@/components/graph/graph.base";
+import {LegendModel, Toolbar}	from "@/components/graph/toolbar";
+import {ConfigModel}			from "@/components/graph//model/models";
+import {Topology as model}		from "@/components/graph//model/graph.model"
+import "@/components/graph/graph.topology.css";
 
 /**
  * Topology 그래프 랜더러
@@ -24,7 +24,7 @@ import "./graph.css";
  * 		기타
  * 			- https://stackoverflow.com/questions/47544041/how-to-visualize-groups-of-nodes-in-a-d3-force-directed-graph-layout/48001854
  */
-export class TopologyGraph extends GraphBase {
+export default class TopologyGraph extends GraphBase {
 
 
 	/**
@@ -40,7 +40,7 @@ export class TopologyGraph extends GraphBase {
 		let data:model.Topology = conf.data;
 
 		// 라인 추가
-		let linksEl:d3Select.Selection<SVGElement,any,SVGElement,any>;
+		let linksEl:d3Select.Selection<SVGLineElement,any,SVGElement,any>;
 		if(data.links) {
 			linksEl = outlineEl.selectAll("line.link")
 				.data(data.links).enter()
@@ -51,7 +51,7 @@ export class TopologyGraph extends GraphBase {
 
 		// 노드 추가
 		if(!data.nodes) return;
-		let nodes:d3Select.Selection<SVGElement,any,SVGElement,any> = outlineEl.selectAll("g.node")
+		let nodes:d3Select.Selection<SVGGElement,any,SVGElement,any> = outlineEl.selectAll("g.node")
 			.data(data.nodes).enter()
 				.append("g")
 				.attr("class","node")
@@ -102,7 +102,8 @@ export class TopologyGraph extends GraphBase {
 					{ label: "Node", ico: '<g><use class="ico" href="#ac_ic_node_node" width="20" height="20"></use></g>' },
 					{ label: "Pod", ico: '<g><use class="ico" href="#ac_ic_node_pod" width="20" height="20"></use></g>' },
 					{ label: "Container", ico: '<g><use class="ico" href="#ac_ic_node_container" width="20" height="20"></use></g>' }
-				]
+				],
+				y: 0
 			}
 		]
 		this.svg().call(Toolbar.render, this, legends);
@@ -137,8 +138,7 @@ export class TopologyGraph extends GraphBase {
 	/**
 	* 노드 랜더링
 	*/
-	private static renderNode(nodes:d3Select.Selection<SVGElement,any,SVGElement,any>)  {
-
+	private static renderNode(nodes:d3Select.Selection<SVGGElement,any,SVGElement,any>)  {
 		nodes
 			.append("use")
 			.attr("height", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?40:30)} )

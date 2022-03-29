@@ -32,9 +32,9 @@
 	</div>
 </template>
 <script>
-import * as graph		from "../../static/kore3lab.graph/kore3lab.graph.topology"
 import VueNavigator		from "@/components/navigator"
 import VueSearchForm	from "@/components/list/searchForm"
+import TopologyGraph	from "@/components/graph/graph.topology"
 
 export default {
 	components: {
@@ -54,7 +54,7 @@ export default {
 			let url = `/api/clusters/${this.currentContext()}/topology`;
 			if (ns) url += `/namespaces/${this.selectNamespace()}`;
 
-			let g = new graph.TopologyGraph("#wrapGraph");
+			let g = new TopologyGraph("#wrapGraph");
 			this.$axios.get(url)
 				.then( resp => {
 					this.$data.nodeLen = resp.data.nodes.length;

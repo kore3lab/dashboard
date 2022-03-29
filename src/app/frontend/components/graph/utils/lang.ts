@@ -130,7 +130,7 @@ export class UI {
 	 * @param func 레이어의 내용 함수
 	 * @param args 레이어의 내용 함수의 파라메터
 	 */
-	public static appendScrollableLayer(X:number, Y:number, bounds:Bounds, parentEl:d3.Selection<SVGGElement,any,SVGElement,any>, func: (selection: d3.Selection<SVGElement, any, SVGElement, any>, ...args: any) => void , ...args: any[]) {
+	public static appendScrollableLayer(X:number, Y:number, bounds:Bounds, parentEl:d3.Selection<SVGGElement,any,SVGElement,any>, func: (selection: d3.Selection<SVGGElement, any, SVGElement, any>, ...args: any[]) => void , ...args: any[]) {
 
 		const margin:number = 10;	//마진 기준 (top,left, right, bottom 동일 처리)
 

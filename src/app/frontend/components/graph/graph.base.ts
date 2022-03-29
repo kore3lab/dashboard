@@ -1,8 +1,8 @@
 import * as d3					from "d3";
 import * as d3Zoom				from "d3-zoom";
-import {ConfigModel, Bounds}	from "../model/models";
-import {Transform}				from "../utils/transform";
-import {UI,Lang}				from "../utils/lang";
+import {ConfigModel, Bounds}	from "./model/models";
+import {Transform}				from "./utils/transform";
+import {UI,Lang}				from "./utils/lang";
 
 /**
  * Graph 베이스 클래스
@@ -123,8 +123,8 @@ export abstract class GraphBase {
 
 		// ZOOM
 		this.zoomBehavior(
-			d3Zoom.zoom().on("zoom", ()=> {
-				outlineEl.attr("transform", d3.event.transform);  
+			d3Zoom.zoom().on("zoom", (event)=> {
+				outlineEl.attr("transform", event.transform);  
 			})
 		);
 
@@ -227,6 +227,6 @@ export abstract class GraphBase {
 
 	}
 	
-	protected abstract populate(conf:ConfigModel.Config, svg:d3.Selection<SVGElement, any, SVGElement, any>, bounds:Bounds, outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>):void;
+	protected abstract populate(conf:ConfigModel.Config, svg:d3.Selection<SVGSVGElement, any, SVGElement, any>, bounds:Bounds, outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>):void;
 
 }
