@@ -7,7 +7,6 @@
   * [API Specification](./developer/api-specification.md)
   * [Packaging Helm-chart](./developer/helm-chart.md)
   * [Web-Terminal Developer Guide](./developer/app-terminal.md)
-  * [Graph Developer Guide](./developer/app-graph.md)
 
 
 * [User Guide](./user/README.md)

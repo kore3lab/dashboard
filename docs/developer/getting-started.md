@@ -20,14 +20,9 @@ $ git clone https://github.com/kore3lab/dashboard.git
 $ cd dashboard
 ```
 
-* Installation dependencies (frontend,graph)
+* Installation dependencies (frontend)
 
 ```
-# graph
-$ cd ../src/app/graph
-$ npm i
-
-$ cd ../../..
 $ npm i
 ```
 
@@ -56,7 +51,6 @@ $ curl http://localhost:3003/healthy
 ### Using ports
 * 3000 : front-end
 * 3001 : backend (restful-api)
-* 3002 : graph 개발
 * 3003 : terminal
 * 8000 : metrics scraper
 
@@ -71,14 +65,11 @@ $ npm run start:frontend        # frontend 실행
 $ npm run start:backend         # backend 실행
 $ npm run start:metrics-scraper # metrics scraper 실행
 $ npm run start:terminal        # container 에서 terminal 실행 
-$ npm run start:graph           # graph 실행
-$ npm run start:graph:backend   # 그래프 개발 실행 (backend + graph)
 ```
 
 * Build
 ```
 $ npm run build:frontend      # frontend 빌드 (using on docker build)
-$ npm run build:graph         # 그래프 빌드 frontend 에 변경된 최신 그래프 적용시 사용
 $ npm run run                 # frontend container 에서 nuxt 실행 (docker image entrypoint) 
 $ npm run build:terminal      # terminal 빌드 (using on docker build)
 ```
