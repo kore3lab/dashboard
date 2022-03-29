@@ -12,21 +12,89 @@ Terminal은 웹 UI에서 클러스터 및 파드 실행 터미널 서비스를 �
 
 아래 그림은 프로젝트의 아키텍처를 간략하게 보여줍니다.
 
-![Architecture Overview](../images/architecture.png)
+![Architecture Overview](../images/architecture.v2.png)
 
-
-* Frontend
-  * Vue, NuxtJS framework
-  * source code : src/app/frontend
+## Summary of function points.
 
 * Backend
-  * Golang
-  * 소스코드 위치 src/app/backend 디렉토리
-
-* Metric-Scraper
-  * Golang
-  * source code : src/app/metric-server
-
+  * 인증 (로그인, 로그아웃) 및 세션키 발급 
+  * 멀티클러스터 Context 관리
+  * 클러스터별 Kubernetes API-Server 연동
+  * 클러스터별 Basic Core Resource 조회 및 생성,수정,삭제
+  * Custom Resource 조회 및 생성,수정,삭제
+  * Metrics-Scraper 연동을 통한 클러스터별, 노드별, 워크로드별 메트릭스 조회
+  * Workload 확장 조회
+  * 클러스터 이벤트 & 로그 조회
+* Metrics-Scraper
+  * 클러스터별 Metrics-Server 연동
+  * 클러스터별 Metrics 수집 및 저장
+  * 클러스터별, 노드별, 워크로드별 Metrics Summary API 제공
+* Frontend
+  * Backend, Metrics-Scraper, Terminal 컴포넌트 연동
+  * Basic & Core Resource 조회 화면
+  * Extention Resource 조회 화면
+  * Resource 등록, 수정, 삭제 화면
+  * Resource 검색 기능
+  * 노드 및  워크로드 Terminal 서비스 화면
+  * 워크로드 로그 조회 화면
 * Terminal
-  * Golang
-  * source code : src/app/terminal
+  * 노드 및 워크로드에 대한 터미널 인스턴스
+  * 멀티클러스터 Context 연계
+  * 보안 인증 (Token) 처리
+  * 터미널 화면 연계를 위한 Socket 모듈
+
+## Summary of function points.
+
+* Cluster
+  * Topology
+  * Namespaces
+  * Events
+* Workload
+  * Pods
+  * Deployments
+  * StatefulSets
+  * Cron Jobs
+  * Jobs
+  * Daemon Sets
+  * Replica Sets
+* Networking
+  * Services
+  * Ingress
+  * Endpoints
+  * Network Polices
+* Storage
+  * Persistent Volumn Claims
+  * Persistent Volumns
+  * Storage Classes
+* Configuration
+  * Config Maps
+  * Secrets
+  * Resource Quotas
+  * Limit Ranges
+  * Horizontal Pod Autoscalers
+  * Pod Disruption Budgets
+* Administrator
+  * Service Accounts
+  * Clsuter Roles
+  * Clsuter Roles Bindings
+  * Roles
+  * Role Bindings
+* Custom Resource
+  * Definitions
+  * CRD 
+* Commons
+  * Index(dashboard)
+  * Login
+  * Create
+  * Terminal
+  * Context Manager
+
+## Repository directires
+  * docs : documentations
+  * scripts : install & build scripts
+  * src : source codes root
+  * src/app/frontend :  source codes of frontend component
+  * src/app/backend : source codes of backend component
+  * src/app/metric-server : source codes of metric-server component
+  * src/app/terminal : source codes of terminal component
+
