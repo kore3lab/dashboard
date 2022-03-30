@@ -1,3 +1,4 @@
+"use strict"
 import * as d3Select	from "d3-selection";
 import { Lang }			from "../utils/lang";
 
@@ -10,7 +11,7 @@ export class Bounds {
 	public height:number = 0;
 
 	constructor(selection:d3Select.Selection<SVGElement, any, Element, any>) {
-		let bounds:ClientRect =  selection.node().getBoundingClientRect();
+		let bounds:ClientRect =  selection.node()!.getBoundingClientRect();
 
 		// padding 반영
 		this.left = bounds.left + Lang.toNumber(selection.style("padding-left"),0);

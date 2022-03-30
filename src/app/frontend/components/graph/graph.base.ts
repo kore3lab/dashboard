@@ -1,8 +1,9 @@
+"use strict"
 import * as d3					from "d3";
 import * as d3Zoom				from "d3-zoom";
-import {ConfigModel, Bounds}	from "./model/models";
-import {Transform}				from "./utils/transform";
-import {UI,Lang}				from "./utils/lang";
+import {ConfigModel, Bounds}	from "@/components/graph/model/models";
+import {Transform}				from "@/components/graph/utils/transform";
+import {UI,Lang}				from "@/components/graph/utils/lang";
 
 /**
  * Graph 베이스 클래스
@@ -30,22 +31,22 @@ export abstract class GraphBase {
 		return arguments.length ? (this._config.data = _, this) : this._config.data;
 	}
 	public bounds(_?:Bounds):any {
-		return arguments.length ? (this._bounds = _, this): this._bounds;
+		return arguments.length ? (this._bounds = _!, this): this._bounds;
 	}
 	protected outlineEl(_?:SVGGElement):any {
-		return arguments.length ? (this._outlineEl = _, this): this._outlineEl;
+		return arguments.length ? (this._outlineEl = _!, this): this._outlineEl;
 	}
 	protected graphEl(_?:d3.Selection<SVGGElement,any,SVGElement,any>):any {
-		return arguments.length ? (this._graphEl = _, this): this._graphEl;
+		return arguments.length ? (this._graphEl = _!, this): this._graphEl;
 	}
 	public svg(_?:d3.Selection<SVGSVGElement, any, SVGElement, any>):any {
-		return arguments.length ? (this._svg = _, this): this._svg;
+		return arguments.length ? (this._svg = _!, this): this._svg;
 	}
 	public container(_?:HTMLElement):any {
-		return arguments.length ? (this._container = _, this): this._container;
+		return arguments.length ? (this._container = _!, this): this._container;
 	}
 	public zoomBehavior(_?:d3Zoom.ZoomBehavior<Element,any>):any {
-		return arguments.length ? (this._zoom = _, this): this._zoom;
+		return arguments.length ? (this._zoom = _!, this): this._zoom;
 	}
 	
 
@@ -58,7 +59,7 @@ export abstract class GraphBase {
 		if(arguments.length==1) this.config(arguments[0]);
 		else if(arguments.length==2) (this._container = arguments[0], this.config(arguments[1]));
 
-		if(!this._container) return;
+		if(!this._container) return this;
 		let container:d3.Selection<any, any, any, any> = d3.select(this._container);
 		
 		// svg
@@ -74,7 +75,7 @@ export abstract class GraphBase {
 
 		let graphEl:d3.Selection<SVGGElement,any,SVGElement,any> = svg.select("g.graph");
 		let outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>;
-		let attrTransform:string;
+		let attrTransform:string = "";
 
 		if(graphEl.size() > 0) {
 			// 이전에 outline 이 있다면  
@@ -100,7 +101,7 @@ export abstract class GraphBase {
 
 		// 멤버변수들
 		this.bounds(bounds);
-		this.outlineEl(outlineEl.node());
+		this.outlineEl(outlineEl.node()!);
 		this.svg(svg);
 		this.container(container.node());
 		this.graphEl(graphEl);
@@ -113,12 +114,12 @@ export abstract class GraphBase {
 		else {
 
 			// outline 수직 정렬
-			if(this._config.global.align.vertical=="middle") UI.alignVertical(outlineEl.node());
-			else if(this._config.global.align.vertical=="none") Transform.instance(outlineEl.node()).shiftY(this._config.global.padding.top);	//중간 정렬이 아닐 경우 TOP padding 적용
+			if(this._config.global.align.vertical=="middle") UI.alignVertical(outlineEl.node()!);
+			else if(this._config.global.align.vertical=="none") Transform.instance(outlineEl.node()!).shiftY(this._config.global.padding.top);	//중간 정렬이 아닐 경우 TOP padding 적용
 
 			// outline 수평 정렬
-			if(this._config.global.align.horizonal=="center") UI.alignHorizonal(outlineEl.node());
-			else if(this._config.global.align.horizonal=="none") Transform.instance(outlineEl.node()).shiftX(this._config.global.padding.left);	//가운데 정렬이 아닐 경우 LEFT padding 적용
+			if(this._config.global.align.horizonal=="center") UI.alignHorizonal(outlineEl.node()!);
+			else if(this._config.global.align.horizonal=="none") Transform.instance(outlineEl.node()!).shiftX(this._config.global.padding.left);	//가운데 정렬이 아닐 경우 LEFT padding 적용
 		}
 
 		// ZOOM

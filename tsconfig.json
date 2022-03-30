@@ -1,21 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "lib": [
+    "target": "es2020",				// 사용할 특정 ECMAScript 버전
+    "module": "esnext",				// 모듈(import) 문법 'commonjs', 'amd', 'es2015', 'esnext'
+    "moduleResolution": "node",		// 모듈 해석 방법 설정: 'node' (Node.js) 혹은 'classic' (TypeScript pre-1.6).
+    "lib": [						// 컴파일에 포함될 라이브러리 파일 목록 
       "esnext",
       "esnext.asynciterable",
       "dom"
     ],
-    "esModuleInterop": true,
-    "allowJs": true,
+    "esModuleInterop": false,		// CommonJS와 ES Modules 간의 상호 운용 가능 여부 (imports에 대한 namespace 생성을 통해)
+    "allowJs": true,				// js import 가능여부
     "sourceMap": true,
-    "strict": true,
-    "noEmit": true,
-	//"strictPropertyInitialization": false,
-	"strictNullChecks": false,
-    "experimentalDecorators": true,
+    "noEmit": true,					// 결과파일을 저장 여부
+    "strict": true,					// 엄격한 문법
+	"strictPropertyInitialization": false,
+	"alwaysStrict": true,
     "baseUrl": ".",
     "paths": {
       "~/*": [
@@ -25,19 +24,12 @@
         "./src/app/frontend/*"
       ]
     },
-    "types": [
+    "types": [						// 컴파일중 포함될 타입 정의 파일 목록
       "@types/node",
       "@nuxt/types"
     ]
   },
-  "include": [
-   "src/app/frontend/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".nuxt",
-    "dist",
-    "aio"
-  ]
+  "include": [ "src/app/frontend/**/*.ts" ],
+  "exclude": [ "node_modules", ".nuxt", "dist", "aio" ]
 }
 
