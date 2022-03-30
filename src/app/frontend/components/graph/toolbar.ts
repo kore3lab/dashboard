@@ -1,6 +1,7 @@
+"use strict"
 import * as d3		from "d3";
 import {UI}			from "@/components/graph/utils/lang";
-import {GraphBase}	from "@/components/graph/graph.base";
+import {GraphBase}	from "~/components/graph/graph.base";
 import "@/components/graph/toolbar.css";
 
 export class LegendModel {
@@ -70,7 +71,7 @@ export class Toolbar {
 			.html('<rect></rect><text>범례</text>')
 
 		// 범례 들어갈 틀 만들기 : g.legend > foreignObject > div (스크롤) > svg > g.outline
-		Y += toolbarEl.node().getBoundingClientRect().height + margin;	//Y 값 - 툴바 버튼 높이 반영
+		Y += toolbarEl.node()!.getBoundingClientRect().height + margin;	//Y 값 - 툴바 버튼 높이 반영
 
 		// 범레 g.legend 추가
 		let legendEl:d3.Selection<SVGGElement,any,SVGElement,any> = svgEl.append("g")
@@ -90,7 +91,7 @@ export class Toolbar {
 			.on("click",() => {
 				d3.select("g.legend").attr("visibility","hidden");
 			})
-			.attr("transform", `translate (${legendEl.node().getBoundingClientRect().width -(margin*2+24)}, 0)`)
+			.attr("transform", `translate (${legendEl.node()!.getBoundingClientRect().width -(margin*2+24)}, 0)`)
 			.html(`<rect></rect><g class="ico"><use width="24" height="24" href="#ac_ic_close"></use></g>`)
 		
 

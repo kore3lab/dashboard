@@ -1,10 +1,11 @@
+"use strict"
 import * as d3Select			from "d3-selection";
 import * as d3Force				from "d3-force";
 import * as d3Drag				from "d3-drag";
-import {GraphBase}				from "@/components/graph/graph.base";
+import {GraphBase}				from "~/components/graph/graph.base";
 import {LegendModel, Toolbar}	from "@/components/graph/toolbar";
-import {ConfigModel}			from "@/components/graph//model/models";
-import {Topology as model}		from "@/components/graph//model/graph.model"
+import {ConfigModel}			from "@/components/graph/model/models";
+import {Topology as model}		from "@/components/graph/model/graph.model"
 import "@/components/graph/graph.topology.css";
 
 /**

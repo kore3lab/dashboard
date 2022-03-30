@@ -34,7 +34,7 @@
 <script>
 import VueNavigator		from "@/components/navigator"
 import VueSearchForm	from "@/components/list/searchForm"
-import TopologyGraph	from "@/components/graph/graph.topology"
+import TopologyGraph	from "~/components/graph/graph.topology"
 
 export default {
 	components: {

@@ -1,3 +1,4 @@
+"use strict"
 import * as d3Force		from "d3-force";
 
 /** 
