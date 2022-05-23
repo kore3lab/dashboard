@@ -8,10 +8,24 @@
 		<dt class="col-sm-3">Limit Ranges</dt>
 		<dd class="col-sm-9"><span v-if="limits.length==0">-</span><span v-for="(val, idx) in limits" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
 	</c-metadata>
+	<!-- 2. graph -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline m-0">
+				<div class="card-header p-2"><h3 class="card-title">Workloads</h3></div>
+				<div class="card-body mw-100" id="wrapGraph"></div>
+			</div>
+		</div>
+	</div>
+
 </div>
 </template>
+<style scoped>
+#wrapGraph {min-height: 40em;}
+</style>
 <script>
 import VueMetadataView	from "@/components/view/metadataView.vue";
+import HierarchyGraph	from "@/components/graph/graph.hierarchy";
 
 export default {
 	props:["value"],
@@ -47,6 +61,32 @@ export default {
 					this.limits.push(el.metadata.name)
 				})
 			});
+			//workloads graph
+			let g = new HierarchyGraph("#wrapGraph", {
+				global: {
+					toolbar: { visible:false }
+				},
+				extends: {
+					hierarchy: {
+						group: {
+							title: { display: "none" }
+						}
+					}
+				}
+			})
+			.on("nodeclick", (e,d)=> {
+				if (d.data.namespace && d.data.name) {
+					// (core) pod, (apps) daemonset, replicaset, deployment
+					const model = this.getViewLink(d.data.kind=="Pod"?"":"apps", `${d.data.kind.toLowerCase()}s`, d.data.namespace, d.data.name);
+					this.$emit("navigate", model)
+				}
+			})
+			this.$axios.get(`/api/clusters/${this.currentContext()}/graph/workloads/namespaces/${data.metadata.name}`)
+				.then( resp => {
+					g.data(resp.data).render();
+				})
+				.catch(e => { this.msghttp(e);})
+
 		}
 	}
 }
