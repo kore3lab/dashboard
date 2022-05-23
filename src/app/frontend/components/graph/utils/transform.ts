@@ -1,10 +1,10 @@
-import {Lang as lang}	from "./lang";
+import {Lang as lang}	from "@/components/graph/utils/lang";
 
 export class Transform {
 
-	x:number = 0
-	y:number = 0
-	k:number = 0
+	x:number
+	y:number
+	k:number
 	private _element:Element;
 
 	constructor(el:Element) {
@@ -19,7 +19,7 @@ export class Transform {
 		this._element = el;
 		this.x = 0, this.y = 0, this.k = 1;
 
-		let transform:string = el.getAttribute("transform") || "" ;
+		let transform:string = el.getAttribute("transform") || "";
 		if(transform) {
 			let offset:number = transform.indexOf("translate");
 			if(offset>=0) {
@@ -45,17 +45,14 @@ export class Transform {
 		return (this.x = x, this.y = y, this.transform());
 	}
 
-	ratioScale(ratio:number):Transform {
-		return (this.k = this.k*ratio, this.transform());
+	scale(ratio:number):Transform {
+		return (this.k = ratio, this.transform());
 	}
 
-	shift(x:number,y:number):Transform {
-		return (this.x = x, this.y = y, this.transform());
-	}
-	shiftY(y:number):Transform {
+	translateY(y:number):Transform {
 		return (this.y = y, this.transform());
 	}
-	shiftX(x:number):Transform {
+	translateX(x:number):Transform {
 		return (this.x = x, this.transform());
 	}
 
@@ -65,7 +62,8 @@ export class Transform {
 	}
 
 	private transform():Transform {
-		return this._element ? (this._element.setAttribute("transform",	this.toString()), this): this;
+		this._element ? (this._element.setAttribute("transform",	this.toString()), this): this;
+		return this;
 	}
 
 

@@ -17,11 +17,24 @@ func Topology(c *gin.Context) {
 	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
 	namespace := c.Param("NAMESPACE")
 
-	topology := model.NewTopology(cluster)
-	if err := topology.Get(namespace); err != nil {
+	if topology, err := model.GetTopologyGraph(cluster, namespace); err != nil {
 		g.SendError(err)
 	} else {
 		g.Send(http.StatusOK, topology)
+	}
+
+}
+
+func Workloads(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
+	namespace := c.Param("NAMESPACE")
+
+	if workloads, err := model.GetWorkloadGraph(cluster, namespace); err != nil {
+		g.SendError(err)
+	} else {
+		g.Send(http.StatusOK, workloads)
 	}
 
 }

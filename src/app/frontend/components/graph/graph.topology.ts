@@ -1,11 +1,9 @@
-"use strict"
 import * as d3Select			from "d3-selection";
 import * as d3Force				from "d3-force";
-import * as d3Drag				from "d3-drag";
-import {GraphBase}				from "~/components/graph/graph.base";
-import {LegendModel, Toolbar}	from "@/components/graph/toolbar";
-import {ConfigModel}			from "@/components/graph/model/models";
-import {Topology as model}		from "@/components/graph/model/graph.model"
+import {GraphBase}				from "@/components/graph/graph.base";
+import {Config}					from "@/components/graph/model/config.model";
+import {TopologyModel as model}	from "@/components/graph/model/graph.model"
+import {WH, Bounds}				from "@/components/graph/utils/ui";
 import "@/components/graph/graph.topology.css";
 
 /**
@@ -27,15 +25,14 @@ import "@/components/graph/graph.topology.css";
  */
 export default class TopologyGraph extends GraphBase {
 
-
 	/**
 	 * (abstract) 랜더링
 	 * @param data 토플로지를 위한 k8s 데이터 (model.K8s)
 	 */
-	public populate(conf:ConfigModel.Config, svgEl:d3Select.Selection<SVGSVGElement, any, SVGElement, any>, bounds:DOMRect, outlineEl:d3Select.Selection<SVGGElement,any,SVGElement,any>) {
+	public populate(outlineEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, bounds:WH, conf:Config) {
 
 		// svg > defs
-		if(svgEl.select("defs").size() == 0) svgEl.append("defs").call(TopologyGraph.renderDefs, conf);
+		if(this.svg.select("defs").size() == 0) this.svg.append("defs").call(TopologyGraph.renderDefs, conf);
 
 
 		let data:model.Topology = conf.data;
@@ -52,12 +49,13 @@ export default class TopologyGraph extends GraphBase {
 
 		// 노드 추가
 		if(!data.nodes) return;
-		let nodes:d3Select.Selection<SVGGElement,any,SVGElement,any> = outlineEl.selectAll("g.node")
+		let nodeEl:d3Select.Selection<SVGGElement,any,SVGElement,any> = outlineEl.selectAll("g.node")
 			.data(data.nodes).enter()
 				.append("g")
-				.attr("class","node")
-				// .attr("id", d=>d.id)
-				.call(TopologyGraph.renderNode);
+				.attr("class", (conf.on && conf.on.nodeclick) ? "node click": "node")
+				.call(TopologyGraph.renderNode, conf);
+
+		if(conf.on && conf.on.nodeclick) nodeEl.on("click", conf.on.nodeclick);
 
 		// 좌표 Simulation
 		let forceLink:d3Force.ForceLink<d3Force.SimulationNodeDatum, d3Force.SimulationLinkDatum<d3Force.SimulationNodeDatum>>;
@@ -72,16 +70,16 @@ export default class TopologyGraph extends GraphBase {
 			.force("charge", d3Force.forceManyBody().strength(-600))
 			.force("theta", d3Force.forceManyBody().theta(0.01))
 			.force("link", forceLink)
-			.force('collision',  d3Force.forceCollide().radius(conf.topology.collision.radius))
+			.force('collision',  d3Force.forceCollide().radius(conf.extends.topology.collision.radius))
 			// .force('collide',  d3Force.forceCollide( (d:any) => { return d.kind=="cluster" ? 0 : 60}))
 			.alpha(1)
-			.alphaDecay(conf.topology.simulation.alphaDecay)	// ~0.0228 시뮬레이션 decay - 클수록 빠르지만 배치가 완벽하지 않음 (default:0.06)
-			.force("center", d3Force.forceCenter(bounds.width/2, bounds.height/2));
+			.alphaDecay(conf.extends.topology.simulation.alphaDecay)	// ~0.0228 시뮬레이션 decay - 클수록 빠르지만 배치가 완벽하지 않음 (default:0.06)
+			.force("center", d3Force.forceCenter(bounds.width/2/conf.global.scale.ratio, bounds.height/2/conf.global.scale.ratio));
 
 
 		// tick
 		nodeSimulation.on("tick", () => {
-			nodes.attr("transform", d=> { return `translate(${d.x},${d.y})`; });
+			nodeEl.attr("transform", d=> { return `translate(${d.x},${d.y})`; });
 
 			linksEl.attr("x1", d=>d.source.x)
 				.attr("y1", d=>d.source.y)
@@ -90,25 +88,9 @@ export default class TopologyGraph extends GraphBase {
 		});
 
 		// onEnd 이벤트
-		if (conf.topology.simulation.onEnd && typeof conf.topology.simulation.onEnd == "function") nodeSimulation.on("end", conf.topology.simulation.onEnd);
+		if (conf.extends.topology.simulation.onEnd && typeof conf.extends.topology.simulation.onEnd == "function") nodeSimulation.on("end", conf.extends.topology.simulation.onEnd);
+
 		
-
-
-		// 범례
-		const legends:Array<LegendModel> = [
-			{
-				header: "Element",
-				rows: [
-					{ label: "Cluster", ico: '<g><use class="ico" href="#ac_ic_node_cluster" width="20" height="20"></use></g>' },
-					{ label: "Node", ico: '<g><use class="ico" href="#ac_ic_node_node" width="20" height="20"></use></g>' },
-					{ label: "Pod", ico: '<g><use class="ico" href="#ac_ic_node_pod" width="20" height="20"></use></g>' },
-					{ label: "Container", ico: '<g><use class="ico" href="#ac_ic_node_container" width="20" height="20"></use></g>' }
-				],
-				y: 0
-			}
-		]
-		this.svg().call(Toolbar.render, this, legends);
-
 	}
 
 	/**
@@ -139,7 +121,8 @@ export default class TopologyGraph extends GraphBase {
 	/**
 	* 노드 랜더링
 	*/
-	private static renderNode(nodes:d3Select.Selection<SVGGElement,any,SVGElement,any>)  {
+	private static renderNode(nodes:d3Select.Selection<SVGGElement,any,SVGElement,any>, conf:Config)  {
+
 		nodes
 			.append("use")
 			.attr("height", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?40:30)} )
@@ -147,6 +130,7 @@ export default class TopologyGraph extends GraphBase {
 			.attr("xlink:href", (d:model.Node) => `#ac_ic_node_${d.kind}`)
 			.attr("x", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?-20:-12)})
 			.attr("y", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?-20:-12)})
+
 
 		// 라벨 Render
 		nodes.append("text")
@@ -156,12 +140,7 @@ export default class TopologyGraph extends GraphBase {
 			.attr("x", -24)
 			.attr("y", 16)
 
-	}
-	/**
-	* 노드 랜더링
-	*/
-	private static renderToolbar(svg:d3Select.Selection<SVGElement,any,SVGElement,any>)  {
-	
+
 	}
 
 };	

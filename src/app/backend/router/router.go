@@ -64,8 +64,10 @@ func CreateUrlMappings() {
 		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/metrics", apis.GetWorkloadMetrics)         // get metrics (workload - pod, deployment, statefulset, daemonset, replicaset)
 		clustersAPI.GET("/nodes/:NAME/pods", apis.GetNodePodListWithMetrics)                               // get pod list in (node)
 		clustersAPI.GET("/namespaces/:NAMESPACE/:RESOURCE/:NAME/pods", apis.GetWorkloadPodListWithMetrics) // get pod list in (workload - deployment, statefulset, daemonset, replicaset)
-		clustersAPI.GET("/topology", apis.Topology)                                                        // get topology graph (cluster)
-		clustersAPI.GET("/topology/namespaces/:NAMESPACE", apis.Topology)                                  // get topology graph (namespace)
+		clustersAPI.GET("/graph/topology", apis.Topology)                                                  // get topology graph (cluster)
+		clustersAPI.GET("/graph/topology/namespaces/:NAMESPACE", apis.Topology)                            // get topology graph (namespace)
+		clustersAPI.GET("/graph/workloads", apis.Workloads)                                                // get workload graph (cluster)
+		clustersAPI.GET("/graph/workloads/namespaces/:NAMESPACE", apis.Workloads)                          // get workload graph (namespace)
 		clustersAPI.GET("/dashboard", apis.Dashboard)                                                      // get dashboard
 		clustersAPI.GET("/nodes", apis.GetNodeListWithUsage)                                               // get node-list
 	}

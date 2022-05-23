@@ -1,39 +1,24 @@
-"use strict"
 import * as d3		from "d3";
-import {UI}			from "@/components/graph/utils/lang";
-import {GraphBase}	from "~/components/graph/graph.base";
+import {GraphBase}	from "@/components/graph/graph.base";
 import "@/components/graph/toolbar.css";
 
-export class LegendModel {
-	y:number = 0
-	header:string
-	rows:Array<{label:string, ico:string}> = []
-}
-
-
-
 /**
- * 범례
+ * Toolbar
  */
 export class Toolbar {
 
 	/**
-	 * 툴바 랜더링
-	 * 		-  범례 랜더링 포함
-	 * 
+	 * Redering toolbar
 	 */
-	public static render(svgEl:d3.Selection<SVGSVGElement,any,SVGElement,any>, owner:GraphBase, legends:Array<LegendModel>) {
+	public static render(owner:GraphBase):d3.Selection<SVGGElement,any,SVGElement,any> {
 
-		const margin:number = 10;
-		let Y:number = margin;
+		const svgEl:d3.Selection<SVGSVGElement,any,SVGElement,any> = owner.svg;
 
-		if(svgEl.select("g.toolbar").size()>0) return;
-
-		let toolbarEl:d3.Selection<SVGGElement,any,SVGElement,any> = svgEl.append("g")
-			.attr("class","toolbar")
-			.attr("transform",`translate (${margin}, ${Y})`)
-
-		// zoom - in 
+		// root
+		let toolbarEl:d3.Selection<SVGGElement,any,SVGElement,any> = svgEl.select("g.toolbar");
+		if(toolbarEl.size() == 0) toolbarEl = svgEl.append("g").attr("class","toolbar")
+			
+		// button - zoom in 
 		toolbarEl.append("g")
 			.attr("id","ac_btn_zoomin")
 			.attr("class","button")
@@ -42,7 +27,7 @@ export class Toolbar {
 				owner.zoomRatio(1.1);
 			});
 		
-		// zoom - out
+		// button - zoom out
 		toolbarEl.append("g")
 			.attr("id","ac_btn_zoomout")
 			.attr("class","button")
@@ -51,7 +36,7 @@ export class Toolbar {
 				owner.zoomRatio(0.9);
 			});
 
-		// zoom - 맞춤
+		// button - zoom fit
 		toolbarEl.append("g")
 			.attr("id","ac_btn_zoomfit")
 			.attr("class","button")
@@ -60,88 +45,8 @@ export class Toolbar {
 				owner.zoom();
 			});
 
-		// 범례 버튼
-		toolbarEl.append("g")
-			.attr("id","ac_btn_legend")
-			.attr("class","button")
-			.on("click", () => {
-				let g = d3.select("g.legend");
-				g.attr("visibility", g.attr("visibility")=="visible"?"hidden":"visible");
-			})
-			.html('<rect></rect><text>범례</text>')
-
-		// 범례 들어갈 틀 만들기 : g.legend > foreignObject > div (스크롤) > svg > g.outline
-		Y += toolbarEl.node()!.getBoundingClientRect().height + margin;	//Y 값 - 툴바 버튼 높이 반영
-
-		// 범레 g.legend 추가
-		let legendEl:d3.Selection<SVGGElement,any,SVGElement,any> = svgEl.append("g")
-			.attr("class","legend")
-			.attr("visibility", "visible")
-
-
-		// g.legend  에 스크롤 가능한 레이어 추가
-		UI.appendScrollableLayer(margin, Y, owner.bounds(), legendEl, Toolbar.renderLegends, legends);
-
-
-		// 닫기 버튼
-		legendEl.selectAll("g.outline").append("g")
-			.attr("class","button")
-			.attr("height", "24").attr("width", "24")
-			.attr("xlink:href", "#ac_ic_close")
-			.on("click",() => {
-				d3.select("g.legend").attr("visibility","hidden");
-			})
-			.attr("transform", `translate (${legendEl.node()!.getBoundingClientRect().width -(margin*2+24)}, 0)`)
-			.html(`<rect></rect><g class="ico"><use width="24" height="24" href="#ac_ic_close"></use></g>`)
-		
+		return toolbarEl;
 
 	}
 
-	/**
-	 * 범례 랜더링
-	 * 
-	 */
-	private static renderLegends(outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>, args: any) {
-
-		let legends:Array<LegendModel> = args[0]
-
-		//  범례 데이터로 y 값 지정 작업
-		let groupY:number = 0;		// 그룹별 y 값
-		const marginH:number = 30, rowH:number =25	//group 간 마진, 아이템별 높이ㄴ
-		legends.forEach((d:LegendModel) => {
-			d["y"] = groupY;
-			groupY += (d.rows.length+1) * rowH + marginH;
-			let y:number = 0;
-			d.rows.forEach((r:any) => {
-				r["y"] = (y+=rowH);
-			});
-		});
-
-		// 범례 그리기
-		// g.outline엘리먼트에 범례 그룹 추가
-		let group:d3.Selection<SVGGElement,any,SVGElement,any> = outlineEl.selectAll("g")
-			.data(legends)
-			.enter()
-			.append("g")
-			.attr("transform", (d:any)=>`translate (0, ${d.y})`)
-			.attr("class","group")
-
-		// 범례 그룹에 제목 추가
-		group.append("text")
-			.text((d:any)=> d.header)
-
-		// 범례 그룹별 아이템 리스트 추가
-		group
-			.selectAll("g.rows")
-			.data(d=>d.rows)
-			.enter()
-			.append("g")
-			.attr("class", "row")
-			.html((d:any)=> {
-				return `${d.ico}<text x="50">${d.label}</text>`;
-			})
-			.attr("transform", (d:any)=> {return `translate (0, ${d.y})`})
-
-
-	}
 }

@@ -39,6 +39,48 @@ func NewStatus(code int) *Status {
 		Code: code}
 }
 
+// hierarchy-graph
+type Hierarchy map[string][]HierarchyNode
+type HierarchyObject struct {
+	Name      string `json:"name"`
+	Kind      string `json:"kind"`
+	Namespace string `json:"namespace"`
+	Depth     int    `json:"depth"`
+}
+type HierarchyNode struct {
+	HierarchyObject
+	OwnerReference HierarchyObject `json:"ownerReference"`
+}
+
+// topology-graph
+type Topology struct {
+	Nodes []topologyNode `json:"nodes"`
+	Links []topologyLink `json:"links"`
+}
+type topologyNode struct {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Kind      string `json:"kind"`
+	Namespace string `json:"namespace"`
+	Group     string `json:"group"`
+	Labels    string `json:"labels"`
+}
+type topologyLink struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Hidden bool   `json:"hidden"`
+	Kind   string `json:"kind"`
+}
+
+const (
+	ELEMENT_KIND_CLUSTER    string = "cluster"
+	ELEMENT_KIND_NAMESPACE  string = "namespace"
+	ELEMENT_KIND_POD        string = "pod"
+	ELEMENT_KIND_NODE       string = "node"
+	ELEMENT_KIND_REPLICASET string = "replica"
+	ELEMENT_KIND_CONTAINER  string = "container"
+)
+
 // metrics
 type MetricUnit struct {
 	CPU    int64 `json:"cpu"`
