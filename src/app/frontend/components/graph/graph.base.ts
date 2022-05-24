@@ -1,5 +1,4 @@
 import * as d3			from "d3";
-import * as d3Select				from "d3-selection";
 import {Config}			from "@/components/graph/model/config.model";
 import {Toolbar}		from "@/components/graph/toolbar";
 import {Bounds, WH, UI}	from "@/components/graph/utils/ui";
@@ -20,9 +19,6 @@ export abstract class GraphBase {
 	public outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>;			//svg > g.outlineWrap > g.outline
 	public toolbarEl:d3.Selection<SVGGElement,any,SVGElement,any>			//svg > g.toolbar
 	public zoomBehavior:d3.ZoomBehavior<any,any>;							//zoom
-	//public bounds:Bounds;													//outline bounds
-	//public initWH:WH														//initial width, height
-
 
 	constructor(container?:string, conf?:Config) {
 		if(container) this.container(container);
@@ -100,13 +96,15 @@ export abstract class GraphBase {
 		if(conf.data) this.populate(this.outlineEl, initWH, conf);
 
 		// zoom
+		this.outlineWrapEl.attr("transform", "translate(0 0) scale(1)");
 		this.outlineWrapEl.on(".zoom", null);
 		this.zoomBehavior = d3.zoom().on("zoom", (event)=> { 
 			this.outlineEl.attr("transform", event.transform); 
 		});
+		this.outlineWrapEl.call(this.zoomBehavior.transform, d3.zoomIdentity.translate(0,0).scale(1));
 		this.outlineWrapEl.call(this.zoomBehavior);		//binding zoom
 		this.outlineWrapEl.on("dblclick.zoom", null);	//zoom 더블클릭 이벤트 drop (because event bubbling)
-		this.zoomBehavior.scaleTo(this.outlineWrapEl, conf.global.scale.ratio);
+		this.zoomBehavior.scaleTo(this.outlineWrapEl, conf.global.scale.ratio)
 		this.zoomBehavior.scaleExtent([conf.global.scale.minRatio,conf.global.scale.maxRatio]);	//min-max ratio
 
 		// window resize event
