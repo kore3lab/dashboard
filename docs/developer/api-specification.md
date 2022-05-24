@@ -15,7 +15,7 @@
 
 ```
 $ curl -X GET http://localhost:3001/api/contexts
-$ curl -X GET http://localhost:3001/api/clusters/kubernetes@in-cluster/topology
+$ curl -X GET http://localhost:3001/api/clusters/kubernetes@in-cluster/graph/topology
 $ curl -X GET http://localhost:3001/api/clusters/kubernetes@in-cluster/dashboard
 ```
 

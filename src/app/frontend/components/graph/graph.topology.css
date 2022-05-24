@@ -1,0 +1,22 @@
+g.outline text {dominant-baseline: hanging;}
+g.outline line.link {stroke:gray;stroke-width:1;stroke-dasharray: 3,3}
+g.outline line.node {stroke:darkcyan;stroke-width:1.5}
+g.outline line.pod {stroke:darkseagreen;}
+g.outline line.container {stroke:darkkhaki;}
+g.outline g.node text {fill: dimgray; }
+g.outline g.node.click { cursor:pointer; }
+g.outline g.node.click text:hover { fill: #007bff; text-decoration: underline; }
+#ac_ic_node_cluster {fill:blue}
+#ac_ic_node_container rect{fill:white}  #ac_ic_node_container path{fill:burlywood} 
+#ac_ic_node_node rect {fill:white} #ac_ic_node_node path {fill:blueviolet}
+#ac_ic_node_pod rect {fill:white} #ac_ic_node_pod path {fill:green}
+#ac_ic_node_service {fill:grey}
+#ac_ic_node_user {fill:grey}
+#ac_ic_node_group {fill:grey}
+#ac_ic_node_role {fill:grey}
+#ac_ic_node_clusterrole {fill:grey}
+#ac_ic_node_rolebinding {fill: blue }
+#ac_ic_node_clusterrolebinding {fill:green}
+#ac_ic_node_secret {fill:grey}
+#ac_ic_node_serviceaccount {fill:grey}
+#ac_ic_node_namespace {fill:grey}

@@ -26,12 +26,12 @@ $ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/s
 
 * Installation
 ```
-$ kubectl apply -f ./scripts/install/kuberntes/recommended.yaml
+$ kubectl apply -f ./scripts/install/kubernetes/recommended.yaml
 ```
 
 * clean-up
 ```
-$ kubectl delete -f ./scripts/install/kuberntes/recommended.yaml
+$ kubectl delete -f ./scripts/install/kubernetes/recommended.yaml
 ```
 
 ### Installation using Helm-chart
@@ -41,7 +41,7 @@ $ kubectl delete -f ./scripts/install/kuberntes/recommended.yaml
 
 ```
 $ kubectl create ns kore
-$ helm install -n kore kore-board ./scripts/install/kuberntes/helm-chart/ \
+$ helm install -n kore kore-board ./scripts/install/kubernetes/helm-chart/ \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \

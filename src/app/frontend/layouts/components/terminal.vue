@@ -43,7 +43,7 @@ div.terminal-content .header-wrapper ul li .input-group-sm button { height: 1.7r
 </style>
 
 <script>
-import VueTerminalLogsView	from "~/components/terminal/terminal-logs.vue";
+import VueTerminalLogsView	from "@/components/terminal/terminal-logs.vue";
 
 export default {
 	components: {

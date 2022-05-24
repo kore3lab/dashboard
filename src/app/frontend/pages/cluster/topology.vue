@@ -29,20 +29,27 @@
 
 			</div>
 		</section>
+		<b-sidebar v-model="isShowSidebar" width="50em" right shadow no-header>
+			<c-view v-model="viewModel"  @close="isShowSidebar=false"/>
+		</b-sidebar>
 	</div>
 </template>
 <script>
-import * as graph		from "../../static/kore3lab.graph/kore3lab.graph.topology"
 import VueNavigator		from "@/components/navigator"
 import VueSearchForm	from "@/components/list/searchForm"
+import TopologyGraph	from "@/components/graph/graph.topology"
+import VueView			from "@/pages/view";
 
 export default {
 	components: {
 		"c-navigator": { extends: VueNavigator },
-		"c-search-form": { extends: VueSearchForm}
+		"c-search-form": { extends: VueSearchForm},
+		"c-view": { extends: VueView }
 	},
 	data() {
 		return {
+			isShowSidebar: false,
+			viewModel:{}
 		}
 	},
 	layout: "default",
@@ -51,20 +58,39 @@ export default {
 			this.$data.start = (new Date()).getTime();
 			const ns = (d && d.namespace) ? d.namespace: this.selectNamespace();
 
-			let url = `/api/clusters/${this.currentContext()}/topology`;
-			if (ns) url += `/namespaces/${this.selectNamespace()}`;
+			let g = new TopologyGraph("#wrapGraph", {
+				global: {
+					scale: {ratio:1},
+					toolbar: {
+						align: { horizontal: "left" }
+					}
+				},
+				extends: {
+					topology:{
+						simulation: {
+							alphaDecay:0.3
+						}
+					}
+				}
+			})
+			.on("nodeclick", (e,d)=> { 
+				if (d.kind == "pod" && d.namespace)  {
+					this.isShowSidebar = true;
+					if(this.isShowSidebar) this.viewModel = this.getViewLink("", "pods", d.namespace, d.name);
+				} else if (d.kind == "node")  {
+					this.isShowSidebar = true;
+					if(this.isShowSidebar) this.viewModel = this.getViewLink("", "nodes", "", d.name);
+				} else {
+					this.isShowSidebar = false;
+				}
+			})
 
-			let g = new graph.TopologyGraph("#wrapGraph");
+			let url = `/api/clusters/${this.currentContext()}/graph/topology`;
+			if (ns) url += `/namespaces/${this.selectNamespace()}`;
 			this.$axios.get(url)
 				.then( resp => {
 					this.$data.nodeLen = resp.data.nodes.length;
-					g.config({
-						topology:{
-							simulation: {
-								alphaDecay:0.3
-							}
-						}
-					}).data(resp.data).render();
+					g.data(resp.data).render();
 				})
 				.catch(e => { this.msghttp(e);})
 		}

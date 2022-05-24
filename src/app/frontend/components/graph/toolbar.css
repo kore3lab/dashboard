@@ -1,0 +1,7 @@
+/* 툴바 */
+g.toolbar g.button {cursor:pointer;}
+g.toolbar g.button rect {fill:#eee; width:29px; height:29px; stroke: #aaa;fill-opacity:0.8;}
+g.toolbar g.button:hover rect {fill:#ccc;fill-opacity:1;}
+g.toolbar g.button g.ico {fill:#666; transform: translate(3px,3px);-ms-transform: translate(3px,3px);-webkit-transform: translate(3px,3px);-o-transform: translate(3px,3px);-moz-transform: translate(3px,3px);}
+#ac_btn_zoomout {transform: translate(34px,0px);-ms-transform: translate(34px,0px);-webkit-transform: translate(34px,0px);-o-transform: translate(34px,0px);-moz-transform: translate(34px,0px);}
+#ac_btn_zoomfit {transform: translate(68px,0px);-ms-transform: translate(68px,0px);-webkit-transform: translate(68px,0px);-o-transform: translate(68px,0px);-moz-transform: translate(68px,0px);}

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: kore-board
-type: application
-version: 0.4.2
-appVersion: v0.4.2
-description: Kubernetes multi-clusters dashboard
