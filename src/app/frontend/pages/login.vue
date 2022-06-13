@@ -10,7 +10,7 @@
 					<div class="card-body">
 						<p v-show="(auth.provider!=='static-token')" class="card-text">Service account has a secret with valid token that can be used to login to dashboard. </p>
 						<p v-show="(auth.provider==='static-token')" class="card-text" >Enter your static token that can be used to login to dashboard. </p>
-						<pre v-show="(auth.provider!=='static-token')" class="text-sm border bg-white"><small id="copyText"><i class="fas fa-dollar-sign mr-1"></i>SECRET="$(kubectl get sa -n kore -l app=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
+						<pre v-show="(auth.provider!=='static-token')" class="text-sm border bg-white"><small id="copyText"><i class="fas fa-dollar-sign mr-1"></i>SECRET="$(kubectl get sa -n kore -l app.kubernetes.io/part-of=kore-board -o jsonpath='{.items[0].secrets[0].name}')"
 <i class="fas fa-dollar-sign mr-1"></i>echo "$(kubectl get secret ${SECRET} -n kore -o jsonpath='{.data.token}' | base64 --decode)"</small><button type="button" class="btn p-0 pl-2" @click="copy()"><i class="fas fa-copy"></i></button></pre>
 						<div class="input-group">
 							<b-form-input v-model="form.token" v-on:keyup.enter="doLogin()" autofocus size="sm" type="password" :state="isLoginState" placeholder="Enter token" trim></b-form-input>
