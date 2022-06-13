@@ -129,36 +129,40 @@ func GetWorkloadCumulativeMetrics(cluster string, namespace string, resource str
 	} else {
 		return nil, errors.New(fmt.Sprintf("unsupported resource '%s'", resource))
 	}
-	names := []string{}
-	for _, pd := range pods {
-		names = append(names, pd.ObjectMeta.Name)
+	if len(pods) > 0 {
+		names := []string{}
+		for _, pd := range pods {
+			names = append(names, pd.ObjectMeta.Name)
+		}
+
+		metricsClient := clientSet.NewCumulativeMetricsClient()
+
+		selector := client.CumulativeMetricsResourceSelector{
+			Pods:      names,
+			Namespace: namespace,
+			Function:  "AVG",
+		}
+
+		result := CumulativeMetrics{}
+		// invoke metrics-scraper api
+		metrics, err := metricsClient.Get(selector)
+		if err != nil {
+			return nil, err
+		}
+		result.Metrics = metrics
+
+		// get request, limit
+		for _, c := range podSpec.Containers {
+			result.Limits.CPU = result.Limits.CPU + c.Resources.Limits.Cpu().MilliValue()
+			result.Limits.Memory = result.Limits.Memory + c.Resources.Limits.Memory().Value()
+			result.Requests.CPU = result.Requests.CPU + c.Resources.Requests.Cpu().MilliValue()
+			result.Requests.Memory = result.Requests.Memory + c.Resources.Requests.Memory().Value()
+		}
+
+		return &result, nil
+	} else {
+		return &CumulativeMetrics{}, nil
 	}
-
-	metricsClient := clientSet.NewCumulativeMetricsClient()
-
-	selector := client.CumulativeMetricsResourceSelector{
-		Pods:      names,
-		Namespace: namespace,
-		Function:  "AVG",
-	}
-
-	result := CumulativeMetrics{}
-	// invoke metrics-scraper api
-	metrics, err := metricsClient.Get(selector)
-	if err != nil {
-		return nil, err
-	}
-	result.Metrics = metrics
-
-	// get request, limit
-	for _, c := range podSpec.Containers {
-		result.Limits.CPU = result.Limits.CPU + c.Resources.Limits.Cpu().MilliValue()
-		result.Limits.Memory = result.Limits.Memory + c.Resources.Limits.Memory().Value()
-		result.Requests.CPU = result.Requests.CPU + c.Resources.Requests.Cpu().MilliValue()
-		result.Requests.Memory = result.Requests.Memory + c.Resources.Requests.Memory().Value()
-	}
-
-	return &result, nil
 
 }
 
