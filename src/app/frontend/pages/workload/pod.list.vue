@@ -189,7 +189,6 @@ export default {
 		onFiltered(items) {
 			//calc. status count
 			let opts = { }
-			this.fieldsAll = {};
 			items.forEach(d=> {
 				opts[d.status.value] =  (opts[d.status.value] ? opts[d.status.value]: 0) + 1;
 			})
