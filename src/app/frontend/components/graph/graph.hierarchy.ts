@@ -59,7 +59,6 @@ export default class HierarchyGraph extends GraphBase {
 		let gY = 0;
 		const padding = conf.extends.hierarchy.group.box.padding;
 		const treeWidth:number = width - (padding.left + padding.right);
-		const nodeHeight:number = conf.extends.hierarchy.group.box.tree.node.height;
 
 		data.forEach((d:model.Node)=> {
 			
@@ -76,7 +75,7 @@ export default class HierarchyGraph extends GraphBase {
 				UI.appendBox(g, (box: d3.Selection<SVGGElement, any, SVGElement, any>)=> {
 					d.children.forEach((c:model.Node)=> {
 						let gg = box.append("g").attr("class","tree")
-							.call(HierarchyGraph.renderHierarchy, c, conf, treeWidth, nodeHeight)
+							.call(HierarchyGraph.renderHierarchy, c, conf, treeWidth)
 							.attr("transform", (d:any,i:number,els: Array<SVGGElement>|d3.ArrayLike<SVGGElement>)=> {
 								return `translate(0,${h-els[i].getBBox().y})`
 							});
@@ -98,67 +97,73 @@ export default class HierarchyGraph extends GraphBase {
 	}
 
 	/**
-	 * Hierarchy(tree) 랜더링
+	 * Hierarchy(tree) 랜더링 
 	 * 
 	 * @param data  랜더링 데이터
 	 * @param treeWidth 너비 - 각 노드 너비 계산
 	*/
-	private static renderHierarchy(parentEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, data:model.Node, conf:Config, treeWidth:number, nodeHeight:number) {
+	private static renderHierarchy(parentEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, data:model.Node, conf:Config, treeWidth:number) {
 
-		const nodeWidth = treeWidth/ 3
+		const nodeHeight:number = conf.extends.hierarchy.group.box.tree.node.height;	//default:30
+		const nodeWidth:number = treeWidth/ 3;
+		const icoWH:number = nodeHeight-2;
+		const marginW:number = 2.5;	// margin(2.5) - between icon and text, between text and text
+
 		const layoaut = d3.tree().nodeSize([nodeHeight, nodeWidth]);
 
 		let d:d3.HierarchyNode<model.Node> = d3.hierarchy(data, (d:any) => d.children);	//  assigns the data to a hierarchy using parent-child relationships
 		let nodes:d3.HierarchyPointNode<model.Node> = <d3.HierarchyPointNode<model.Node>>layoaut(d) // maps the node data to the tree layout
 
+		// x-> y, y->x (because horizontal)
 		nodes.each( (nd:d3.HierarchyPointNode<model.Node>)=> {
 			if(nd.data.depth > 0) {
-				nd.y =  nodeWidth * nd.data.depth
+				nd.y =  nodeWidth * nd.data.depth;
 			} else {
 				nd.y =  nodeWidth * nd.depth;
 			}
 		})
-
-		const icoWH:number = nodeHeight - 2	//30-6,	40-2
-
-		// adds the links between the nodes
-		parentEl.selectAll(".link")
-			.data( nodes.descendants().slice(1))
-		.enter().append("path")
-			.attr("class", "link")
-			.attr("d", (d:d3.HierarchyPointNode<model.Node>) => `M${d.y},${d.x}C${(d.y + d.parent!.y) / 2},${d.x} ${(d.y + d.parent!.y) / 2},${d.parent!.x} ${d.parent!.y},${d.parent!.x}`);
 
 		// adds each node as a group
 		let nodeEl:d3.Selection<SVGGElement, any, SVGElement, any> = parentEl.selectAll(".node")
 			.data(nodes.descendants())
 		.enter().append("g")
 			.attr("class", (conf.on && conf.on.nodeclick)? "node click": "node")
-			.attr("transform", (d:d3.HierarchyPointNode<model.Node>) => `translate(${d.y},${d.x-12})`);
+			.attr("transform", (d:d3.HierarchyPointNode<model.Node>) => `translate(${d.y},${d.x})`);
 
 		// on nodeclick
 		if(conf.on && conf.on.nodeclick) nodeEl.on("click", conf.on.nodeclick);
 
 		// adds the icon to the node
 		nodeEl.append("use")
-			.attr("class","ico")
-			.attr("y",-6)
-			.attr("height",icoWH).attr("width",icoWH)
+			.attr("class","ico").attr("height",icoWH).attr("width",icoWH)
 			.attr("xlink:href", (d:d3.HierarchyPointNode<model.Node>)=>`#ac_ic_${(d.data.kind || "").toLowerCase()}`)
 
 		nodeEl.append("text")
 			.text((d:d3.HierarchyPointNode<model.Node>) =>d.data.name)
-			.attr("x", icoWH+2.5)
+			.attr("x", icoWH + marginW)
 			.attr("y", (d:any,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => {
-				const h = (icoWH-els[i].getBBox().height)/2-(els[i].getBBox().y) 
-				return d.children ? h - 10: h;
+				const box = els[i].getBBox();
+				return (nodeHeight-box.height)/2 - box.y;	//set vertical-middle
 			})
-			.each( (d:d3.HierarchyPointNode<model.Node>,i:number,els:SVGTextElement[]|d3.ArrayLike<SVGTextElement>) =>{
-				UI.ellipsisText(els[i], nodeWidth)
+			.each( (d:any,i:number,els:SVGTextElement[]|d3.ArrayLike<SVGTextElement>) =>{
+				d.width = UI.ellipsisText(els[i], nodeWidth);	//calculate - text width
 			});
 
+		// adds the links between the nodes
+		parentEl.selectAll(".link")
+			.data( nodes.descendants().slice(1))
+		.enter().append("path")
+			.attr("class", "link")
+			.attr("d", (d:any) => {
+				// x->y, y->x (because horizontal)
+				const x1 = d.parent!.y + d.parent!.width + icoWH + (marginW*2);
+				const y1 = d.parent!.x + nodeHeight/2; // node height/2;
+				const x2 = d.y;
+				const y2 = d.x + nodeHeight/2; // node height/2;
+				return `M ${x2},${y2} C ${(x2+x1)/2},${y2} ${(x2+x1)/2},${y1} ${x1},${y1}`;
+			})
+
 	}
-
-
 
 	/**
 	 * defs 정의

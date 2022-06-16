@@ -156,7 +156,7 @@ export class UI {
 	 * @param el "text" element
 	 * @param width 최대 너비
 	 */
-	public static ellipsisText(el:SVGTextElement, width:number): void {
+	public static ellipsisText(el:SVGTextElement, width:number): number {
 		width -= el.x.baseVal[0].value;	//x 값 빼기
 		if(el.getComputedTextLength() > width) {
 			const text = `${el.textContent}`;
@@ -168,6 +168,7 @@ export class UI {
 				if(el.getComputedTextLength() < width) break;
 			}
 		}
+		return el.getComputedTextLength();
 	}
 
 	public static appendBox(parentEl:d3.Selection<SVGGElement, any, SVGElement,any>, 
