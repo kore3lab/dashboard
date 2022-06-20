@@ -71,11 +71,12 @@ table.b-table.subset td {font-weight:350; padding: .3rem}
 .label {display: inline-grid;border:1px #73b5fc solid;background-color: #eff6fd;padding: 1px 4px;line-height: 1.3rem;border-radius: .25em!important;margin: .1em .2em .1em 0em;color: #0363ca;}
 .border-box {display: inline-grid;border: 1px #6c757d dotted;line-height: 1.3rem;padding: 0 .4em;border-radius: .25em!important;margin: .1em .2em .1em 0em;color: #6c757d;}
 .border-box.background {background-color: #f3f4f5;}
+/* custom > b-tabs */
+.nav-tabs a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0 .3em}
+.nav-tabs a.nav-link {padding: .3em .3em; color:#aaa}
 /* custom > view */
 section.content-view {font-size: .95rem;}
 section.content-view .card-primary > .card-header {font-size: 1.1rem; line-height: 1.1rem;}
-section.content-view a.nav-link.active {border-bottom: 3px solid #007bff; color: #007bff; margin: 0 .3em}
-section.content-view a.nav-link {padding: .3em .3em; color:#aaa}
 section.content-view dt {line-height: 1.8rem; padding: .25rem .3rem; margin:0; background-color:#f3f4f5; font-weight: 500;}
 section.content-view dd {line-height: 1.8rem; padding: .25rem .3rem; margin:0 }
 section.content-view .card-header {background-color:#f3f4f5;}

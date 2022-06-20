@@ -6,9 +6,12 @@ import (
 
 	"github.com/kore3lab/dashboard/pkg/config"
 	coreV1 "k8s.io/api/core/v1"
+	networkV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
+// topoplogy graph
 func GetTopologyGraph(cluster string, namespace string) (topology Topology, err error) {
 
 	topology = Topology{Nodes: []topologyNode{}, Links: []topologyLink{}}
@@ -120,18 +123,18 @@ func GetTopologyGraph(cluster string, namespace string) (topology Topology, err 
 
 func NewHierarchyNode(kind string, meta v1.ObjectMeta) HierarchyNode {
 	h := HierarchyNode{
-		HierarchyObject: HierarchyObject{Name: meta.Name, Namespace: meta.Namespace, Kind: kind},
+		UID:  string(meta.UID),
+		Name: meta.Name, Namespace: meta.Namespace, Kind: kind,
 	}
 	if len(meta.OwnerReferences) > 0 {
-		h.OwnerReference = HierarchyObject{Name: meta.OwnerReferences[0].Name, Namespace: meta.Namespace, Kind: meta.OwnerReferences[0].Kind}
+		h.Owner = string(meta.OwnerReferences[0].UID)
 	}
 
 	return h
 }
 
+// workload graph
 func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
-
-	hierarchy := make(map[string][]HierarchyNode)
 
 	// api-client
 	client, err := config.Cluster.Client(cluster)
@@ -145,61 +148,131 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 	}
 
 	// namespace list
-	var nsList *coreV1.NamespaceList
+	hierarchy := make(map[string][]HierarchyNode)
 	if namespace == "" {
-		if nsList, err = api.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{}); err != nil {
-			return nil, err
-		}
-	} else {
-		var ns *coreV1.Namespace
-		if ns, err = api.CoreV1().Namespaces().Get(context.TODO(), namespace, v1.GetOptions{}); err != nil {
+		if nsList, err := api.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{}); err != nil {
 			return nil, err
 		} else {
-			nsList = &coreV1.NamespaceList{}
-			nsList.Items = append(nsList.Items, *ns)
+			for _, ns := range nsList.Items {
+				hierarchy[ns.Name] = []HierarchyNode{}
+			}
+		}
+	} else {
+		hierarchy[namespace] = []HierarchyNode{}
+	}
+
+	//deployment
+	if deployments, err := api.AppsV1().Deployments(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	} else {
+		for _, deploy := range deployments.Items {
+			hierarchy[deploy.Namespace] = append(hierarchy[deploy.Namespace], NewHierarchyNode("Deployment", deploy.ObjectMeta))
+		}
+	}
+	//deamonsets
+	if deamonsets, err := api.AppsV1().DaemonSets(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	} else {
+		for _, daemonset := range deamonsets.Items {
+			hierarchy[daemonset.Namespace] = append(hierarchy[daemonset.Namespace], NewHierarchyNode("DaemonSet", daemonset.ObjectMeta))
+		}
+	}
+	//replicasets
+	if replicasets, err := api.AppsV1().ReplicaSets(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	} else {
+		for _, replicaset := range replicasets.Items {
+			hierarchy[replicaset.Namespace] = append(hierarchy[replicaset.Namespace], NewHierarchyNode("ReplicaSet", replicaset.ObjectMeta))
+		}
+	}
+	//pods
+	if pods, err := api.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	} else {
+		for _, pod := range pods.Items {
+			hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], NewHierarchyNode("Pod", pod.ObjectMeta))
 		}
 	}
 
-	for _, ns := range nsList.Items {
+	return hierarchy, err
 
-		namespace := ns.ObjectMeta.Name
-		nodes := []HierarchyNode{}
+}
 
-		//deployment
-		if deployments, err := api.AppsV1().Deployments(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+// network graph
+func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
+
+	// api-client
+	client, err := config.Cluster.Client(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	api, err := client.NewKubernetesClient()
+	if err != nil {
+		return nil, err
+	}
+
+	// namespace list
+	hierarchy := make(map[string][]HierarchyNode)
+	if namespace == "" {
+		if nsList, err := api.CoreV1().Namespaces().List(context.TODO(), v1.ListOptions{}); err != nil {
 			return nil, err
 		} else {
-			for _, deploy := range deployments.Items {
-				nodes = append(nodes, NewHierarchyNode("Deployment", deploy.ObjectMeta))
+			for _, ns := range nsList.Items {
+				hierarchy[ns.Name] = []HierarchyNode{}
 			}
 		}
-		//deamonsets
-		if deamonsets, err := api.AppsV1().DaemonSets(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
-			return nil, err
-		} else {
-			for _, daemonset := range deamonsets.Items {
-				nodes = append(nodes, NewHierarchyNode("DaemonSet", daemonset.ObjectMeta))
+	} else {
+		hierarchy[namespace] = []HierarchyNode{}
+	}
+
+	//service
+	var svcList *coreV1.ServiceList
+	if svcList, err = api.CoreV1().Services(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	}
+	//pods
+	var podList *coreV1.PodList
+	if podList, err = api.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	}
+
+	//ingress
+	var ingList *networkV1.IngressList
+	if ingList, err = api.NetworkingV1().Ingresses(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	}
+
+	// service-pods
+	for _, svc := range svcList.Items {
+		selector, _ := v1.LabelSelectorAsSelector(&v1.LabelSelector{
+			MatchLabels: svc.Spec.Selector,
+		})
+		hierarchy[svc.Namespace] = append(hierarchy[svc.Namespace], NewHierarchyNode("Service", svc.ObjectMeta))
+
+		for _, pod := range podList.Items {
+			if pod.Namespace == svc.Namespace && selector.Matches(labels.Set(pod.Labels)) {
+				hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], HierarchyNode{
+					UID: string(pod.UID), Name: pod.Name, Namespace: pod.Namespace, Kind: "Pod",
+					Owner: string(svc.UID),
+				})
 			}
 		}
-		//replicasets
-		if replicasets, err := api.AppsV1().ReplicaSets(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
-			return nil, err
-		} else {
-			for _, replicaset := range replicasets.Items {
-				nodes = append(nodes, NewHierarchyNode("ReplicaSet", replicaset.ObjectMeta))
+	}
+
+	// ingress-services
+	for _, ing := range ingList.Items {
+		for _, rule := range ing.Spec.Rules {
+			for _, path := range rule.HTTP.Paths {
+				for i, nd := range hierarchy[ing.Namespace] {
+					if nd.Kind == "Service" && path.Backend.Service.Name == nd.Name && ing.Namespace == nd.Namespace {
+						nd.Arrow = rule.Host
+						nd.Owner = string(ing.UID)
+						hierarchy[nd.Namespace] = append(hierarchy[nd.Namespace][:i], append(hierarchy[nd.Namespace][i+1:], nd)...)
+					}
+				}
 			}
 		}
-		//pods
-		if pods, err := api.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
-			return nil, err
-		} else {
-			for _, pod := range pods.Items {
-				nd := NewHierarchyNode("Pod", pod.ObjectMeta)
-				nd.Depth = 2
-				nodes = append(nodes, nd)
-			}
-		}
-		hierarchy[namespace] = nodes
 	}
 
 	return hierarchy, err
