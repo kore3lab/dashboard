@@ -13,7 +13,7 @@
 		<div class="col-md-12">
 			<div class="card card-secondary card-outline m-0">
 				<div class="card-header p-2"><h3 class="card-title">Workloads</h3></div>
-				<div class="card-body mw-100" id="wrapGraph"  v-show="isWorkload"></div>
+				<div class="card-body mw-100" id="wrapWorkloadsGraph"  v-show="isWorkload"></div>
 			</div>
 		</div>
 	</div>
@@ -21,7 +21,7 @@
 </div>
 </template>
 <style scoped>
-#wrapGraph {min-height: 40em;}
+#wrapWorkloadsGraph {min-height: 40em;}
 </style>
 <script>
 import VueMetadataView	from "@/components/view/metadataView.vue";
@@ -63,7 +63,7 @@ export default {
 				})
 			});
 			//workloads graph
-			let g = new HierarchyGraph("#wrapGraph", {
+			let g = new HierarchyGraph("#wrapWorkloadsGraph", {
 				global: {
 					toolbar: { visible:false }
 				},
@@ -71,6 +71,9 @@ export default {
 					hierarchy: {
 						group: {
 							title: { display: "none" }
+						},
+						node: {
+							forEach: (d)=> { if(d.kind == "Pod") d.depth = 2; }
 						}
 					}
 				}

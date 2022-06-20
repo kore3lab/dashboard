@@ -32,8 +32,8 @@ export default class TopologyGraph extends GraphBase {
 	public populate(outlineEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, bounds:WH, conf:Config) {
 
 		// svg > defs
-		if(this.svg.select("defs").size() == 0) this.svg.append("defs").call(TopologyGraph.renderDefs, conf);
-
+		this.svg.select("defs").remove();
+		this.svg.append("defs").call(TopologyGraph.renderDefs, conf);
 
 		let data:model.Topology = conf.data;
 
@@ -127,7 +127,7 @@ export default class TopologyGraph extends GraphBase {
 			.append("use")
 			.attr("height", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?40:30)} )
 			.attr("width", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?40:30)} )
-			.attr("xlink:href", (d:model.Node) => `#ac_ic_node_${d.kind}`)
+			.attr("xlink:href", (d:model.Node) => `#ac_ic_node_${d.kind.toLowerCase()}`)
 			.attr("x", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?-20:-12)})
 			.attr("y", (d:model.Node) => {return (d.kind==model.NodeKind.NODE||d.kind==model.NodeKind.CLUSTER?-20:-12)})
 

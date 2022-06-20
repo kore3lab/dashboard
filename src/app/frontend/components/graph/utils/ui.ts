@@ -157,7 +157,7 @@ export class UI {
 	 * @param width 최대 너비
 	 */
 	public static ellipsisText(el:SVGTextElement, width:number): number {
-		width -= el.x.baseVal[0].value;	//x 값 빼기
+		if(el.x.baseVal.length > 0) width -= el.x.baseVal[0].value;	//x 값 빼기
 		if(el.getComputedTextLength() > width) {
 			const text = `${el.textContent}`;
 			const chars = text.split("");
