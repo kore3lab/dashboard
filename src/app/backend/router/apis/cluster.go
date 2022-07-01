@@ -11,6 +11,20 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func Network(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
+	namespace := c.Param("NAMESPACE")
+
+	if topology, err := model.GetNetworkGraph(cluster, namespace); err != nil {
+		g.SendError(err)
+	} else {
+		g.Send(http.StatusOK, topology)
+	}
+
+}
+
 func Topology(c *gin.Context) {
 	g := app.Gin{C: c}
 

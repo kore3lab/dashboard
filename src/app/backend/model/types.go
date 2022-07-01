@@ -6,25 +6,11 @@ import (
 	"github.com/kore3lab/dashboard/pkg/client"
 )
 
-// base
-type Model struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
-}
-
-type ListModel struct {
-	Kind  string        `json:"kind"`
-	Items []interface{} `json:"items"`
-}
-
 // status
-
 const (
 	KIND_STAUTS      = "Status"
 	STATUS_UNKNOWN   = 0
 	STATUS_NOT_EXIST = 404
-	// STATUS_OK        = 200
-	// STATUS_FAIL      = 500
 )
 
 type Status struct {
@@ -41,15 +27,13 @@ func NewStatus(code int) *Status {
 
 // hierarchy-graph
 type Hierarchy map[string][]HierarchyNode
-type HierarchyObject struct {
+type HierarchyNode struct {
+	UID       string `json:"uid"`
 	Name      string `json:"name"`
 	Kind      string `json:"kind"`
 	Namespace string `json:"namespace"`
-	Depth     int    `json:"depth"`
-}
-type HierarchyNode struct {
-	HierarchyObject
-	OwnerReference HierarchyObject `json:"ownerReference"`
+	Line      string `json:"line"`
+	Owner     string `json:"owner"`
 }
 
 // topology-graph

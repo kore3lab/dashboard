@@ -9,11 +9,11 @@
 		<dd class="col-sm-9"><span v-if="limits.length==0">-</span><span v-for="(val, idx) in limits" v-bind:key="idx" class="mr-1"><a href="#" @click="$emit('navigate', getViewLink('', 'limitranges', metadata.name,val))">{{ val }} </a></span></dd>
 	</c-metadata>
 	<!-- 2. graph -->
-	<div class="row">
+	<div class="row" v-show="isWorkload">
 		<div class="col-md-12">
 			<div class="card card-secondary card-outline m-0">
 				<div class="card-header p-2"><h3 class="card-title">Workloads</h3></div>
-				<div class="card-body mw-100" id="wrapGraph"></div>
+				<div class="card-body mw-100" id="wrapWorkloadsGraph"  v-show="isWorkload"></div>
 			</div>
 		</div>
 	</div>
@@ -21,7 +21,7 @@
 </div>
 </template>
 <style scoped>
-#wrapGraph {min-height: 40em;}
+#wrapWorkloadsGraph {min-height: 40em;}
 </style>
 <script>
 import VueMetadataView	from "@/components/view/metadataView.vue";
@@ -36,7 +36,8 @@ export default {
 		return {
 			status: {},
 			quotas: [],
-			limits: []
+			limits: [],
+			isWorkload: true
 		}
 	},
 	watch: {
@@ -62,7 +63,7 @@ export default {
 				})
 			});
 			//workloads graph
-			let g = new HierarchyGraph("#wrapGraph", {
+			let g = new HierarchyGraph("#wrapWorkloadsGraph", {
 				global: {
 					toolbar: { visible:false }
 				},
@@ -70,6 +71,9 @@ export default {
 					hierarchy: {
 						group: {
 							title: { display: "none" }
+						},
+						node: {
+							forEach: (d)=> { if(d.kind == "Pod") d.depth = 2; }
 						}
 					}
 				}
@@ -81,8 +85,10 @@ export default {
 					this.$emit("navigate", model)
 				}
 			})
+			this.isWorkload = true;
 			this.$axios.get(`/api/clusters/${this.currentContext()}/graph/workloads/namespaces/${data.metadata.name}`)
 				.then( resp => {
+					this.isWorkload = resp.data[data.metadata.name].length > 0;
 					g.data(resp.data).render();
 				})
 				.catch(e => { this.msghttp(e);})

@@ -21,6 +21,7 @@ export class Config {
 				minWidth:number, maxWidth:number
 			}
 			group: {
+				divide:boolean
 				spacing:number
 				title: {
 					display:"always"|"none"|"has"
@@ -28,15 +29,26 @@ export class Config {
 				}
 				box: {
 					padding: { top:number, left:number, right:number, bottom:number }
-					background: { fill:string, opacity:number},
+					background: { fill:string, opacity:number}
 					border: { width:number, color?:string, dash?:string }
 					tree : {
 						spacing:number
 						node : {
 							height:number
 						}
+						line : {
+							caption: {
+								align: "center"|"left"|"right"
+								padding: { left:number, right:number }
+								width: number
+							}
+							end:"none"|"arrow"
+						}
 					}
 				}
+			}
+			node: {
+				forEach: any
 			}
 		}
 		topology: {
@@ -72,20 +84,32 @@ export class Config {
 			hierarchy: {
 				scale: { minWidth: 0, maxWidth:0 },
 				group: {
-					spacing:25,											//group간 간격
+					divide: true,		//그룹으로 나누기
+					spacing:25,			//group간 간격
 					title: {
-						display: "has",									//group title visible/hidden
-						spacing: 10										//group title과 box 사이 간격
+						display: "has",	//group title visible/hidden
+						spacing: 10		//group title과 box 사이 간격
 					},
 					box: {
 						border: { width: 1, color:"gray", dash: "2 2" },	//box border
 						background: { fill:"silver", opacity:0.1 },			//box background
 						padding: {top:10, left:5, right:5, bottom:10 },		//box padding
 						tree : { 
-							spacing:15,									//트리간 간격
-							node : { height: 30 }						//노드 높이
+							spacing:15,				//트리간 간격
+							node : { height: 30 },	//노드 높이
+							line: { 
+								caption: {
+									align: "center",	// 라인 설명 정렬
+									padding: { left:0, right:0 },	// 라인 설명 padding
+									width: 0						// width fix (0:flexible, less 1: % )
+								},
+								end: "none"			// 라인 종료 모양
+							}
 						}
 					},
+				},
+				node: {
+					forEach: undefined	// 노드 데이터 foreach 함수
 				}
 			},
 			topology: {

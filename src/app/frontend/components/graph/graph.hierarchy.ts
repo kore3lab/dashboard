@@ -7,6 +7,7 @@ import {UI, WH}						from "@/components/graph/utils/ui";
 import {GraphBase}					from "@/components/graph/graph.base";
 import "@/components/graph/graph.hierarchy.css";
 
+
 /**
  * Topology 그래프 랜더러
  */
@@ -29,29 +30,64 @@ export default class HierarchyGraph extends GraphBase {
 		width -= (conf.extends.hierarchy.group.box.border.width*2);	 // border
 
 		// svg > defs
-		if(this.svg.select("defs").size() == 0) this.svg.append("defs").call(HierarchyGraph.renderDefs, conf);
+		this.svg.select("defs").remove();
+		this.svg.append("defs").call(HierarchyGraph.renderDefs, conf);
 
-		// data 가공
-		let data:Array<model.Node> = [];
-		Object.keys(conf.data).forEach( (k:string)=> {
-			let d:Array<model.Node> = conf.data[k];
-			const root = d.reduce((acc, cur:model.Node) => {
-				if(cur.ownerReference && cur.ownerReference.kind && cur.ownerReference.name) {
-					d.reduce((a:model.Node, c:model.Node) => {
-						if(c.kind == cur.ownerReference!.kind && c.name == cur.ownerReference!.name) {
-							if(!c.children) c.children=[]
-							c.children.push(cur)
-						}
-						return a
-					}, new model.Node());
-				} else {
-					if(!cur.children) cur.children = [];
-					acc.children.push(cur)
-				}
-				return acc;
-			}, new model.Node(k))
-			data.push(root)
+		// data processing - recursive
+		const recursive = function(data:any, callback?:any) {
+			let root:Array<model.Node> = [];
+			Object.keys(data).forEach( (k:string)=> {
+				let d:Array<model.Node> = data[k];
+				const group = d.reduce((acc, cur:model.Node) => {
+					if(callback) callback(cur);
+					if(cur.owner) {
+						d.reduce((a:model.Node, c:model.Node) => {
+							if(c.uid == cur.owner) {
+								if(!c.children) c.children=[]
+								c.children.push(cur)
+							}
+							return a
+						}, new model.Node());
+					} else {
+						if(!cur.children) cur.children = [];
+						acc.children.push(cur)
+					}
+					return acc;
+				}, new model.Node("Namespace", {name:k, namespace:k}));
+				root.push(group)
+			});
+			return root;
+		}
+
+		// data processing - grouping 
+		let data: Array<model.Node> ;
+		if (conf.extends.hierarchy.group.divide) {
+			data = recursive(conf.data, conf.extends.hierarchy.node.forEach);
+		} else {
+			// non-grouping
+			data = [new model.Node()];
+			data[0].children = recursive(conf.data, conf.extends.hierarchy.node.forEach);
+		}
+		// serch tree depth (columns count)
+		const getDepth = (d:any, level:number) => {
+			let depth = Math.max(d.depth ? d.depth: level, level);
+			if (d.children) {
+				level++;
+				d.children.forEach((c:any) => {
+					const n = getDepth(c, level)
+					depth = Math.max(depth, n);
+				});
+			}
+			return depth;
+		}
+
+		let columns:number = 0;
+		data.forEach( (d:model.Node)=> {
+			const c = getDepth(d, -1);		// first elements is group (non-include depth)
+			columns = Math.max(columns, c);
 		});
+		columns++;
+
 		// rendering groups
 		// svg > g.graph > g.outlineWrap > g.outline > g.group
 		//		> text
@@ -59,7 +95,6 @@ export default class HierarchyGraph extends GraphBase {
 		let gY = 0;
 		const padding = conf.extends.hierarchy.group.box.padding;
 		const treeWidth:number = width - (padding.left + padding.right);
-		const nodeHeight:number = conf.extends.hierarchy.group.box.tree.node.height;
 
 		data.forEach((d:model.Node)=> {
 			
@@ -76,15 +111,15 @@ export default class HierarchyGraph extends GraphBase {
 				UI.appendBox(g, (box: d3.Selection<SVGGElement, any, SVGElement, any>)=> {
 					d.children.forEach((c:model.Node)=> {
 						let gg = box.append("g").attr("class","tree")
-							.call(HierarchyGraph.renderHierarchy, c, conf, treeWidth, nodeHeight)
+							.call(HierarchyGraph.renderHierarchy, c, conf, treeWidth, columns)
 							.attr("transform", (d:any,i:number,els: Array<SVGGElement>|d3.ArrayLike<SVGGElement>)=> {
 								return `translate(0,${h-els[i].getBBox().y})`
 							});
 						h += gg.node()!.getBBox().height + conf.extends.hierarchy.group.box.tree.spacing;	// multi-root 간 간격
 					});
 				}, width, padding, conf.extends.hierarchy.group.box.background, conf.extends.hierarchy.group.box.border);
-
 			}
+
 			// + move XY
 			g.attr("transform", `translate(${(bounds.width-width)/2},${gY})`)
 			if(d.children.length > 0) gY += g.node()!.getBBox().height + conf.extends.hierarchy.group.spacing;
@@ -94,71 +129,123 @@ export default class HierarchyGraph extends GraphBase {
 		if(conf.global.toolbar.align.horizontal == "none") conf.global.toolbar.align.horizontal = "right";
 		if(conf.global.toolbar.align.vertical == "none") conf.global.toolbar.align.vertical = "top";
 
-
 	}
 
 	/**
-	 * Hierarchy(tree) 랜더링
+	 * Hierarchy(tree) 랜더링 
 	 * 
 	 * @param data  랜더링 데이터
 	 * @param treeWidth 너비 - 각 노드 너비 계산
 	*/
-	private static renderHierarchy(parentEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, data:model.Node, conf:Config, treeWidth:number, nodeHeight:number) {
+	private static renderHierarchy(parentEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, data:model.Node, conf:Config, treeWidth:number, columns:number) {
 
-		const nodeWidth = treeWidth/ 3
-		const layoaut = d3.tree().nodeSize([nodeHeight, nodeWidth]);
+		const nodeHeight:number = conf.extends.hierarchy.group.box.tree.node.height;	//default:30
+		const nodeWidth:number = treeWidth/columns;
+		const icoWH:number = nodeHeight-2;
+		const marginW:number = 2.5;	// margin(2.5) - between icon and text, between text and text
+		const minLinkWidth:number = 30;	// link-lines min-width
+
+
+		const layoaut = d3.cluster().nodeSize([nodeHeight, nodeWidth]);
 
 		let d:d3.HierarchyNode<model.Node> = d3.hierarchy(data, (d:any) => d.children);	//  assigns the data to a hierarchy using parent-child relationships
 		let nodes:d3.HierarchyPointNode<model.Node> = <d3.HierarchyPointNode<model.Node>>layoaut(d) // maps the node data to the tree layout
 
+		// x-> y, y->x (because horizontal)
 		nodes.each( (nd:d3.HierarchyPointNode<model.Node>)=> {
 			if(nd.data.depth > 0) {
-				nd.y =  nodeWidth * nd.data.depth
+				nd.y =  nodeWidth * nd.data.depth;
 			} else {
 				nd.y =  nodeWidth * nd.depth;
 			}
 		})
 
-		const icoWH:number = nodeHeight - 2	//30-6,	40-2
-
-		// adds the links between the nodes
-		parentEl.selectAll(".link")
-			.data( nodes.descendants().slice(1))
-		.enter().append("path")
-			.attr("class", "link")
-			.attr("d", (d:d3.HierarchyPointNode<model.Node>) => `M${d.y},${d.x}C${(d.y + d.parent!.y) / 2},${d.x} ${(d.y + d.parent!.y) / 2},${d.parent!.x} ${d.parent!.y},${d.parent!.x}`);
-
 		// adds each node as a group
-		let nodeEl:d3.Selection<SVGGElement, any, SVGElement, any> = parentEl.selectAll(".node")
+		const nodeEl:d3.Selection<SVGGElement, any, SVGElement, any> = parentEl.selectAll(".node")
 			.data(nodes.descendants())
 		.enter().append("g")
 			.attr("class", (conf.on && conf.on.nodeclick)? "node click": "node")
-			.attr("transform", (d:d3.HierarchyPointNode<model.Node>) => `translate(${d.y},${d.x-12})`);
+			.attr("transform", (d:d3.HierarchyPointNode<model.Node>) => `translate(${d.y},${d.x})`);
 
 		// on nodeclick
 		if(conf.on && conf.on.nodeclick) nodeEl.on("click", conf.on.nodeclick);
 
 		// adds the icon to the node
 		nodeEl.append("use")
-			.attr("class","ico")
-			.attr("y",-6)
-			.attr("height",icoWH).attr("width",icoWH)
+			.attr("class","ico").attr("height",icoWH).attr("width",icoWH)
 			.attr("xlink:href", (d:d3.HierarchyPointNode<model.Node>)=>`#ac_ic_${(d.data.kind || "").toLowerCase()}`)
 
 		nodeEl.append("text")
 			.text((d:d3.HierarchyPointNode<model.Node>) =>d.data.name)
-			.attr("x", icoWH+2.5)
+			.attr("x", icoWH + marginW)
 			.attr("y", (d:any,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => {
-				const h = (icoWH-els[i].getBBox().height)/2-(els[i].getBBox().y) 
-				return d.children ? h - 10: h;
+				const box = els[i].getBBox();
+				return (nodeHeight-box.height)/2 - box.y;	//set vertical-middle
 			})
-			.each( (d:d3.HierarchyPointNode<model.Node>,i:number,els:SVGTextElement[]|d3.ArrayLike<SVGTextElement>) =>{
-				UI.ellipsisText(els[i], nodeWidth)
+			.each( (d:any,i:number,els:SVGTextElement[]|d3.ArrayLike<SVGTextElement>) =>{
+				d.width = UI.ellipsisText(els[i], nodeWidth- minLinkWidth);	//calculate - text width
 			});
 
+		// adds the links between the nodes
+		const linkEl:d3.Selection<SVGGElement, any, SVGElement, any>= parentEl.selectAll(".link")
+			.data(nodes.descendants().slice(1))
+		.enter().append("g")
+			.attr("class", "link");
+
+		const linkPath = linkEl.append("path")
+			.attr("class", "line")
+			.attr("d", (d:any) => {
+				// x->y, y->x (because horizontal)
+				const x1 = d.parent!.y + d.parent!.width + icoWH + (marginW*2);
+				const y1 = d.parent!.x + nodeHeight/2; // node height/2;
+				const x2 = d.y;
+				const y2 = d.x  + nodeHeight/2; // node height/2;
+				return `M ${x2},${y2} C ${(x2+x1)/2},${y2} ${(x2+x1)/2},${y1} ${x1},${y1}`;
+			})
+		
+		//end arrow
+		if (conf.extends.hierarchy.group.box.tree.line.end == "arrow")  linkPath.attr("marker-start", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGPathElement>|d3.ArrayLike<SVGPathElement>)=> els[i].getBBox().width >= 30 ? "url(#ac_ic_link_line_end)": "");
+
+		// line description
+		linkEl.append("text")
+			.text((d:d3.HierarchyPointNode<model.Node>) => {
+				return d.data.line?d.data.line:"";
+			})
+			.attr("x", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => { 
+				if(!d.data.line) return 0;
+				const line = els[i].parentElement?.querySelector<SVGPathElement>("path.line");	// path.line
+				const cfg = conf.extends.hierarchy.group.box.tree.line.caption;
+				if (line) {
+					const box = line.getBBox();
+					const paddingLeft = cfg.padding.left < 0.5 ? box.width * cfg.padding.left: cfg.padding.left;		// less 0.5 then percentage
+					const paddingRight = cfg.padding.right < 0.5 ? box.width * cfg.padding.right: cfg.padding.right;	// less 0.5 then percentage
+					const w = UI.ellipsisText(els[i], box.width - (paddingLeft + paddingRight));						// ellipsis & calculate the text width
+					
+					if(cfg.align == "left") return box.x + (paddingLeft+paddingRight > w ? 0: paddingLeft);										// align left
+					else if(cfg.align == "right") return box.x + box.width  - w - (paddingLeft+paddingRight > w ? 0: paddingLeft+paddingRight);	// align right
+					else return box.x + (box.width-w)/2;																						// align center
+				} else {
+					return 0;
+				}
+			})
+			.attr("y", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => {
+				if(!d.data.line) return 0;
+				const line = els[i].parentElement?.querySelector<SVGPathElement>("path.line");	// path.line
+				if (line) {
+					const box = els[i].getBBox();				//get box
+					const boxLine = line.getBBox();				//get line-box
+					const neighbor = d.parent && d.parent.children && d.parent?.children.length > 1;	// exists neighbor
+
+					if (d.x==0 && neighbor) return boxLine.y - box.y - box.height/2;	// if line is flat - single line  (3 : line height + padding)
+					else if (!neighbor) return boxLine.y - box.height - box.y - 3;		// if multi lines  (3 : line height + padding)
+					else if (d.x < 0) return boxLine.y - box.y;							// if next-node is up
+					else return boxLine.y - box.y + boxLine.height - box.height;		// if next-node is down
+				} else {
+					return 0;
+				}
+			})
+
 	}
-
-
 
 	/**
 	 * defs 정의
@@ -166,6 +253,8 @@ export default class HierarchyGraph extends GraphBase {
 	 * @param defsEl def 엘리먼트
 	 */
 	private static renderDefs(defsEl:d3.Selection<SVGDefsElement, any, SVGElement, any>) {
+
+		defsEl.append("marker").attr("id","ac_ic_link_line_end").attr("markerWidth", 7).attr("markerHeight",7).attr("refX",0).attr("refY",3.5).attr("orient","auto").html(`<polygon points="10 0, 10 7, 0 3.5" />`)
 
 		// https://github.com/kubernetes/community/tree/master/icons
 		defsEl.append("symbol").attr("id", "ac_ic_namespace")

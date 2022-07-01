@@ -2,4 +2,6 @@ g.outline g.group > text { font: 1.2em sans-serif; }
 g.outline g.tree .node text { font: 1em sans-serif; }
 g.outline g.tree .node.click { cursor:pointer; }
 g.outline g.tree .node.click text:hover {  fill: #007bff; text-decoration: underline; }
-g.outline g.tree  path.link { fill: none; stroke: #ccc; stroke-width: 1px;}
+g.outline g.tree g.link path { fill: none; stroke: #ccc; stroke-width: 1px;}
+g.outline g.tree g.link text {font-size: .9em; fill:#666}
+#ac_ic_link_line_end {fill:#ccc; }

@@ -76,26 +76,6 @@ export class UI {
 		Transform.instance(el).translate(X/k,Y/k)
 	}
 
-	
-
-	public static align2(selection: d3.Selection<SVGGElement, any, SVGElement, any>, horizontal:"none"|"left"|"right"|"center", vertical:"none"|"top"|"bottom"|"middle",  margin?: {left?:number, top?:number, right?:number,bottom?:number}): d3.ZoomTransform{ 
-
-		const el:SVGElement = selection.node()!
-		let transform:d3.ZoomTransform = d3.zoomTransform(el);
-		if(!el || !el.parentElement) return transform
-
-		const outline:DOMRect = el.parentElement.getBoundingClientRect();
-		const inline:DOMRect = el.getBoundingClientRect();
-
-
-		let X = outline.width > inline.width ? inline.x + (outline.width - inline.width)/2 : 0;
-		let Y = outline.height > inline.height ? -inline.y + (outline.height - inline.height)/2: -inline.y;
-
-		const k:number = Transform.instance(el.parentElement).k;	//calcuate parent elements's tranfrom-scale (ratio) 
-		return transform.translate(X/k,Y/k);
-	}
-
-
 	/**
 	 * 스크롤 가능한 레이어 추가
 	 * 
@@ -156,8 +136,8 @@ export class UI {
 	 * @param el "text" element
 	 * @param width 최대 너비
 	 */
-	public static ellipsisText(el:SVGTextElement, width:number): void {
-		width -= el.x.baseVal[0].value;	//x 값 빼기
+	public static ellipsisText(el:SVGTextElement, width:number): number {
+		if(el.x.baseVal.length > 0) width -= el.x.baseVal[0].value;	//x 값 빼기
 		if(el.getComputedTextLength() > width) {
 			const text = `${el.textContent}`;
 			const chars = text.split("");
@@ -168,6 +148,7 @@ export class UI {
 				if(el.getComputedTextLength() < width) break;
 			}
 		}
+		return el.getComputedTextLength();
 	}
 
 	public static appendBox(parentEl:d3.Selection<SVGGElement, any, SVGElement,any>, 
@@ -184,14 +165,17 @@ export class UI {
 		if(render) box.call(render)
 
 		// after rendering > calcuate border(background) bounds
-		let bounds:DOMRect = boxWrap.node()!.getBBox();
-		const bottom:number = bounds.y + bounds.height + (padding?padding.top+padding.bottom:0);
-		const right:number = bounds.x + (width?width:bounds.width); //stroke-width 반영
+		const parentBounds:DOMRect = parentEl.node()!.getBBox();
+		const bounds:DOMRect = boxWrap.node()!.getBBox();
+		const x:number = parentBounds.x;
+		const y:number = bounds.y;
+		const bottom:number = y + bounds.height + (padding?padding.top+padding.bottom:0);
+		const right:number = x + (width?width:bounds.width); //stroke-width 반영
 
 		// box (insert before g.box)
 		const background = boxWrap.insert("path","g.box")
 			.attr("class","background")
-			.attr("d",`M${bounds.x},${bounds.y} L${right},${bounds.y} L${right},${bottom} L${bounds.x},${bottom} L${bounds.x},${bounds.y}`)
+			.attr("d",`M${x},${y} L${right},${y} L${right},${bottom} L${x},${bottom} L${x},${y}`)
 
 		if(bg) {
 			background.attr("fill",bg.fill)
@@ -204,7 +188,6 @@ export class UI {
 			if (border.dash) background.attr("stroke-dasharray", border.dash)
 		}
 			
-
 		if(padding) Transform.instance(box.node()!).translate(padding.left,padding.top)
 		return box
 
