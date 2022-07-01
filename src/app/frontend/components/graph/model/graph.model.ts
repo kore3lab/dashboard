@@ -19,7 +19,7 @@ export namespace HierarchyModel {
 		namespace?:string
 		depth:number
 		owner?:string 
-		arrow?:string
+		line?:string
 		children:Array<Node>
 
 		constructor(kind?:string, metadata?:any) {
