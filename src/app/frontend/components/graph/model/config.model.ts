@@ -37,6 +37,11 @@ export class Config {
 							height:number
 						}
 						line : {
+							caption: {
+								align: "center"|"left"|"right"
+								padding: { left:number, right:number }
+								width: number
+							}
 							end:"none"|"arrow"
 						}
 					}
@@ -92,7 +97,14 @@ export class Config {
 						tree : { 
 							spacing:15,				//트리간 간격
 							node : { height: 30 },	//노드 높이
-							line: { end: "none"}	// 라인 종료 모양
+							line: { 
+								caption: {
+									align: "center",	// 라인 설명 정렬
+									padding: { left:0, right:0 },	// 라인 설명 padding
+									width: 0						// width fix (0:flexible, less 1: % )
+								},
+								end: "none"			// 라인 종료 모양
+							}
 						}
 					},
 				},

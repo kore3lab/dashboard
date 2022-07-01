@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kore3lab/dashboard/pkg/config"
+	"github.com/kore3lab/dashboard/pkg/lang"
 	coreV1 "k8s.io/api/core/v1"
 	networkV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -243,30 +244,41 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 		return nil, err
 	}
 
-	// service-pods
+	// service->pods
 	for _, svc := range svcList.Items {
-		selector, _ := v1.LabelSelectorAsSelector(&v1.LabelSelector{
-			MatchLabels: svc.Spec.Selector,
-		})
+
 		hierarchy[svc.Namespace] = append(hierarchy[svc.Namespace], NewHierarchyNode("Service", svc.ObjectMeta))
 
-		for _, pod := range podList.Items {
-			if pod.Namespace == svc.Namespace && selector.Matches(labels.Set(pod.Labels)) {
-				hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], HierarchyNode{
-					UID: string(pod.UID), Name: pod.Name, Namespace: pod.Namespace, Kind: "Pod",
-					Owner: string(svc.UID),
-				})
+		// get the pods relations
+		if len(svc.Spec.Selector) > 0 {
+			selector, _ := v1.LabelSelectorAsSelector(&v1.LabelSelector{
+				MatchLabels: svc.Spec.Selector,
+			})
+			for _, pod := range podList.Items {
+				if pod.Namespace == svc.Namespace && selector.Matches(labels.Set(pod.Labels)) {
+					hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], HierarchyNode{
+						UID: string(pod.UID), Name: pod.Name, Namespace: pod.Namespace, Kind: "Pod",
+						Line:  pod.Status.PodIP,
+						Owner: string(svc.UID),
+					})
+				}
 			}
 		}
+
 	}
 
-	// ingress-services
+	// ingress->services
 	for _, ing := range ingList.Items {
+		hierarchy[ing.Namespace] = append(hierarchy[ing.Namespace], NewHierarchyNode("Ingress", ing.ObjectMeta))
 		for _, rule := range ing.Spec.Rules {
 			for _, path := range rule.HTTP.Paths {
 				for i, nd := range hierarchy[ing.Namespace] {
-					if nd.Kind == "Service" && path.Backend.Service.Name == nd.Name && ing.Namespace == nd.Namespace {
-						nd.Arrow = rule.Host
+					if nd.Kind == "Service" && path.Backend.Service.Name == nd.Name {
+						if len(path.Path) > 1 {
+							nd.Line = fmt.Sprintf("%s (%s) ", lang.NVL(rule.Host, "-"), path.Path)
+						} else {
+							nd.Line = rule.Host
+						}
 						nd.Owner = string(ing.UID)
 						hierarchy[nd.Namespace] = append(hierarchy[nd.Namespace][:i], append(hierarchy[nd.Namespace][i+1:], nd)...)
 					}

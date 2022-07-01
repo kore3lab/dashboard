@@ -32,7 +32,7 @@ type HierarchyNode struct {
 	Name      string `json:"name"`
 	Kind      string `json:"kind"`
 	Namespace string `json:"namespace"`
-	Arrow     string `json:"arrow"`
+	Line      string `json:"line"`
 	Owner     string `json:"owner"`
 }
 

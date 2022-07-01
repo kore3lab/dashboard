@@ -19,6 +19,7 @@ export abstract class GraphBase {
 	public outlineEl:d3.Selection<SVGGElement,any,SVGElement,any>;			//svg > g.outlineWrap > g.outline
 	public toolbarEl:d3.Selection<SVGGElement,any,SVGElement,any>			//svg > g.toolbar
 	public zoomBehavior:d3.ZoomBehavior<any,any>;							//zoom
+	public resizeListener:any
 
 	constructor(container?:string, conf?:Config) {
 		if(container) this.container(container);
@@ -108,14 +109,14 @@ export abstract class GraphBase {
 		this.zoomBehavior.scaleExtent([conf.global.scale.minRatio,conf.global.scale.maxRatio]);	//min-max ratio
 
 		// window resize event
-		const resize = () => {
-			const bounds:Bounds = this.getBounds()
+		this.resizeListener = () => {
+			const bounds:Bounds = this.getBounds();
 			this.svg.attr("width", bounds.width).attr("height", bounds.height);
 			const k:number = Math.round(Math.min(bounds.width/(initWH.width), bounds.height/(initWH.height))*100)/100;
-			Transform.instance(this.outlineWrapEl.node()!).scale(k)
+			Transform.instance(this.outlineWrapEl.node()!).scale(k);
+			UI.align(this.toolbarEl.node()!, conf.global.toolbar.align.horizontal, conf.global.toolbar.align.vertical);
 		}
-		resize();
-		if(!d3.select(window).on("resize.updatesvg")) d3.select(window).on("resize.updatesvg", resize );
+		if(!d3.select(window).on("resize.updatesvg")) d3.select(window).on("resize.updatesvg", this.resizeListener );
 
 		// toolbar
 		if (conf.global.toolbar.visible) {
@@ -123,6 +124,7 @@ export abstract class GraphBase {
 			UI.align(this.toolbarEl.node()!, conf.global.toolbar.align.horizontal, conf.global.toolbar.align.vertical);
 		}
 
+		this.resizeListener();
 		return this;
 
 	}

@@ -20,6 +20,7 @@
 					<b-nav tabs class="col-12">
 						<b-nav-item class="p-0" link-classes="pl-3 pr-3" :active="selctedTab==1" @click="selctedTab=1;query()">Topology</b-nav-item>
 						<b-nav-item class="p-0" link-classes="pl-3 pr-3" :active="selctedTab==2" @click="selctedTab=2;query()">Workloads</b-nav-item>
+						<b-nav-item class="p-0" link-classes="pl-3 pr-3" :active="selctedTab==3" @click="selctedTab=3;query()">Network</b-nav-item>
 					</b-nav>
 				</div>
 				<div class="row">
@@ -40,6 +41,9 @@
 		</b-sidebar>
 	</div>
 </template>
+<style scoped>
+#wrapTopologyGraph {overflow: hidden;}
+</style>
 <script>
 import VueNavigator		from "@/components/navigator"
 import VueSearchForm	from "@/components/list/searchForm"
@@ -58,32 +62,50 @@ export default {
 			isShowSidebar: false,
 			isShowOverlay: false,
 			viewModel:{},
-			selctedTab: 1
+			selctedTab: 1,
+			g: undefined
 		}
 	},
 	layout: "default",
+	mounted() {
+		 window.addEventListener('resize', this.handleResize);
+	},
+ 	beforeDestroy() {
+        window.removeEventListener('resize', this.handleResize);
+    },
 	methods: {
+		handleResize() {
+			if(this.g) this.g.resize();
+        },
 		query(d) {
 			const ns = (d && d.namespace) ? d.namespace: this.selectNamespace();
-			const g = this.selctedTab == 1 ? new TopologyGraph("#wrapTopologyGraph"): new HierarchyGraph("#wrapTopologyGraph");
+			this.g = this.selctedTab == 1 ? new TopologyGraph("#wrapTopologyGraph"): new HierarchyGraph("#wrapTopologyGraph");
 			// node-click()
-			g.on("nodeclick", (e,data)=> { 
+			this.g.on("nodeclick", (e,data)=> { 
 				const d = data.data ? data.data: data;
 				if ("Container,Cluster".includes(d.kind)) {
 					this.isShowSidebar = false;
 				} else {
-					const group = ("DaemonSet,ReplicaSet,StatefulSet,Deployment".includes(d.kind)) ? "apps": "";
+					let group = "";
+					if("DaemonSet,ReplicaSet,StatefulSet,Deployment".includes(d.kind)) group= "apps";
+					else if("Ingress".includes(d.kind)) group= "networking.k8s.io";
+					else true;
 					this.isShowSidebar = true;
-					if(this.isShowSidebar) this.viewModel = this.getViewLink(group, `${d.kind.toLowerCase()}s`, d.namespace, d.name);
+					if(this.isShowSidebar) this.viewModel = this.getViewLink(group, `${d.kind.toLowerCase()}${d.kind, d.kind.endsWith("s") ? "es": "s"}`, d.namespace, d.name);
 				}
 			});
 
 			this.isShowOverlay = true;
-			let url = `/api/clusters/${this.currentContext()}/graph/${this.selctedTab==1?"topology":"workloads"}`;
+			let url = `/api/clusters/${this.currentContext()}/graph/`;
+			if (this.selctedTab==1) url += "topology";
+			else if (this.selctedTab==2) url += "workloads";
+			else if (this.selctedTab==3) url += "network";
+			else return;
 			if (ns) url += `/namespaces/${this.selectNamespace()}`;
+
 			this.$axios.get(url)
 				.then( resp => {
-					g.config({
+					this.g.config({
 						global: {
 							scale: {ratio:1},
 							toolbar: {
@@ -98,15 +120,34 @@ export default {
 							},
 							hierarchy: {
 								group: {
-									divide: ns? true: false,
-									title: { display: "none" },
+									divide: (this.selctedTab==3 ? true : (this.selctedTab==2 ? false : true)),
+									title: {
+										display: (this.selctedTab==3 && !ns) ? "has" : "none"
+									},
+									spacing: 25,
 									box: {
-										border: { width: 0 },
-										background: { fill: "none" }
+										border: { 
+											width: (this.selctedTab==3 && !ns) ? 1: 0,
+											color: "gray",
+											dash: "2 2"
+										},
+										background: { 
+											fill: (this.selctedTab==3 ? "silver" :"none"),
+											opacity: 0.1
+										},
+										tree: { 
+											line: {
+												caption: {
+													align: "right",
+													padding: {right: 20 }
+												},
+												end: (this.selctedTab==3? "arrow":"none")
+											}
+										}
 									}
 								},
 								node: {
-									forEach: ns? (d)=> { if(d.kind == "Pod") d.depth = 2; }: (d)=> { if(d.kind == "Pod") d.depth = 3; }
+									forEach: (this.selctedTab==3) ? (cur)=> { if(cur.kind == "Pod") cur.depth = 2; if(cur.kind == "Service") cur.depth = 1; } : (this.selctedTab==2)? (d)=> { if(d.kind == "Pod") d.depth = 3; }: undefined
 								}
 							}
 						}
