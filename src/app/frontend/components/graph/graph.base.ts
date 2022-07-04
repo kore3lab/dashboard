@@ -114,7 +114,7 @@ export abstract class GraphBase {
 			this.svg.attr("width", bounds.width).attr("height", bounds.height);
 			const k:number = Math.round(Math.min(bounds.width/(initWH.width), bounds.height/(initWH.height))*100)/100;
 			Transform.instance(this.outlineWrapEl.node()!).scale(k);
-			UI.align(this.toolbarEl.node()!, conf.global.toolbar.align.horizontal, conf.global.toolbar.align.vertical);
+			if(this.toolbarEl) UI.align(this.toolbarEl.node()!, conf.global.toolbar.align.horizontal, conf.global.toolbar.align.vertical);
 		}
 		if(!d3.select(window).on("resize.updatesvg")) d3.select(window).on("resize.updatesvg", this.resizeListener );
 
