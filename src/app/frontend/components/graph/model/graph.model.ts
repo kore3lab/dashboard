@@ -14,6 +14,7 @@ export namespace HierarchyModel {
 
 	export class Node {
 		uid:string
+		apiVersion:string
 		name:string
 		kind:string
 		namespace?:string

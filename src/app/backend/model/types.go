@@ -28,12 +28,13 @@ func NewStatus(code int) *Status {
 // hierarchy-graph
 type Hierarchy map[string][]HierarchyNode
 type HierarchyNode struct {
-	UID       string `json:"uid"`
-	Name      string `json:"name"`
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Line      string `json:"line"`
-	Owner     string `json:"owner"`
+	UID        string `json:"uid"`
+	Name       string `json:"name"`
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Namespace  string `json:"namespace"`
+	Line       string `json:"line"`
+	Owner      string `json:"owner"`
 }
 
 // topology-graph
