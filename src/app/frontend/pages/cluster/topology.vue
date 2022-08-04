@@ -132,7 +132,7 @@ export default {
 											dash: "2 2"
 										},
 										background: { 
-											fill: (this.selctedTab==3 ? "silver" :"none"),
+											fill: (this.selctedTab==3 && !ns) ? "silver" :"none",
 											opacity: 0.1
 										},
 										tree: { 

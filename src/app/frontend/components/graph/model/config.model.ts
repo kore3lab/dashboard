@@ -7,7 +7,10 @@ export class Config {
 		padding: { top:number, left:number, right:number, bottom:number }
 		toolbar: {
 			visible:boolean
-			align: { horizontal:"none"|"left"|"right"|"center", vertical:"none"|"top"|"bottom"|"middle" }
+			align: {
+				horizontal:"none"|"left"|"right"|"center"
+				vertical:"none"|"top"|"bottom"|"middle" 
+			}
 			margin: { left:number, top:number, right:number, bottom:number} 
 		}
 		scale: {
@@ -17,8 +20,12 @@ export class Config {
 	data?:any
 	extends: {
 		hierarchy: {
+			type: "horizontal"|"vertical"
 			scale: {
 				minWidth:number, maxWidth:number
+			}
+			align: {
+				vertical:"none"|"top"|"bottom"|"middle"
 			}
 			group: {
 				divide:boolean
@@ -35,6 +42,7 @@ export class Config {
 						spacing:number
 						node : {
 							height:number
+							padding: { top:number, left:number, right:number, bottom:number }
 						}
 						line : {
 							caption: {
@@ -78,11 +86,13 @@ export class Config {
 				margin: { top: 0, left: 0, right:0, bottom:0 }
 			},
 			padding: { top: 0, left: 0, right:0, bottom:0 },
-			scale: { ratio: 1, minRatio: 0.1, maxRatio: 10 }
+			scale: { ratio: 1, minRatio: 0.1, maxRatio: 10 },
 		};
 		this.extends = {
 			hierarchy: {
+				type: "horizontal",
 				scale: { minWidth: 0, maxWidth:0 },
+				align: { vertical:"middle" },
 				group: {
 					divide: true,		//그룹으로 나누기
 					spacing:25,			//group간 간격
@@ -96,7 +106,10 @@ export class Config {
 						padding: {top:10, left:5, right:5, bottom:10 },		//box padding
 						tree : { 
 							spacing:15,				//트리간 간격
-							node : { height: 30 },	//노드 높이
+							node : {
+								height: 30, 	//노드 높이
+								padding: { top:5, left:10, right:10, bottom:5 }	// only veritcal-graph
+							},	
 							line: { 
 								caption: {
 									align: "center",	// 라인 설명 정렬
