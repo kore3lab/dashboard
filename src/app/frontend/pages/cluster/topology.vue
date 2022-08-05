@@ -83,13 +83,10 @@ export default {
 			// node-click()
 			this.g.on("nodeclick", (e,data)=> { 
 				const d = data.data ? data.data: data;
-				if ("Container,Cluster".includes(d.kind)) {
-					this.isShowSidebar = false;
-				} else {
+				if (!"Container,Cluster".includes(d.kind)) {
 					let group = "";
 					if("DaemonSet,ReplicaSet,StatefulSet,Deployment".includes(d.kind)) group= "apps";
 					else if("Ingress".includes(d.kind)) group= "networking.k8s.io";
-					else true;
 					this.isShowSidebar = true;
 					if(this.isShowSidebar) this.viewModel = this.getViewLink(group, `${d.kind.toLowerCase()}${d.kind, d.kind.endsWith("s") ? "es": "s"}`, d.namespace, d.name);
 				}
