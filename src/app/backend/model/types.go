@@ -58,12 +58,12 @@ type topologyLink struct {
 }
 
 const (
-	ELEMENT_KIND_CLUSTER    string = "cluster"
-	ELEMENT_KIND_NAMESPACE  string = "namespace"
-	ELEMENT_KIND_POD        string = "pod"
-	ELEMENT_KIND_NODE       string = "node"
-	ELEMENT_KIND_REPLICASET string = "replica"
-	ELEMENT_KIND_CONTAINER  string = "container"
+	ELEMENT_KIND_CLUSTER    string = "Cluster"
+	ELEMENT_KIND_NAMESPACE  string = "Namespace"
+	ELEMENT_KIND_POD        string = "Pod"
+	ELEMENT_KIND_NODE       string = "Node"
+	ELEMENT_KIND_REPLICASET string = "ReplicaSet"
+	ELEMENT_KIND_CONTAINER  string = "Container"
 )
 
 // metrics

@@ -149,7 +149,6 @@ export default class HierarchyGraph extends GraphBase {
 	 * rendering Vertical-mode
 	*/
 	private renderVertical(parentEl:d3Select.Selection<SVGGElement,any,SVGElement,any>, data:model.Node, conf:Config, width:number, columns:number) {
-
 		//calcuate max-columns
 		columns = 0
 		const getMaxCols = (d:any) => {
@@ -167,7 +166,7 @@ export default class HierarchyGraph extends GraphBase {
 
 		// contraints
 		const nodeHeight:number = conf.extends.hierarchy.group.box.tree.node.height + 50;	//default:30
-		const nodeWidth:number = width/columns;
+		const nodeWidth:number = columns==0?width:width/columns;
 		const nodePadding = conf.extends.hierarchy.group.box.tree.node.padding;
 		const ellipsisWidth = nodeWidth - (nodePadding.left + nodePadding.right);	//text max-width(ellipsis text)
 
@@ -186,7 +185,7 @@ export default class HierarchyGraph extends GraphBase {
 		const nameEl:d3.Selection<SVGTextElement, any, SVGElement, any> = nodeEl.append("text")
 			.attr("class", (conf.on && conf.on.nodeclick)? "name click": "name")	
 			.text((d:d3.HierarchyPointNode<model.Node>) => d.data.name)
-			.attr("x", (d:d3.HierarchyPointNode<model.Node>) => d.x)
+			.attr("x", (d:d3.HierarchyPointNode<model.Node>) => d.x?d.x:0)
 			.attr("y", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => {
 				return d.y + els[i].getBBox().height;
 			})
@@ -201,7 +200,7 @@ export default class HierarchyGraph extends GraphBase {
 		nodeEl.append("text")
 			.attr("class", "kind")
 			.text((d:d3.HierarchyPointNode<model.Node>) => `${d.data.apiVersion} ${d.data.kind}`)
-			.attr("x", (d:d3.HierarchyPointNode<model.Node>) => d.x)
+			.attr("x", (d:d3.HierarchyPointNode<model.Node>) => d.x?d.x:0)
 			.attr("y", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGTextElement>|d3.ArrayLike<SVGTextElement>) => {
 				return d.y + els[i].getBBox().height * 2;
 			})
@@ -223,7 +222,7 @@ export default class HierarchyGraph extends GraphBase {
 			.attr("class", "background")
 			.attr("d", (d:d3.HierarchyPointNode<model.Node>,i:number,els: Array<SVGPathElement>|d3.ArrayLike<SVGPathElement>) => {
 				const bounds = new Bounds(els[i].parentElement!)
-				const x1 = d.x - nodePadding.left;
+				const x1 = (d.x?d.x:0) - nodePadding.left;
 				const y1 = d.y - nodePadding.top;
 				const x2 = x1 + bounds.width + (nodePadding.left+nodePadding.right);
 				const y2 = y1 + bounds.height + (nodePadding.top + nodePadding.bottom);
