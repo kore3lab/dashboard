@@ -106,8 +106,8 @@ export default {
 					host = rule.host
 					list = [];
 					rule.http.paths.map((p,_) => {
-						const serviceName = "service" in p.backend ? p.backend.service.name : p.backend.serviceName;
-						const servicePort = "service" in p.backend ? p.backend.service.port.number ?? p.backend.service.port.name : p.backend.servicePort;
+						const serviceName = "service" in p.backend && p.backend.service ? p.backend.service.name : p.backend.serviceName;
+						const servicePort = "service" in p.backend && p.backend.service ? p.backend.service.port.number ?? p.backend.service.port.name : p.backend.servicePort;
 						list.push({
 							path: p.path || "-",
 							backends: `${serviceName}:${servicePort}`
