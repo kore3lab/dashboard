@@ -102,7 +102,8 @@ export abstract class GraphBase {
 		this.zoomBehavior = d3.zoom().on("zoom", (event)=> { 
 			this.outlineEl.attr("transform", event.transform); 
 		});
-		this.outlineWrapEl.call(this.zoomBehavior.transform, d3.zoomIdentity.translate(0,0).scale(1));
+		const translate = Transform.instance(this.outlineEl.node()!);
+		this.outlineWrapEl.call(this.zoomBehavior.transform, d3.zoomIdentity.translate(translate.x,translate.y).scale(translate.k));
 		this.outlineWrapEl.call(this.zoomBehavior);		//binding zoom
 		this.outlineWrapEl.on("dblclick.zoom", null);	//zoom 더블클릭 이벤트 drop (because event bubbling)
 		this.zoomBehavior.scaleTo(this.outlineWrapEl, conf.global.scale.ratio)

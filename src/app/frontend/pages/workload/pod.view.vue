@@ -34,6 +34,16 @@
 		</dd>
 	</c-metadata>
 
+	<!-- 2-2. graph -->
+	<div class="row">
+		<div class="col-md-12">
+			<div class="card card-secondary card-outline">
+				<div class="card-header p-2"><h3 class="card-title">Relation</h3></div>
+				<div class="card-body mw-100" id="wrapRelationGraph"></div>
+			</div>
+		</div>
+	</div>
+
 	<!-- 3. init container -->
 	<div class="row" v-show="initContainers.length > 0">
 		<div class="col-md-12">
@@ -178,12 +188,16 @@
 
 </div>
 </template>
+<style scoped>
+#wrapRelationGraph {min-height: 18em;}
+#wrapRelationGraph >>> g.outline.vertical g.tree g.node path.background {fill:#f3f4f5}
+</style>
 <script>
 import VueMetadataView	from "@/components/view/metadataView.vue";
 import VueJsonTree		from "@/components/jsontree";
 import VueEventsView	from "@/components/view/eventsView.vue";
 import VueChartsView	from "@/components/view/metricsChartsView.vue";
-
+import HierarchyGraph	from "@/components/graph/graph.hierarchy";
 
 export default {
 	props:["value"],
@@ -224,6 +238,38 @@ export default {
 				secret: data.spec.volumes? data.spec.volumes.filter(el=>{return el.secret}): []
 			};
 			this.initContainers = this.getContainers(data, true);
+
+			//graph
+			let g = new HierarchyGraph("#wrapRelationGraph", {
+				global: {
+					toolbar: { visible:false }
+				},
+				extends: {
+					hierarchy: {
+						type: "vertical",
+						group: {
+							title: { display: "none" },
+							box: {
+								border: { width: 0 },
+								background: { fill: "none" }
+							}
+						}
+					}
+				}
+			})
+			.on("nodeclick", (e,d)=> {
+				if (d.data.namespace && d.data.name) {
+					// (core) pod, (apps) daemonset, replicaset, deployment
+					const v = d.data.apiVersion.split("/");
+					const model = this.getViewLink(v.length == 1 ? "": v[0], `${d.data.kind.toLowerCase()}${d.data.kind.endsWith("s") ? "es": "s"}`, d.data.namespace, d.data.name);
+					this.$emit("navigate", model)
+				}
+			})
+			this.$axios.get(`/api/clusters/${this.currentContext()}/graph/pod/namespaces/${data.metadata.namespace}/pods/${data.metadata.name}`)
+				.then( resp => {
+					g.data(resp.data).render();
+				})
+				.catch(e => { this.msghttp(e);})
 
 			// volumns
 			this.volumes = [];

@@ -37,7 +37,7 @@ gulp.task(
         // Install dependencies to speed up subsequent compilations.
         // "-i",
         // for debugging backend
-        '-gcflags="all=-N -l"',
+        "-gcflags=all=-N -l",
         "-o",
         path.join(basePath, ".tmp/serve/backend"),
         mainPackageName,

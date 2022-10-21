@@ -122,13 +122,33 @@ func GetTopologyGraph(cluster string, namespace string) (topology Topology, err 
 
 }
 
-func NewHierarchyNode(kind string, meta v1.ObjectMeta) HierarchyNode {
-	h := HierarchyNode{
-		UID:  string(meta.UID),
-		Name: meta.Name, Namespace: meta.Namespace, Kind: kind,
+// get group versions
+func getGroupVersion(client *config.ClientSet) (coreVersion string, appsVersion string, networkVersion string, err error) {
+	if discoveryClient, err := client.NewDiscoveryClient(); err == nil {
+		if groups, err := discoveryClient.ServerGroups(); err == nil {
+			for _, g := range groups.Groups {
+				if g.Name == "" {
+					coreVersion = g.PreferredVersion.GroupVersion
+				} else if g.Name == "apps" {
+					appsVersion = g.PreferredVersion.GroupVersion
+				} else if g.Name == "network" {
+					networkVersion = g.PreferredVersion.GroupVersion
+				}
+			}
+		}
 	}
-	if len(meta.OwnerReferences) > 0 {
-		h.Owner = string(meta.OwnerReferences[0].UID)
+	return
+}
+func newHierarchyNode(ty v1.TypeMeta, obj v1.ObjectMeta, owner string) HierarchyNode {
+	h := HierarchyNode{
+		UID:        string(obj.UID),
+		APIVersion: ty.APIVersion, Kind: ty.Kind,
+		Name: obj.Name, Namespace: obj.Namespace,
+	}
+	if len(owner) > 0 {
+		h.Owner = owner
+	} else if len(obj.OwnerReferences) > 0 {
+		h.Owner = string(obj.OwnerReferences[0].UID)
 	}
 
 	return h
@@ -140,6 +160,13 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 	// api-client
 	client, err := config.Cluster.Client(cluster)
 	if err != nil {
+		return nil, err
+	}
+
+	// get group versions
+	var coreVersion string
+	var appsVersion string
+	if coreVersion, appsVersion, _, err = getGroupVersion(client); err != nil {
 		return nil, err
 	}
 
@@ -167,7 +194,7 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 		return nil, err
 	} else {
 		for _, deploy := range deployments.Items {
-			hierarchy[deploy.Namespace] = append(hierarchy[deploy.Namespace], NewHierarchyNode("Deployment", deploy.ObjectMeta))
+			hierarchy[deploy.Namespace] = append(hierarchy[deploy.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "Deployment"}, deploy.ObjectMeta, ""))
 		}
 	}
 	//deamonsets
@@ -175,7 +202,7 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 		return nil, err
 	} else {
 		for _, daemonset := range deamonsets.Items {
-			hierarchy[daemonset.Namespace] = append(hierarchy[daemonset.Namespace], NewHierarchyNode("DaemonSet", daemonset.ObjectMeta))
+			hierarchy[daemonset.Namespace] = append(hierarchy[daemonset.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "DaemonSet"}, daemonset.ObjectMeta, ""))
 		}
 	}
 	//replicasets
@@ -183,7 +210,7 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 		return nil, err
 	} else {
 		for _, replicaset := range replicasets.Items {
-			hierarchy[replicaset.Namespace] = append(hierarchy[replicaset.Namespace], NewHierarchyNode("ReplicaSet", replicaset.ObjectMeta))
+			hierarchy[replicaset.Namespace] = append(hierarchy[replicaset.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "ReplicaSet"}, replicaset.ObjectMeta, ""))
 		}
 	}
 	//pods
@@ -191,7 +218,7 @@ func GetWorkloadGraph(cluster string, namespace string) (Hierarchy, error) {
 		return nil, err
 	} else {
 		for _, pod := range pods.Items {
-			hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], NewHierarchyNode("Pod", pod.ObjectMeta))
+			hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "Pod"}, pod.ObjectMeta, ""))
 		}
 	}
 
@@ -205,6 +232,13 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 	// api-client
 	client, err := config.Cluster.Client(cluster)
 	if err != nil {
+		return nil, err
+	}
+
+	// get group versions
+	var coreVersion string
+	var networkVersion string
+	if coreVersion, _, networkVersion, err = getGroupVersion(client); err != nil {
 		return nil, err
 	}
 
@@ -247,7 +281,7 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 	// service->pods
 	for _, svc := range svcList.Items {
 
-		hierarchy[svc.Namespace] = append(hierarchy[svc.Namespace], NewHierarchyNode("Service", svc.ObjectMeta))
+		hierarchy[svc.Namespace] = append(hierarchy[svc.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "Service"}, svc.ObjectMeta, ""))
 
 		// get the pods relations
 		if len(svc.Spec.Selector) > 0 {
@@ -256,11 +290,9 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 			})
 			for _, pod := range podList.Items {
 				if pod.Namespace == svc.Namespace && selector.Matches(labels.Set(pod.Labels)) {
-					hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], HierarchyNode{
-						UID: string(pod.UID), Name: pod.Name, Namespace: pod.Namespace, Kind: "Pod",
-						Line:  pod.Status.PodIP,
-						Owner: string(svc.UID),
-					})
+					n := newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "Pod"}, pod.ObjectMeta, string(svc.UID))
+					n.Line = pod.Status.PodIP
+					hierarchy[pod.Namespace] = append(hierarchy[pod.Namespace], n)
 				}
 			}
 		}
@@ -269,7 +301,7 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 
 	// ingress->services
 	for _, ing := range ingList.Items {
-		hierarchy[ing.Namespace] = append(hierarchy[ing.Namespace], NewHierarchyNode("Ingress", ing.ObjectMeta))
+		hierarchy[ing.Namespace] = append(hierarchy[ing.Namespace], newHierarchyNode(v1.TypeMeta{APIVersion: networkVersion, Kind: "Ingress"}, ing.ObjectMeta, ""))
 		for _, rule := range ing.Spec.Rules {
 			for _, path := range rule.HTTP.Paths {
 				for i, nd := range hierarchy[ing.Namespace] {
@@ -288,5 +320,101 @@ func GetNetworkGraph(cluster string, namespace string) (Hierarchy, error) {
 	}
 
 	return hierarchy, err
+}
+
+// workload graph
+func GetPodGraph(cluster string, namespace string, name string) (Hierarchy, error) {
+
+	// api-client
+	client, err := config.Cluster.Client(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	// get group versions
+	var coreVersion string
+	var appsVersion string
+	if coreVersion, appsVersion, _, err = getGroupVersion(client); err != nil {
+		return nil, err
+	}
+
+	// get objects
+	nodes := []HierarchyNode{}
+	api, err := client.NewKubernetesClient()
+	if err != nil {
+		return nil, err
+	}
+
+	//pods
+	var pod *coreV1.Pod
+	if pod, err = api.CoreV1().Pods(namespace).Get(context.TODO(), name, v1.GetOptions{}); err != nil {
+		return nil, err
+	} else {
+		n := newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "Pod"}, pod.ObjectMeta, "")
+		n.Owner = ""
+		nodes = append(nodes, n)
+	}
+
+	//ownerReferences (ReplicaSet+Deployment, DaemonSet, StatefulSet)
+	if len(pod.OwnerReferences) > 0 {
+		owner := pod.OwnerReferences[0]
+
+		if owner.Kind == "ReplicaSet" {
+			if replicaset, err := api.AppsV1().ReplicaSets(namespace).Get(context.TODO(), owner.Name, v1.GetOptions{}); err != nil {
+				return nil, err
+			} else {
+				n1 := newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "ReplicaSet"}, replicaset.ObjectMeta, "")
+				n1.Owner = string(pod.UID)
+				nodes = append(nodes, n1)
+
+				//deployment
+				if len(replicaset.OwnerReferences) > 0 {
+					if deployment, err := api.AppsV1().Deployments(namespace).Get(context.TODO(), replicaset.OwnerReferences[0].Name, v1.GetOptions{}); err == nil {
+						nodes = append(nodes, newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "Deployment"}, deployment.ObjectMeta, string(replicaset.UID)))
+					}
+				}
+			}
+		} else if owner.Kind == "DaemonSet" {
+			if daemonset, err := api.AppsV1().DaemonSets(namespace).Get(context.TODO(), owner.Name, v1.GetOptions{}); err != nil {
+				return nil, err
+			} else {
+				nodes = append(nodes, newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "DaemonSet"}, daemonset.ObjectMeta, string(pod.UID)))
+			}
+		} else if owner.Kind == "StatefulSet" {
+			if statefulset, err := api.AppsV1().StatefulSets(namespace).Get(context.TODO(), owner.Name, v1.GetOptions{}); err != nil {
+				return nil, err
+			} else {
+				nodes = append(nodes, newHierarchyNode(v1.TypeMeta{APIVersion: appsVersion, Kind: "StatefulSet"}, statefulset.ObjectMeta, string(pod.UID)))
+			}
+		}
+	}
+	//ServiceAccount
+	if pod.Spec.ServiceAccountName != "" {
+		if serviceaccount, err := api.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), pod.Spec.ServiceAccountName, v1.GetOptions{}); err != nil {
+			return nil, err
+		} else {
+			nodes = append(nodes, newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "ServiceAccount"}, serviceaccount.ObjectMeta, string(pod.UID)))
+		}
+	}
+
+	//service
+	if svcList, err := api.CoreV1().Services(namespace).List(context.TODO(), v1.ListOptions{}); err != nil {
+		return nil, err
+	} else {
+		for _, svc := range svcList.Items {
+			if len(svc.Spec.Selector) > 0 {
+				selector, _ := v1.LabelSelectorAsSelector(&v1.LabelSelector{
+					MatchLabels: svc.Spec.Selector,
+				})
+				if selector.Matches(labels.Set(pod.Labels)) {
+					nodes = append(nodes, newHierarchyNode(v1.TypeMeta{APIVersion: coreVersion, Kind: "Service"}, svc.ObjectMeta, string(pod.UID)))
+					break
+				}
+			}
+
+		}
+	}
+
+	return map[string][]HierarchyNode{namespace: nodes}, err
 
 }

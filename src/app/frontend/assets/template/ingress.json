@@ -1,29 +1,34 @@
 {
-    "apiVersion": "networking.k8s.io/v1beta1",
-    "kind": "Ingress",
-    "metadata": {
-        "name": "test-ingress",
-        "namespace": "default",
-        "annotations": {
-            "nginx.ingress.kubernetes.io/rewrite-target": "/"
-        }
-    },
-    "spec": {
-        "rules": [
+  "apiVersion": "networking.k8s.io/v1",
+  "kind": "Ingress",
+  "metadata": {
+      "name": "minimal-ingress",
+      "namespace": "default",
+      "annotations": {
+          "nginx.ingress.kubernetes.io/rewrite-target": "/"
+      }
+  },
+  "spec": {
+    "ingressClassName": "nginx-example",
+    "rules": [
+      {
+        "http": {
+          "paths": [
             {
-                "http": {
-                    "paths": [
-                        {
-                            "path": "/testpath",
-                            "pathType": "Prefix",
-                            "backend": {
-                                "serviceName": "test",
-                                "servicePort": 80
-                            }
-                        }
-                    ]
+              "path": "/testpath",
+              "pathType": "Prefix",
+              "backend": {
+                "service": {
+                  "name": "test",
+                  "port": {
+                    "number": 80
+                  }
                 }
+              }
             }
-        ]
-    }
+          ]
+        }
+      }
+    ]
+  }
 }

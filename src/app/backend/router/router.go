@@ -70,6 +70,7 @@ func CreateUrlMappings() {
 		clustersAPI.GET("/graph/workloads/namespaces/:NAMESPACE", apis.Workloads)                          // get workload graph (namespace)
 		clustersAPI.GET("/graph/network", apis.Network)                                                    // get network graph (cluster)
 		clustersAPI.GET("/graph/network/namespaces/:NAMESPACE", apis.Network)                              // get network graph (namespace)
+		clustersAPI.GET("/graph/pod/namespaces/:NAMESPACE/pods/:POD", apis.Pod)                            // get pod graph
 		clustersAPI.GET("/dashboard", apis.Dashboard)                                                      // get dashboard
 		clustersAPI.GET("/nodes", apis.GetNodeListWithUsage)                                               // get node-list
 	}

@@ -28,12 +28,13 @@ func NewStatus(code int) *Status {
 // hierarchy-graph
 type Hierarchy map[string][]HierarchyNode
 type HierarchyNode struct {
-	UID       string `json:"uid"`
-	Name      string `json:"name"`
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Line      string `json:"line"`
-	Owner     string `json:"owner"`
+	UID        string `json:"uid"`
+	Name       string `json:"name"`
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Namespace  string `json:"namespace"`
+	Line       string `json:"line"`
+	Owner      string `json:"owner"`
 }
 
 // topology-graph
@@ -57,12 +58,12 @@ type topologyLink struct {
 }
 
 const (
-	ELEMENT_KIND_CLUSTER    string = "cluster"
-	ELEMENT_KIND_NAMESPACE  string = "namespace"
-	ELEMENT_KIND_POD        string = "pod"
-	ELEMENT_KIND_NODE       string = "node"
-	ELEMENT_KIND_REPLICASET string = "replica"
-	ELEMENT_KIND_CONTAINER  string = "container"
+	ELEMENT_KIND_CLUSTER    string = "Cluster"
+	ELEMENT_KIND_NAMESPACE  string = "Namespace"
+	ELEMENT_KIND_POD        string = "Pod"
+	ELEMENT_KIND_NODE       string = "Node"
+	ELEMENT_KIND_REPLICASET string = "ReplicaSet"
+	ELEMENT_KIND_CONTAINER  string = "Container"
 )
 
 // metrics

@@ -1,7 +1,15 @@
-g.outline g.group > text { font: 1.2em sans-serif; }
-g.outline g.tree .node text { font: 1em sans-serif; }
-g.outline g.tree .node.click { cursor:pointer; }
-g.outline g.tree .node.click text:hover {  fill: #007bff; text-decoration: underline; }
-g.outline g.tree g.link path { fill: none; stroke: #ccc; stroke-width: 1px;}
-g.outline g.tree g.link text {font-size: .9em; fill:#666}
-#ac_ic_link_line_end {fill:#ccc; }
+/* commons */
+g.outline g.group > text { font-size: 1.2em; }
+g.outline g.tree .click { cursor:pointer; }
+g.outline g.tree g.link { fill: none; stroke: #ccc; stroke-width: 1px; }
+g.outline g.tree g.link text { font-size: .9em; fill:#666 }
+/* horizontal */
+g.outline.horizontal g.tree g.node text { fill: #666; font-size:1em; }
+g.outline.horizontal g.tree g.node text { font-size: 1em; }
+g.outline.horizontal g.tree g.node.click text:hover { fill: #007bff; text-decoration: underline; }
+/* vertical */
+g.outline.vertical g.tree g.node text { fill: #666; font-size:.9em; }
+g.outline.vertical g.tree g.node text.name { font-weight: bold; }
+g.outline.vertical g.tree g.node text.click:hover { fill: #007bff; text-decoration: underline; }
+g.outline.vertical g.tree g.node path.background { fill: #fff; stroke: #bbb; stroke-width: 1px; } 
+#ac_ic_arrow_end { fill:#ccc; }

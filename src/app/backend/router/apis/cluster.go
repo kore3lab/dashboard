@@ -53,6 +53,21 @@ func Workloads(c *gin.Context) {
 
 }
 
+func Pod(c *gin.Context) {
+	g := app.Gin{C: c}
+
+	cluster := lang.NVL(g.C.Param("CLUSTER"), config.Cluster.DefaultContext)
+	namespace := c.Param("NAMESPACE")
+	name := c.Param("POD")
+
+	if workloads, err := model.GetPodGraph(cluster, namespace, name); err != nil {
+		g.SendError(err)
+	} else {
+		g.Send(http.StatusOK, workloads)
+	}
+
+}
+
 func Dashboard(c *gin.Context) {
 	g := app.Gin{C: c}
 
