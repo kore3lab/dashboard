@@ -88,8 +88,10 @@ func GetContext(c *gin.Context) {
 
 		resourcesList, err := discoveryClient.ServerPreferredResources()
 		if err != nil {
-			g.SendMessage(http.StatusInternalServerError, err.Error(), err)
-			return
+			if _, resourcesList, err = discoveryClient.ServerGroupsAndResources(); err != nil {
+				g.SendMessage(http.StatusInternalServerError, err.Error(), err)
+				return
+			}
 		}
 
 		// make a "groups > group > resources > resource" data structure
