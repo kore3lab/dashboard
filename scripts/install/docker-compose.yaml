@@ -9,17 +9,17 @@ services:
     privileged: true
 
   metrics-scraper:
-    image: honester/kore-board.metrics-scraper:v0.5.3.20221104
+    image: ghcr.io/kore3lab/kore-board.metrics-scraper:latest
     command: --kubeconfig=/app/.kube/config --db-file=/app/data/metrics.db --log-level=info
     volumes:
-      - /Users/eunsang/WORKSPACE/acornsoftlab/nipa.ceritifcate/config:/app/.kube/config
+      - kubeconfig:/app/.kube
       - data:/app/data
 
   backend:
-    image: honester/kore-board.backend:v0.5.3.20221104
+    image: ghcr.io/kore3lab/kore-board.backend:latest
     command: --kubeconfig=/app/.kube/config --metrics-scraper-url=http://metrics-scraper:8000 --terminal-url=http://terminal:3003 --log-level=info
     volumes:
-      - /Users/eunsang/WORKSPACE/acornsoftlab/nipa.ceritifcate/config:/app/.kube/config
+      - kubeconfig:/app/.kube
     links:
       - metrics-scraper
 

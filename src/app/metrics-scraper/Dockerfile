@@ -14,12 +14,9 @@ RUN GOOS=linux CGO_ENABLED=1 go build -ldflags '-w -extldflags "-static"' -tags 
 #-------------------------------------------
 # STEP 2 : build a image
 #-------------------------------------------
-FROM ubuntu:18.04
+FROM scratch
 
 COPY --from=builder /usr/src/app/dashboard-metrics-scraper /app/
-
-RUN apt-get update && apt-get install -y wget
-RUN wget https://t1.kakaocdn.net/kakaoicloud/binaries-kic-iam-auth/v0.1.2/kic-iam-auth_0.1.2_Linux_x86_64/kic-iam-auth && chmod +x kic-iam-auth && mv kic-iam-auth /usr/local/bin/
 
 #-------------------------------------------
 # STEP 3 : execute a binary
