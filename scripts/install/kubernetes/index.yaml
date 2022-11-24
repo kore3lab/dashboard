@@ -3,7 +3,7 @@ entries:
   acornsoft-dashboard:
   - apiVersion: v2
     appVersion: v0.3.0
-    created: "2022-10-21T11:08:26.375039+09:00"
+    created: "2022-11-24T14:32:59.511299+09:00"
     description: Acornsoft Kubernetes Dashboard
     digest: 9063661ae9ba91998ab0375fa3b96cf3c8f247816b77a734716357930f07d3b3
     name: acornsoft-dashboard
@@ -13,7 +13,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: v0.2.0
-    created: "2022-10-21T11:08:26.372523+09:00"
+    created: "2022-11-24T14:32:59.508879+09:00"
     description: Acornsoft Kubernetes Dashboard
     digest: 90d6e245dbbb0098514374152c92e78ac65bd50fadee0a69250ee0450257f879
     name: acornsoft-dashboard
@@ -23,7 +23,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: v0.1.2
-    created: "2022-10-21T11:08:26.366412+09:00"
+    created: "2022-11-24T14:32:59.506847+09:00"
     description: Acornsoft Kubernetes Dashboard
     digest: 3205f6217826ba691c6f040ab23809cb0a3047ab6f5295bea2100d874b82e519
     name: acornsoft-dashboard
@@ -33,8 +33,18 @@ entries:
     version: 0.1.2
   kore-board:
   - apiVersion: v2
+    appVersion: v0.5.4
+    created: "2022-11-24T14:32:59.531764+09:00"
+    description: Kubernetes multi-clusters dashboard
+    digest: 58a13da261258afac2ff78514aea88ce192ffa5f1ce4308945df01c3535c3b7b
+    name: kore-board
+    type: application
+    urls:
+    - kore-board-0.5.4.tgz
+    version: 0.5.4
+  - apiVersion: v2
     appVersion: v0.5.3
-    created: "2022-10-21T11:08:26.393348+09:00"
+    created: "2022-11-24T14:32:59.529097+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: abc649f1a1b0456a2f40a92459968f011e71b9bf6e10a2d7d59f55bf010d30cf
     name: kore-board
@@ -44,7 +54,7 @@ entries:
     version: 0.5.3
   - apiVersion: v2
     appVersion: v0.5.2
-    created: "2022-10-21T11:08:26.391126+09:00"
+    created: "2022-11-24T14:32:59.526328+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: a272ff9069e61eb45045d808d917ea50669d91af28f091fff5c12ec66231ff98
     name: kore-board
@@ -54,7 +64,7 @@ entries:
     version: 0.5.2
   - apiVersion: v2
     appVersion: v0.5.1
-    created: "2022-10-21T11:08:26.388608+09:00"
+    created: "2022-11-24T14:32:59.523275+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: 9fee906403036f7aca6971bcb39b2a83afcb1dbd7feafea31d89d954ce7221d1
     name: kore-board
@@ -64,7 +74,7 @@ entries:
     version: 0.5.1
   - apiVersion: v2
     appVersion: v0.5.0
-    created: "2022-10-21T11:08:26.385512+09:00"
+    created: "2022-11-24T14:32:59.520431+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: e60368b94335ed7ab63dc03c6a6c2e0e6f706dcae823d9a55f1e2f86bfc089d6
     name: kore-board
@@ -74,7 +84,7 @@ entries:
     version: 0.5.0
   - apiVersion: v2
     appVersion: v0.4.2
-    created: "2022-10-21T11:08:26.382431+09:00"
+    created: "2022-11-24T14:32:59.517701+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: 242fd23d5991dd585cec827ea5500c31801904660fc70c81b5b2d784964f25c8
     name: kore-board
@@ -84,7 +94,7 @@ entries:
     version: 0.4.2
   - apiVersion: v2
     appVersion: v0.4.0
-    created: "2022-10-21T11:08:26.38004+09:00"
+    created: "2022-11-24T14:32:59.515745+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: 86b6253fad9c2843aa0555ac2dbfdba9020fdbf16fb626564235c84879ed5ee2
     name: kore-board
@@ -94,7 +104,7 @@ entries:
     version: 0.4.0
   - apiVersion: v2
     appVersion: v0.3.3
-    created: "2022-10-21T11:08:26.377646+09:00"
+    created: "2022-11-24T14:32:59.513317+09:00"
     description: Kubernetes multi-clusters dashboard
     digest: 5421b7f7072b0047e2c91c7d2f546271c085b1672eef703c7c8114be2c9c007d
     name: kore-board
@@ -102,4 +112,4 @@ entries:
     urls:
     - kore-board-0.3.3.tgz
     version: 0.3.3
-generated: "2022-10-21T11:08:26.35975+09:00"
+generated: "2022-11-24T14:32:59.504384+09:00"
