@@ -299,27 +299,78 @@ export default {
 			let specCon = type ? d.spec.initContainers || d.status.initContainerStatuses || [] : d.spec.containers || d.status.containerStatuses || []
 			
 			if(specCon) {
-				for (let i = 0; i < specCon.length; i++) {
-					Object.assign(specCon[i], statusCon[i])
+				if (statusCon) {
+					for (let i = 0; i < specCon.length; i++) {
+						Object.assign(specCon[i], statusCon[i])
+					}
 				}
 
-				specCon.forEach((specCon, i) => {
+				specCon.forEach((d, i) => {
 					specCons.push({
-						name : specCon.name,
-						args: specCon.args,
-						image: specCon.image,
-						env: this.getEnv(specCon.env),
-						ports: specCon.ports,
-						mounts: specCon.volumeMounts,
-						command: this.getCommand(specCon.command),
-						status: this.checkStatus(Object.keys(specCon.state),specCon) || {value:'',style:''},
-						lastState: this.getLast(specCon.lastState)
+						name : d.name,
+						args: d.args,
+						image: d.image,
+						ports: d.ports,
+						mounts: d.volumeMounts,
+						env: function(val) {
+							if(val) {
+								let list = []
+								val.forEach(el => {
+									if(el.value){
+										list.push({name: el.name, value: el.value})
+									}else if(el.valueFrom){
+										let val = el.valueFrom[Object.keys(el.valueFrom)[0]]
+										val = Object.values(val)
+										let v = `(${val[1]}.${val[0]})`
+										list.push({name: el.name, value: Object.keys(el.valueFrom)[0], v: v })
+									}
+								})
+								return list
+							}
+							return ""
+						}(d.env),
+						command: function(c) {
+							if(c) {
+								let list = ""
+								c.forEach(el => {
+									list += el + " "
+								})
+								return list
+							}
+							return ""
+						}(d.command),
+						status: function(val) {
+							if(val.state) {
+								const status = Object.keys(val.state)
+								return{
+									value : status[0],
+									ready : val.ready ? 'ready' : '',
+									reason : {
+										reason: status[Object.keys(status)].reason,
+										exitCode: status[Object.keys(status)].exitCode,
+									}
+								}
+							} else return {value:'',style:''}
+						}(d),
+						lastState: function(val) {
+							if(val.lastState) {
+								const s = val.lastState;
+								if(Object.keys(s).length !== 0) {
+									return {
+										Status: Object.keys(s)[0],
+										Reason: s[Object.keys(s)].reason,
+										ExitCode: s[Object.keys(s)].exitCode,
+										StartedAt: s[Object.keys(s)].startedAt,
+										FinishedAt: s[Object.keys(s)].finishedAt,
+									}
+								}
+							}
+							return ""
+						}(d),
+						liveness: type? "": this.getProbe(d.livenessProbe),
+						readiness: type? "": this.getProbe(d.readinessProbe),
+						startup: type? "": this.getProbe(d.startupProbe),
 					})
-					if(!type){
-						specCons[i].liveness = this.getProbe(specCon.livenessProbe),
-						specCons[i].readiness = this.getProbe(specCon.readinessProbe),
-						specCons[i].startup = this.getProbe(specCon.startupProbe)
-					}
 				})
 			}
 			return specCons;
@@ -338,55 +389,6 @@ export default {
 			document.execCommand("copy")
 			textArea.remove()
 		},
-		getEnv(env) {
-			let list = []
-			if(env) {
-				env.forEach(el => {
-					if(el.value){
-						list.push({name: el.name, value: el.value})
-					}else if(el.valueFrom){
-						let val = el.valueFrom[Object.keys(el.valueFrom)[0]]
-						val = Object.values(val)
-						let v = `(${val[1]}.${val[0]})`
-						list.push({name: el.name, value: Object.keys(el.valueFrom)[0], v: v })
-					}
-				})
-				return list
-			}
-			return false
-		},
-		getCommand(c) {
-			let list = ""
-			if(c) {
-				c.forEach(el => {
-					list += el + " "
-				})
-				return list
-			}
-			return false
-		},
-		checkStatus(status,el) {
-			return{
-				value : status[0],
-				ready : el.ready ? 'ready' : '',
-				reason : {
-					reason: status[Object.keys(status)].reason,
-					exitCode: status[Object.keys(status)].exitCode,
-				}
-			}
-		},
-		getLast(s) {
-			if(Object.keys(s).length !== 0) {
-				return {
-					Status: Object.keys(s)[0],
-					Reason: s[Object.keys(s)].reason,
-					ExitCode: s[Object.keys(s)].exitCode,
-					StartedAt: s[Object.keys(s)].startedAt,
-					FinishedAt: s[Object.keys(s)].finishedAt,
-				}
-			}
-			return false
-		},
 		getProbe(probeData) {
 			if (!probeData) {
 				return false;
@@ -400,8 +402,8 @@ export default {
 				const { path, port, host, scheme } = httpGet;
 
 				probe.push(
-						"http-get",
-						`${scheme.toLowerCase()}://${host || ""}:${port || ""}${path || ""}`,
+					"http-get",
+					`${scheme.toLowerCase()}://${host || ""}:${port || ""}${path || ""}`,
 				);
 			}
 			if (exec && exec.command) {
@@ -413,11 +415,11 @@ export default {
 			}
 
 			probe.push(
-					`delay=${initialDelaySeconds || "0"}s`,
-					`timeout=${timeoutSeconds || "0"}s`,
-					`period=${periodSeconds || "0"}s`,
-					`#success=${successThreshold || "0"}`,
-					`#failure=${failureThreshold || "0"}`,
+				`delay=${initialDelaySeconds || "0"}s`,
+				`timeout=${timeoutSeconds || "0"}s`,
+				`period=${periodSeconds || "0"}s`,
+				`#success=${successThreshold || "0"}`,
+				`#failure=${failureThreshold || "0"}`,
 			);
 			return probe;
 		}
