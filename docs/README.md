@@ -12,7 +12,7 @@
 ## [User Guide](./user/README.md)
 
 * [Installation](./user/installation.md)
-* [Add a KUBECONFIG](./user/add-kubeconfig.md)
+* [Authenticate API access with serviceaccount](./user/add-authenticate-serviceaccount.md)
 * Configuration
   * [Sign-in](./user/config-sign-in.md)
   * [Kubeconfig provider](./user/config-kubeconfigs.md)

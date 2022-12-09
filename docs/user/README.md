@@ -1,7 +1,7 @@
 # User Guide
 
 * [Installation](./installation.md)
-* [Add a KUBECONFIG](./add-kubeconfig.md)
+* [Authenticate API access with serviceaccount](./add-authenticate-serviceaccount.md)
 * Configuration
   * [Sign-in](./config-sign-in.md)
   * [Kubeconfig provider](./config-kubeconfigs.md)
