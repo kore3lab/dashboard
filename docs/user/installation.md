@@ -23,7 +23,7 @@ $ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/s
 
 ## Kubernetes
 
-### Installation using Yaml
+### Installation using vanilla manifests
 
 * Installation
 
