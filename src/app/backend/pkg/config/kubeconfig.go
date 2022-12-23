@@ -55,39 +55,33 @@ func (me *kubeCluster) Add(name string, json map[string]interface{}) error {
 
 	// parsing - cluster
 	cluster.Server = jsonC["server"].(string)
-	val, exists := jsonC["certificate-authority-data"].(string)
-	if exists {
+	if val, exists := jsonC["certificate-authority-data"].(string); exists {
 		ca, err := base64.StdEncoding.DecodeString(val)
 		if err != nil {
 			return fmt.Errorf("Unable to decode cerificate-authority-data (data=%s, cause=%s)", val, err)
 		}
 		cluster.CertificateAuthorityData = ca
-	} else {
-		cluster.CertificateAuthority = jsonC["certificate-authority"].(string)
 	}
 
 	// parsing - user
-	val, exists = jsonU["client-certificate-data"].(string)
-
-	if exists {
+	if val, exists := jsonU["client-certificate-data"].(string); exists {
 		ca, err := base64.StdEncoding.DecodeString(val)
 		if err != nil {
 			return fmt.Errorf("Unable to decode client-certificate-data (data=%s, cuase=%s)", val, err)
 		}
 		user.ClientCertificateData = ca
-	} else {
-		user.ClientCertificate = jsonU["client-certificate"].(string)
 	}
 
-	val, exists = jsonU["client-key-data"].(string)
-	if exists {
+	if val, exists := jsonU["client-key-data"].(string); exists {
 		ca, err := base64.StdEncoding.DecodeString(val)
 		if err != nil {
 			return fmt.Errorf("Unable to decode client-key-data (data=%s, cause=%s)", val, err)
 		}
 		user.ClientKeyData = ca
-	} else {
-		user.ClientKey = jsonU["client-key"].(string)
+	}
+
+	if val, exists := jsonU["token"].(string); exists {
+		user.Token = val
 	}
 
 	me.KubeConfig.Clusters[context.Cluster] = cluster

@@ -1,6 +1,8 @@
 # User Guide
 
 * [Installation](./installation.md)
-* [Sign-in configuration](./config-sign-in.md)
-* [Kubeconfig configuration](./config-kubeconfigs.md)
-* [Configure startup parameters](./config-startup-parameters.md)
+* [Authenticate API access with serviceaccount](./add-authenticate-serviceaccount.md)
+* Configuration
+  * [Sign-in](./config-sign-in.md)
+  * [Kubeconfig provider](./config-kubeconfigs.md)
+  * [Container startup parameters](./config-startup-parameters.md)

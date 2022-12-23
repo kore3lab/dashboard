@@ -16,22 +16,25 @@ $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/la
 * if necessary, add a startup option `--kubelet-insecure-tls` 
 
 * or apply "metrics-server" with options `--kubelet-insecure-tls`
+
 ```
 $ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/metrics-server/metrics-server-v0.5.1-kubelet-insecure-tls.yaml
 ```
 
 ## Kubernetes
 
-### Installation using Yaml
+### Installation using vanilla manifests
 
 * Installation
+
 ```
-$ kubectl apply -f ./scripts/install/kubernetes/recommended.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/kubernetes/recommended.yaml
 ```
 
-* clean-up
+* Uninstallation
+
 ```
-$ kubectl delete -f ./scripts/install/kubernetes/recommended.yaml
+$ kubectl delete -f https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/kubernetes/recommended.yaml
 ```
 
 ### Installation using Helm-chart
@@ -40,19 +43,23 @@ $ kubectl delete -f ./scripts/install/kubernetes/recommended.yaml
 * Installation
 
 ```
+$ helm repo add kore https://raw.githubusercontent.com/kore3lab/dashboard/master/scripts/install/kubernetes
+$ helm search repo kore
+
 $ kubectl create ns kore
-$ helm install -n kore kore-board ./scripts/install/kubernetes/helm-chart/ \
+$ helm install dashboard kore/kore-board -n kore \
   --set backend.service.type=NodePort \
   --set backend.service.nodePort=30081 \
   --set frontend.service.type=NodePort \
   --set frontend.service.nodePort=30080
 
-$ helm list
+$ helm list -n kore
 ```
 
-* clean-up
+* Uninstallation
+
 ```
-$ helm uninstall kore-board
+$ helm uninstall dashboard -n kore
 ```
 
 ### if you want use existing kubeconfig file
@@ -67,11 +74,13 @@ $ kubectl create configmap kore-board-kubeconfig --from-file=config=${HOME}/.kub
 ### Installation using "docker-compose"
 
 * Installation
+
 ```
 $ docker-compose -f ./scripts/install/docker-compose.yaml up -d
 ```
 
-* clean-up
+* Uninstallation
+
 ```
 $ docker-compose -f ./scripts/install/docker-compose.yaml down
 ```
@@ -103,7 +112,8 @@ $ docker run --rm -d -p 3000:80 --name frontend\
     ghcr.io/kore3lab/kore-board.frontend:latest
 ```
 
-* clean-up
+* Uninstallation
+
 ```
 $ docker stop frontend backend metrics-scraper terminal
 $ docker volume rm data kubeconfig
