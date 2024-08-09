@@ -92,9 +92,19 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp-volume
+        {{- if .Values.backend.extravolumeMounts }}
+          {{- with .Values.backend.extravolumeMounts }}
+{{ toYaml . | indent 12 }}
+          {{- end }}
+        {{- end }}
       volumes:
         - name: tmp-volume
           emptyDir: {}
+    {{- if .Values.backend.extravolumes }}
+      {{- with .Values.backend.extravolumes }}
+{{ toYaml . | indent 8 }}
+      {{- end }}
+    {{- end }}
       serviceAccountName: {{ .Chart.Name }}
       nodeSelector:
         "kubernetes.io/os": linux

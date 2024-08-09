@@ -37,7 +37,13 @@ backend:
     limits:
       memory: "256Mi"
       cpu: "200m"
-
+  extravolumeMounts: []
+  # - name: user-vol
+  #   mountPath: "/var/user"
+  extravolumes: []
+  # - name: user-vol
+  #   secret:
+  #     secretName: secret-basic-auth
 frontend:
   replicaCount: 1
   resources:
