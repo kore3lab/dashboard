@@ -28,6 +28,8 @@ metricsScraper:
 
 backend:
   replicaCount: 1
+  args: []
+    # - --auth=strategy=cookie,secret=static-token,token=kore3lab
   resources:
     requests:
       memory: "128Mi"
