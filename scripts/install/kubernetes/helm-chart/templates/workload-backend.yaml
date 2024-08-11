@@ -79,17 +79,32 @@ spec:
           args:
             - --kubeconfig=strategy=configmap,configmap={{ .Chart.Name }}-kubeconfig,namespace={{ .Release.Namespace }},filename=config
             - --metrics-scraper-url=http://metrics-scraper:8000
-            - --terminal-url=http://terminal:3003
             - --log-level=info
+            - --terminal-url=http://terminal:3003
+        {{- if .Values.backend.args }}
+          {{- with .Values.backend.args }}
+{{ toYaml . | indent 12 }}
+          {{- end }}
+        {{- end }}
           ports:
             - containerPort: 3000
               protocol: TCP
           volumeMounts:
             - mountPath: /tmp
               name: tmp-volume
+        {{- if .Values.backend.extravolumeMounts }}
+          {{- with .Values.backend.extravolumeMounts }}
+{{ toYaml . | indent 12 }}
+          {{- end }}
+        {{- end }}
       volumes:
         - name: tmp-volume
           emptyDir: {}
+    {{- if .Values.backend.extravolumes }}
+      {{- with .Values.backend.extravolumes }}
+{{ toYaml . | indent 8 }}
+      {{- end }}
+    {{- end }}
       serviceAccountName: {{ .Chart.Name }}
       nodeSelector:
         "kubernetes.io/os": linux
